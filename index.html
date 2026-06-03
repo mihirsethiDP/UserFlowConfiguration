@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>UserFlowConfiguration — Canvas Editor</title>
+<title>FlowConfig — Diagnostic Flow Designer</title>
 <style>
   :root {
     --bg: #0f172a;
@@ -14,29 +14,31 @@
     --text: #0f172a;
     --muted: #64748b;
     --accent: #6366f1;
-    --accent-2: #8b5cf6;
     --accent-grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+
     --entry: #10b981;
     --question: #3b82f6;
+    --answer: #0ea5e9;
     --action: #f59e0b;
     --wait: #8b5cf6;
     --terminal: #64748b;
     --jump: #ec4899;
     --fallback: #ef4444;
+    --rootcause: #14b8a6;
+
     --shadow-sm: 0 1px 2px rgba(15,23,42,0.06);
     --shadow-md: 0 4px 12px rgba(15,23,42,0.10);
     --shadow-lg: 0 12px 40px rgba(15,23,42,0.18);
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; font-family: -apple-system, "Segoe UI", "Inter", Roboto, sans-serif; color: var(--text); background: var(--panel-soft); user-select: none; -webkit-font-smoothing: antialiased; }
-
-  #app { display: grid; grid-template-columns: 240px 1fr 320px; grid-template-rows: 56px 1fr; height: 100vh; }
+  #app { display: grid; grid-template-columns: 240px 1fr 340px; grid-template-rows: 56px 1fr; height: 100vh; }
 
   /* ============ TOPBAR ============ */
-  #topbar { grid-column: 1 / 4; background: var(--bg); color: #fff; display: flex; align-items: center; padding: 0 20px; gap: 14px; font-size: 13px; box-shadow: var(--shadow-md); position: relative; z-index: 10; }
+  #topbar { grid-column: 1 / 4; background: var(--bg); color: #fff; display: flex; align-items: center; padding: 0 20px; gap: 12px; font-size: 13px; box-shadow: var(--shadow-md); position: relative; z-index: 10; }
   #topbar .logo { font-weight: 700; font-size: 15px; background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: -0.01em; }
   #topbar .crumb { color: #475569; font-size: 14px; }
-  #topbar select { font-size: 13px; padding: 6px 26px 6px 10px; border: 1px solid #334155; border-radius: 6px; background: var(--bg-soft) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>") no-repeat right 8px center; color: #e2e8f0; appearance: none; cursor: pointer; font-weight: 500; }
+  #topbar select { font-size: 13px; padding: 6px 26px 6px 10px; border: 1px solid #334155; border-radius: 6px; background: var(--bg-soft) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>") no-repeat right 8px center; color: #e2e8f0; appearance: none; cursor: pointer; font-weight: 500; max-width: 280px; text-overflow: ellipsis; }
   #topbar select:hover { border-color: var(--accent); }
   #topbar .spacer { flex: 1; }
   #topbar button { font-size: 12px; padding: 7px 14px; border: 1px solid #334155; border-radius: 6px; background: var(--bg-soft); color: #e2e8f0; cursor: pointer; font-weight: 500; transition: all 0.15s; }
@@ -53,7 +55,7 @@
   .palette-item { padding: 9px 12px; margin-bottom: 6px; border: 1px solid var(--border); border-radius: 8px; font-size: 12.5px; cursor: grab; background: var(--panel); display: flex; align-items: center; gap: 10px; transition: all 0.15s; font-weight: 500; }
   .palette-item:hover { border-color: var(--accent); transform: translateX(2px); box-shadow: var(--shadow-sm); }
   .palette-item:active { cursor: grabbing; }
-  .palette-item .dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .palette-item .icon { width: 18px; height: 18px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 700; flex-shrink: 0; }
   .palette-actions { padding-top: 14px; border-top: 1px dashed var(--border); margin-top: 16px; }
   .palette-actions button { width: 100%; margin-bottom: 6px; font-size: 12px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; font-weight: 500; transition: all 0.15s; }
   .palette-actions button:hover { border-color: var(--accent); background: var(--panel-soft); }
@@ -63,8 +65,7 @@
   #canvas-wrap {
     position: relative; overflow: hidden;
     background-color: #f1f5f9;
-    background-image:
-      radial-gradient(circle at 1px 1px, rgba(99,102,241,0.15) 1px, transparent 0);
+    background-image: radial-gradient(circle at 1px 1px, rgba(99,102,241,0.15) 1px, transparent 0);
     background-size: 24px 24px;
   }
   #canvas { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
@@ -73,7 +74,7 @@
   #edges path.edge:hover { stroke: var(--accent); }
 
   .node {
-    position: absolute; min-width: 180px; max-width: 240px;
+    position: absolute; width: 210px;
     background: var(--panel); border: 2px solid var(--border);
     border-radius: 10px; padding: 12px 14px 12px 14px; font-size: 12.5px;
     box-shadow: var(--shadow-sm);
@@ -81,7 +82,7 @@
   }
   .node:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
   .node.selected { box-shadow: 0 0 0 3px rgba(99,102,241,0.3), var(--shadow-md); border-color: var(--accent) !important; }
-  .node .label { font-weight: 600; line-height: 1.35; color: var(--text); }
+  .node .label { font-weight: 600; line-height: 1.35; color: var(--text); font-size: 12.5px; }
   .node .sub { color: var(--muted); font-size: 11px; margin-top: 4px; line-height: 1.35; }
   .node .type-tag {
     position: absolute; top: -11px; left: 10px;
@@ -89,10 +90,7 @@
     border-radius: 4px; color: #fff; letter-spacing: 0.06em; font-weight: 700;
     box-shadow: var(--shadow-sm);
   }
-  .node .stripe {
-    position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
-    border-radius: 8px 0 0 8px;
-  }
+  .node .stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 8px 0 0 8px; }
   .port {
     position: absolute; width: 14px; height: 14px;
     background: #fff; border: 2px solid #94a3b8; border-radius: 50%;
@@ -104,35 +102,56 @@
   .port.out { right: -8px; top: 50%; transform: translateY(-50%); }
   .port.out:hover { transform: translateY(-50%) scale(1.3); }
 
+  /* Node type styling */
   .t-entry      { border-color: var(--entry); }
   .t-entry .type-tag      { background: var(--entry); }
   .t-entry .stripe        { background: var(--entry); }
-  .t-question   { border-color: var(--question); }
+
+  .t-question   { border-color: var(--question); background: linear-gradient(180deg, #eff6ff 0%, #fff 60%); }
   .t-question .type-tag   { background: var(--question); }
   .t-question .stripe     { background: var(--question); }
+  .t-question .qtype { display: inline-block; font-size: 9.5px; padding: 2px 6px; border-radius: 3px; background: #dbeafe; color: #1e40af; font-weight: 600; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* Answer cards — small chip, gray border, matches drawio look */
+  .t-answer { width: 170px; padding: 10px 12px; border-color: #cbd5e1; background: #fff; border-radius: 8px; }
+  .t-answer .type-tag { background: var(--answer); }
+  .t-answer .stripe { background: var(--answer); }
+  .t-answer .label { font-weight: 500; font-size: 12px; }
+
   .t-action     { border-color: var(--action); }
   .t-action .type-tag     { background: var(--action); }
   .t-action .stripe       { background: var(--action); }
+
   .t-wait       { border-color: var(--wait); }
   .t-wait .type-tag       { background: var(--wait); }
   .t-wait .stripe         { background: var(--wait); }
-  .t-terminal   { border-color: var(--terminal); border-radius: 999px; padding-left: 18px; padding-right: 18px; }
+
+  .t-terminal   { border-color: var(--terminal); border-radius: 999px; padding-left: 20px; padding-right: 20px; width: 180px; background: linear-gradient(180deg, #f8fafc 0%, #fff 100%); }
   .t-terminal .type-tag   { background: var(--terminal); }
   .t-terminal .stripe     { display: none; }
+
   .t-jump       { border-color: var(--jump); background: linear-gradient(135deg, #fdf2f8 0%, #fff 100%); }
   .t-jump .type-tag       { background: var(--jump); }
   .t-jump .stripe         { background: var(--jump); }
+
   .t-fallback   { border-color: var(--fallback); border-style: dashed; background: #fef2f2; }
   .t-fallback .type-tag   { background: var(--fallback); }
   .t-fallback .stripe     { background: var(--fallback); }
 
-  .dot.t-entry{background:var(--entry)}
-  .dot.t-question{background:var(--question)}
-  .dot.t-action{background:var(--action)}
-  .dot.t-wait{background:var(--wait)}
-  .dot.t-terminal{background:var(--terminal)}
-  .dot.t-jump{background:var(--jump)}
-  .dot.t-fallback{background:var(--fallback)}
+  .t-rootcause  { border-color: var(--rootcause); }
+  .t-rootcause .type-tag  { background: var(--rootcause); }
+  .t-rootcause .stripe    { background: var(--rootcause); }
+
+  /* Palette icon backgrounds */
+  .icon.t-entry{background:var(--entry)}
+  .icon.t-question{background:var(--question)}
+  .icon.t-answer{background:var(--answer)}
+  .icon.t-action{background:var(--action)}
+  .icon.t-wait{background:var(--wait)}
+  .icon.t-terminal{background:var(--terminal)}
+  .icon.t-jump{background:var(--jump)}
+  .icon.t-fallback{background:var(--fallback)}
+  .icon.t-rootcause{background:var(--rootcause)}
 
   /* ============ INSPECTOR ============ */
   #inspector { background: var(--panel); border-left: 1px solid var(--border); padding: 20px; overflow-y: auto; font-size: 13px; }
@@ -142,16 +161,20 @@
   #inspector label { display: block; font-size: 10px; text-transform: uppercase; color: var(--muted); margin: 14px 0 5px; letter-spacing: 0.08em; font-weight: 700; }
   #inspector input, #inspector textarea, #inspector select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; background: var(--panel-soft); transition: all 0.15s; }
   #inspector input:focus, #inspector textarea:focus, #inspector select:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-  #inspector textarea { min-height: 70px; resize: vertical; }
-  #inspector .options { display: flex; flex-direction: column; gap: 6px; }
-  #inspector .options .row { display: flex; gap: 6px; }
-  #inspector .options input { flex: 1; }
-  #inspector .options button { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 6px; padding: 0 10px; cursor: pointer; font-size: 14px; line-height: 1; }
-  #inspector .options button:hover { background: #fee2e2; }
-  #inspector .add-btn { background: var(--panel-soft); border: 1px dashed #94a3b8; padding: 8px; width: 100%; border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 500; transition: all 0.15s; }
+  #inspector textarea { min-height: 60px; resize: vertical; }
+  #inspector .route-table { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  #inspector .route-row { display: grid; grid-template-columns: 1fr 1fr 28px; gap: 4px; padding: 6px; border-bottom: 1px solid var(--border); background: #fff; align-items: center; }
+  #inspector .route-row:last-child { border-bottom: none; }
+  #inspector .route-row input, #inspector .route-row select { padding: 6px 8px; font-size: 12px; background: var(--panel-soft); border-color: var(--border); }
+  #inspector .route-row button { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 5px; cursor: pointer; font-size: 14px; padding: 4px 0; line-height: 1; }
+  #inspector .route-row button:hover { background: #fee2e2; }
+  #inspector .add-btn { background: var(--panel-soft); border: 1px dashed #94a3b8; padding: 7px; width: 100%; border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 500; transition: all 0.15s; }
   #inspector .add-btn:hover { border-color: var(--accent); color: var(--accent); background: #fff; }
+  #inspector .gen-btn { width: 100%; padding: 9px; background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1px solid #93c5fd; color: #1e40af; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; margin-top: 10px; transition: all 0.15s; }
+  #inspector .gen-btn:hover { background: linear-gradient(135deg, #dbeafe, #bfdbfe); transform: translateY(-1px); }
   #inspector .danger { background: #fff; border: 1px solid #fecaca; color: var(--fallback); padding: 9px 14px; border-radius: 6px; cursor: pointer; margin-top: 24px; width: 100%; font-weight: 600; font-size: 12px; transition: all 0.15s; }
   #inspector .danger:hover { background: var(--fallback); color: #fff; }
+  #inspector .help { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
 
   /* ============ ZOOM / LEGEND ============ */
   .zoom-ctl { position: absolute; bottom: 16px; right: 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; display: flex; font-size: 12px; box-shadow: var(--shadow-md); overflow: hidden; }
@@ -160,7 +183,7 @@
   .zoom-ctl span { padding: 8px 10px; border-left: 1px solid var(--border); border-right: 1px solid var(--border); min-width: 56px; text-align: center; font-weight: 600; color: var(--muted); }
   .empty { color: var(--muted); font-size: 12.5px; padding: 32px 12px; text-align: center; line-height: 1.6; }
   .empty .icon { font-size: 32px; opacity: 0.4; margin-bottom: 12px; }
-  .legend { position: absolute; bottom: 16px; left: 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 11.5px; color: var(--muted); box-shadow: var(--shadow-sm); max-width: 380px; line-height: 1.6; }
+  .legend { position: absolute; bottom: 16px; left: 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 11.5px; color: var(--muted); box-shadow: var(--shadow-sm); max-width: 400px; line-height: 1.6; }
   .legend b { color: var(--text); }
   .legend kbd { background: var(--panel-soft); border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; font-size: 10px; font-family: ui-monospace, monospace; color: var(--text); }
 
@@ -175,8 +198,8 @@
   .modal .choice p { margin: 0; font-size: 12.5px; }
   .modal .choice .emoji { font-size: 18px; }
   .modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
-  .modal input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
-  .modal input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .modal input, .modal select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+  .modal input:focus, .modal select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
   .modal button { font-size: 13px; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; font-weight: 500; }
   .modal button.primary { background: var(--accent-grad); color: #fff; border: none; font-weight: 600; }
   .modal button.primary:hover { box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
@@ -200,21 +223,27 @@
     <span class="spacer"></span>
     <button id="new-btn" class="ghost">＋ New flow</button>
     <button id="mode-btn">▶ Simulate</button>
-    <button class="primary" id="save-btn">⬇ Export</button>
+    <button class="primary" id="save-btn">⬇ Export JSON</button>
   </div>
 
   <div id="palette">
     <h3>Start / End</h3>
-    <div class="palette-item" draggable="true" data-type="entry"><span class="dot t-entry"></span>Entry</div>
-    <div class="palette-item" draggable="true" data-type="terminal"><span class="dot t-terminal"></span>Terminal (Stop)</div>
-    <div class="palette-item" draggable="true" data-type="jump"><span class="dot t-jump"></span>Jump to Flow</div>
+    <div class="palette-item" draggable="true" data-type="entry"><span class="icon t-entry">▶</span>Entry</div>
+    <div class="palette-item" draggable="true" data-type="terminal"><span class="icon t-terminal">■</span>Terminal (Stop)</div>
+    <div class="palette-item" draggable="true" data-type="jump"><span class="icon t-jump">↗</span>Jump to Flow</div>
+
     <h3>Decision</h3>
-    <div class="palette-item" draggable="true" data-type="question"><span class="dot t-question"></span>Question</div>
+    <div class="palette-item" draggable="true" data-type="question"><span class="icon t-question">?</span>Question</div>
+    <div class="palette-item" draggable="true" data-type="answer"><span class="icon t-answer">A</span>Answer card</div>
+    <div class="palette-item" draggable="true" data-type="rootcause"><span class="icon t-rootcause">⊕</span>Root-cause selector</div>
+
     <h3>Action</h3>
-    <div class="palette-item" draggable="true" data-type="action"><span class="dot t-action"></span>Action / Task</div>
+    <div class="palette-item" draggable="true" data-type="action"><span class="icon t-action">✓</span>Action / Task</div>
+
     <h3>Control</h3>
-    <div class="palette-item" draggable="true" data-type="wait"><span class="dot t-wait"></span>Wait</div>
-    <div class="palette-item" draggable="true" data-type="fallback"><span class="dot t-fallback"></span>Fallback</div>
+    <div class="palette-item" draggable="true" data-type="wait"><span class="icon t-wait">⏱</span>Wait</div>
+    <div class="palette-item" draggable="true" data-type="fallback"><span class="icon t-fallback">!</span>Fallback</div>
+
     <div class="palette-actions">
       <button id="auto-layout">⇆ Auto-layout</button>
       <button id="clear-flow" class="danger">🗑 Clear flow</button>
@@ -225,15 +254,14 @@
     <svg id="edges"></svg>
     <div id="canvas"></div>
     <div class="legend">
-      <b>Tip:</b> Drag from a node's <b>right port</b> → another node's <b>left port</b> to connect.
-      Drop palette items onto canvas. <kbd>Scroll</kbd> to zoom, <kbd>drag empty space</kbd> to pan, <kbd>Delete</kbd> to remove selected.
+      <b>Tip:</b> Drag <b>right port → left port</b> to connect. For <b>Question</b> nodes, use the inspector's routing table — click <b>Generate answer cards</b> to auto-create branches. <kbd>Scroll</kbd> zoom · <kbd>Drag empty</kbd> pan · <kbd>Del</kbd> remove.
     </div>
     <div class="zoom-ctl">
       <button id="zoom-out">−</button><span id="zoom-lbl">100%</span><button id="zoom-in">+</button><button id="zoom-fit">Fit</button>
     </div>
   </div>
 
-  <div id="inspector"><div class="empty"><div class="icon">🎨</div>Select a node or edge to edit.<br/><br/>Or drag a node type from the palette onto the canvas.</div></div>
+  <div id="inspector"><div class="empty"><div class="icon">🎨</div>Select a node or connection to edit.<br/><br/>Or drag a node type from the palette onto the canvas.</div></div>
 </div>
 
 <!-- Welcome modal -->
@@ -243,7 +271,7 @@
     <p>Design diagnostic flows on a canvas. Pick how you want to start:</p>
     <div class="choice" data-action="dummy">
       <h3><span class="emoji">🧪</span> Load demo: "Low DO in Aeration Tank"</h3>
-      <p>A fully-built diagnostic tree with 6 flows. Flow 3 mirrors the original drawio diagram.</p>
+      <p>A diagnostic tree with 6 flows. Flow 3 mirrors the drawio with answer-cards.</p>
     </div>
     <div class="choice" data-action="scratch">
       <h3><span class="emoji">✨</span> Start from scratch</h3>
@@ -260,7 +288,7 @@
     <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin-bottom:6px">Flow name</label>
     <input id="new-flow-name" placeholder="e.g. Sensor calibration check" />
     <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin:14px 0 6px">Add to</label>
-    <select id="new-flow-tree" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"></select>
+    <select id="new-flow-tree"></select>
     <div class="actions">
       <button id="new-cancel">Cancel</button>
       <button class="primary" id="new-confirm">Create flow</button>
@@ -297,94 +325,127 @@ const data = {
   }]
 };
 
+// Question subtypes (mirrors reference prototype)
+const QTYPES = [
+  { id: 'single',     label: 'Single-choice' },
+  { id: 'yesno',      label: 'Yes / No' },
+  { id: 'multi',      label: 'Multi-select' },
+  { id: 'numeric',    label: 'Numeric input' },
+  { id: 'photo',      label: 'Photo upload' },
+  { id: 'freetext',   label: 'Free text' }
+];
+
 // =========================================================
-// Pre-built dummy flow — Flow 3 (faithful to drawio)
+// Clean demo flow — Flow 3, mirrors drawio answer-card pattern
 // =========================================================
 function buildDummyFlow3() {
   const f = data.trees[0].flows[2];
+  // Layout columns (x): 60, 320, 580, 840, 1100, 1360
+  // Layout rows (y): grouped per question's answers
   f.nodes = [
-    // Entry
-    { id: 'n_entry', type: 'entry', x: 40, y: 360, label: 'Low DO in Aeration tank', sub: 'Flow entry point' },
+    // === Column 0: entry ===
+    { id: 'entry',   type: 'entry',    x: 60,   y: 400, label: 'Low DO in Aeration tank', sub: 'Flow entry point' },
 
-    // Step 1: aeration even across the tank?
-    { id: 'n_q1', type: 'question', x: 290, y: 360,
+    // === Column 1: Question 1 ===
+    { id: 'q1',      type: 'question', x: 320,  y: 400,
       label: 'Step 1 — Is aeration even across the tank?',
-      options: ['Yes — bubbles normal on surface', 'Moderate — some bubbles', 'No — no bubbles', 'Skip to end'] },
-
-    // No bubbles branch — supervisor + image, then done
-    { id: 'n_call_sup', type: 'action', x: 580, y: 520, label: 'Call supervisor', sub: 'Diffusers appear choked' },
-    { id: 'n_img1',     type: 'action', x: 580, y: 620, label: 'Upload image', sub: 'Evidence of no bubbling' },
-    { id: 'n_done1',    type: 'terminal', x: 830, y: 570, label: 'Done' },
-
-    // Skip branch — RCA + supervisor message
-    { id: 'n_skip_rca', type: 'action', x: 580, y: 720, label: 'Upload image + RCA', sub: 'Root cause selector' },
-    { id: 'n_send_msg', type: 'action', x: 830, y: 720, label: 'Send message to supervisor', sub: 'Optional' },
-    { id: 'n_done2',    type: 'terminal', x: 1080, y: 720, label: 'Done' },
-
-    // Step 2: dead zones?
-    { id: 'n_q2', type: 'question', x: 580, y: 260,
-      label: 'Step 2 — Are dead zones created in the tank?',
+      qtype: 'single',
       options: [
-        'Sludge accumulation at bottom',
-        'Uneven DO readings across tank',
-        'Dark / black-colored water localized',
-        'Reduced treatment despite normal blower',
-        'Skip to end',
-        'Reassignment'
-      ] },
+        { id: 'q1a', text: 'Yes, bubbles seem normal on the surface',  route: 'q2' },
+        { id: 'q1b', text: 'Moderately, some bubbles on the surface',  route: 'q2' },
+        { id: 'q1c', text: 'No, there are no bubbles on the tank',     route: 'a_callsup' },
+        { id: 'q1d', text: 'Skip to the End',                           route: 'a_rca1' }
+      ]},
 
-    // Symptom → "Diffusers choked" (Yes paths)
-    { id: 'n_diff', type: 'action', x: 900, y: 100, label: 'Diffusers choked — cleaning needed', sub: 'Call supervisor to plan' },
-    { id: 'n_done3', type: 'terminal', x: 1180, y: 100, label: 'Stop — action planned' },
+    // === Column 2: answer cards for Q1 ===
+    { id: 'ans_q1a', type: 'answer', x: 580, y: 200, label: 'Yes, bubbles seem normal on the surface', linkedOption: 'q1a' },
+    { id: 'ans_q1b', type: 'answer', x: 580, y: 320, label: 'Moderately, some bubbles on the surface', linkedOption: 'q1b' },
+    { id: 'ans_q1c', type: 'answer', x: 580, y: 440, label: 'No, there are no bubbles on the tank',     linkedOption: 'q1c' },
+    { id: 'ans_q1d', type: 'answer', x: 580, y: 560, label: 'Skip to the End',                          linkedOption: 'q1d' },
 
-    // Symptom → "No" / Next flow (DO sensor failure)
-    { id: 'n_jump', type: 'jump', x: 900, y: 200, label: 'Jump to next diagnostic flow', target: 'f4' },
+    // === Column 3 (top): Question 2 ===
+    { id: 'q2',      type: 'question', x: 840, y: 260,
+      label: 'Step 2 — Are dead zones created in the tank?',
+      qtype: 'multi',
+      options: [
+        { id: 'q2a', text: 'Sludge accumulation at the bottom of certain areas',     route: 'a_diff' },
+        { id: 'q2b', text: 'Dark or black-colored wastewater in localized area',      route: 'a_diff' },
+        { id: 'q2c', text: 'Uneven dissolved oxygen (DO) readings across the tank',  route: 'jump_do' },
+        { id: 'q2d', text: 'Reduced treatment performance despite normal blower',    route: 'jump_do' },
+        { id: 'q2e', text: 'Skip to the End',                                          route: 'a_rca2' },
+        { id: 'q2f', text: 'Reassignment',                                             route: 'a_reassign' }
+      ]},
 
-    // Skip-to-end branch from step 2
-    { id: 'n_media1', type: 'action', x: 900, y: 320, label: 'Media upload + RCA', sub: 'Free-text root cause' },
+    // === Column 3 (bottom): Direct action for "No bubbles" path ===
+    { id: 'a_callsup', type: 'action', x: 840, y: 480, label: 'Call supervisor', sub: 'Diffusers appear choked' },
+    { id: 'a_rca1',    type: 'action', x: 840, y: 600, label: 'Upload image + RCA', sub: 'Root cause selector' },
 
-    // Reassignment branch
-    { id: 'n_reassign', type: 'action', x: 900, y: 420, label: 'Reassign to another operator' },
-    { id: 'n_media2',   type: 'action', x: 1180, y: 420, label: 'Media upload' },
+    // === Column 4: Q2 answer cards (compact, 6 cards) ===
+    { id: 'ans_q2a', type: 'answer', x: 1100, y: 60,  label: 'Sludge accumulation at the bottom',    linkedOption: 'q2a' },
+    { id: 'ans_q2b', type: 'answer', x: 1100, y: 150, label: 'Dark / black-colored water localized', linkedOption: 'q2b' },
+    { id: 'ans_q2c', type: 'answer', x: 1100, y: 240, label: 'Uneven DO readings across tank',        linkedOption: 'q2c' },
+    { id: 'ans_q2d', type: 'answer', x: 1100, y: 330, label: 'Reduced treatment performance',         linkedOption: 'q2d' },
+    { id: 'ans_q2e', type: 'answer', x: 1100, y: 420, label: 'Skip to the End',                       linkedOption: 'q2e' },
+    { id: 'ans_q2f', type: 'answer', x: 1100, y: 510, label: 'Reassignment',                          linkedOption: 'q2f' },
 
-    // Fallback
-    { id: 'n_fallback', type: 'fallback', x: 580, y: 100, label: 'No symptom matches', sub: 'Catch-all branch' }
+    // === Column 4 (lower): downstream actions ===
+    { id: 'a_imgcs',   type: 'action', x: 1100, y: 600, label: 'Upload image', sub: 'Evidence of no bubbling' },
+    { id: 'a_sendmsg', type: 'action', x: 1100, y: 690, label: 'Send message to supervisor', sub: 'Optional' },
+
+    // === Column 5: final actions / terminals / jump ===
+    { id: 'a_diff',     type: 'action', x: 1360, y: 100, label: 'Diffusers choked — cleaning needed', sub: 'Call supervisor to plan' },
+    { id: 'jump_do',    type: 'jump',   x: 1360, y: 270, label: 'Next flow: DO sensor failure', target: 'f4' },
+    { id: 'a_rca2',     type: 'action', x: 1360, y: 420, label: 'Media upload + RCA', sub: 'Free-text root cause' },
+    { id: 'a_reassign', type: 'action', x: 1360, y: 510, label: 'Reassign to another operator' },
+    { id: 'a_media2',   type: 'action', x: 1360, y: 600, label: 'Media upload' },
+    { id: 'term1',      type: 'terminal', x: 1360, y: 690, label: 'Done' }
   ];
 
   f.edges = [
-    { id: 'e_1', from: 'n_entry', to: 'n_q1' },
+    // entry → Q1
+    { id: 'e1', from: 'entry', to: 'q1' },
 
-    // Step 1 branches
-    { id: 'e_2', from: 'n_q1', to: 'n_q2', cond: 'Yes / Moderate' },
-    { id: 'e_3', from: 'n_q1', to: 'n_call_sup', cond: 'No bubbles' },
-    { id: 'e_4', from: 'n_q1', to: 'n_skip_rca', cond: 'Skip to end' },
+    // Q1 → answer cards
+    { id: 'e2', from: 'q1', to: 'ans_q1a' },
+    { id: 'e3', from: 'q1', to: 'ans_q1b' },
+    { id: 'e4', from: 'q1', to: 'ans_q1c' },
+    { id: 'e5', from: 'q1', to: 'ans_q1d' },
+
+    // Q1 answer cards → routes
+    { id: 'e6', from: 'ans_q1a', to: 'q2' },
+    { id: 'e7', from: 'ans_q1b', to: 'q2' },
+    { id: 'e8', from: 'ans_q1c', to: 'a_callsup' },
+    { id: 'e9', from: 'ans_q1d', to: 'a_rca1' },
 
     // No-bubble path
-    { id: 'e_5', from: 'n_call_sup', to: 'n_img1' },
-    { id: 'e_6', from: 'n_img1', to: 'n_done1' },
+    { id: 'e10', from: 'a_callsup', to: 'a_imgcs' },
+    { id: 'e11', from: 'a_imgcs', to: 'term1' },
 
     // Skip path
-    { id: 'e_7', from: 'n_skip_rca', to: 'n_send_msg' },
-    { id: 'e_8', from: 'n_send_msg', to: 'n_done2' },
+    { id: 'e12', from: 'a_rca1', to: 'a_sendmsg' },
+    { id: 'e13', from: 'a_sendmsg', to: 'term1' },
 
-    // Step 2 — yes paths → diffusers choked → done
-    { id: 'e_9',  from: 'n_q2', to: 'n_diff',     cond: 'Sludge / dark water (Yes)' },
-    { id: 'e_10', from: 'n_diff', to: 'n_done3' },
+    // Q2 → answer cards
+    { id: 'e14', from: 'q2', to: 'ans_q2a' },
+    { id: 'e15', from: 'q2', to: 'ans_q2b' },
+    { id: 'e16', from: 'q2', to: 'ans_q2c' },
+    { id: 'e17', from: 'q2', to: 'ans_q2d' },
+    { id: 'e18', from: 'q2', to: 'ans_q2e' },
+    { id: 'e19', from: 'q2', to: 'ans_q2f' },
 
-    // Step 2 — no paths → jump to DO sensor flow
-    { id: 'e_11', from: 'n_q2', to: 'n_jump', cond: 'No → next flow' },
+    // Q2 answer cards → routes
+    { id: 'e20', from: 'ans_q2a', to: 'a_diff' },
+    { id: 'e21', from: 'ans_q2b', to: 'a_diff' },
+    { id: 'e22', from: 'ans_q2c', to: 'jump_do' },
+    { id: 'e23', from: 'ans_q2d', to: 'jump_do' },
+    { id: 'e24', from: 'ans_q2e', to: 'a_rca2' },
+    { id: 'e25', from: 'ans_q2f', to: 'a_reassign' },
 
-    // Step 2 — skip
-    { id: 'e_12', from: 'n_q2', to: 'n_media1',  cond: 'Skip to end' },
-    { id: 'e_13', from: 'n_media1', to: 'n_jump' },
-
-    // Step 2 — reassignment
-    { id: 'e_14', from: 'n_q2', to: 'n_reassign', cond: 'Reassignment' },
-    { id: 'e_15', from: 'n_reassign', to: 'n_media2' },
-    { id: 'e_16', from: 'n_media2', to: 'n_jump' },
-
-    // Fallback
-    { id: 'e_17', from: 'n_q2', to: 'n_fallback', cond: 'No match' }
+    // Tail
+    { id: 'e26', from: 'a_diff', to: 'jump_do' },
+    { id: 'e27', from: 'a_rca2', to: 'jump_do' },
+    { id: 'e28', from: 'a_reassign', to: 'a_media2' },
+    { id: 'e29', from: 'a_media2', to: 'jump_do' }
   ];
 }
 
@@ -397,14 +458,9 @@ let selection = null;
 let pan = { x: 0, y: 0 }, zoom = 1;
 let nextId = 1000;
 const uid = (p) => `${p}${nextId++}`;
-const STORAGE_KEY = 'flowconfig-v1';
+const STORAGE_KEY = 'flowconfig-v2';
 
-// =========================================================
-// Persistence (localStorage)
-// =========================================================
-function persist() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (_) {}
-}
+function persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (_) {} }
 function loadPersisted() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -432,8 +488,8 @@ function refreshTopbar() {
   treeSel.innerHTML = data.trees.map(t => `<option value="${t.id}" ${t === curTree ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('');
   flowSel.innerHTML = curTree.flows.map(f => `<option value="${f.id}" ${f === curFlow ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('');
 }
-treeSel.onchange = e => { curTree = data.trees.find(t => t.id === e.target.value); curFlow = curTree.flows[0]; selection = null; render(); };
-flowSel.onchange = e => { curFlow = curTree.flows.find(f => f.id === e.target.value); selection = null; render(); };
+treeSel.onchange = e => { curTree = data.trees.find(t => t.id === e.target.value); curFlow = curTree.flows[0]; selection = null; render(); fitToView(); };
+flowSel.onchange = e => { curFlow = curTree.flows.find(f => f.id === e.target.value); selection = null; render(); fitToView(); };
 
 // =========================================================
 // Render
@@ -459,32 +515,31 @@ function renderNode(n) {
   el.style.top = n.y + 'px';
   el.dataset.id = n.id;
   let subText = n.sub || '';
-  if (n.type === 'question' && n.options) subText = n.options.length + ' answer option' + (n.options.length === 1 ? '' : 's');
   if (n.type === 'jump' && n.target) {
     const tgt = curTree.flows.find(f => f.id === n.target);
     subText = '→ ' + (tgt ? tgt.name : '(unset)');
   }
   if (n.type === 'wait' && n.duration) subText = '⏱ ' + n.duration;
+  const qtypeChip = (n.type === 'question' && n.qtype) ? `<div class="qtype">${qtypeLabel(n.qtype)} · ${(n.options || []).length} options</div>` : '';
   el.innerHTML = `
     <div class="stripe"></div>
     <div class="type-tag">${n.type}</div>
     <div class="label">${escapeHtml(n.label || '(untitled)')}</div>
     ${subText ? `<div class="sub">${escapeHtml(subText)}</div>` : ''}
+    ${qtypeChip}
     ${n.type !== 'entry' ? '<div class="port in" data-port="in"></div>' : ''}
     ${n.type !== 'terminal' && n.type !== 'jump' ? '<div class="port out" data-port="out"></div>' : ''}
   `;
   attachNodeHandlers(el, n);
   return el;
 }
+function qtypeLabel(id) { return (QTYPES.find(q => q.id === id) || { label: id }).label; }
+
 function renderEdges() {
   edgesSvg.innerHTML = `
     <defs>
-      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
-      </marker>
-      <marker id="arrow-sel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/>
-      </marker>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker>
+      <marker id="arrow-sel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/></marker>
     </defs>`;
   for (const e of curFlow.edges) {
     const a = curFlow.nodes.find(n => n.id === e.from);
@@ -495,12 +550,12 @@ function renderEdges() {
     if (!aEl || !bEl) continue;
     const ax = a.x + aEl.offsetWidth, ay = a.y + aEl.offsetHeight / 2;
     const bx = b.x, by = b.y + bEl.offsetHeight / 2;
-    const dx = Math.max(60, (bx - ax) * 0.5);
+    const dx = Math.max(50, Math.abs(bx - ax) * 0.4);
     const isSel = selection && selection.kind === 'edge' && selection.id === e.id;
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', `M ${ax} ${ay} C ${ax + dx} ${ay}, ${bx - dx} ${by}, ${bx} ${by}`);
     path.setAttribute('stroke', isSel ? '#6366f1' : '#94a3b8');
-    path.setAttribute('stroke-width', isSel ? '2.5' : '2');
+    path.setAttribute('stroke-width', isSel ? '2.5' : '1.8');
     path.setAttribute('fill', 'none');
     path.setAttribute('marker-end', isSel ? 'url(#arrow-sel)' : 'url(#arrow)');
     path.classList.add('edge');
@@ -523,7 +578,7 @@ function renderEdges() {
       edgesSvg.appendChild(t);
     }
   }
-  const w = Math.max(2400, ...curFlow.nodes.map(n => n.x + 400));
+  const w = Math.max(2800, ...curFlow.nodes.map(n => n.x + 400));
   const h = Math.max(1600, ...curFlow.nodes.map(n => n.y + 300));
   edgesSvg.setAttribute('width', w); edgesSvg.setAttribute('height', h);
 }
@@ -531,24 +586,62 @@ function renderEdges() {
 // =========================================================
 // Inspector
 // =========================================================
-const TYPE_COLORS = { entry: '#10b981', question: '#3b82f6', action: '#f59e0b', wait: '#8b5cf6', terminal: '#64748b', jump: '#ec4899', fallback: '#ef4444' };
+const TYPE_COLORS = { entry: '#10b981', question: '#3b82f6', answer: '#0ea5e9', action: '#f59e0b', wait: '#8b5cf6', terminal: '#64748b', jump: '#ec4899', fallback: '#ef4444', rootcause: '#14b8a6' };
+
+function destinationOptions(excludeId) {
+  // Returns HTML <option> list of nodes in current flow + special targets
+  let html = `<option value="">— select destination —</option>`;
+  html += `<optgroup label="In this flow">`;
+  curFlow.nodes.filter(n => n.id !== excludeId).forEach(n => {
+    html += `<option value="node:${n.id}">${escapeHtml(typeLabel(n.type))} · ${escapeHtml(truncate(n.label, 40))}</option>`;
+  });
+  html += `</optgroup><optgroup label="Special">`;
+  html += `<option value="end">→ End diagnosis</option>`;
+  curTree.flows.filter(f => f !== curFlow).forEach(f => {
+    html += `<option value="flow:${f.id}">↗ Jump to flow: ${escapeHtml(f.name)}</option>`;
+  });
+  html += `</optgroup>`;
+  return html;
+}
+function typeLabel(t) { return ({ entry: 'Entry', question: 'Question', answer: 'Answer', action: 'Action', wait: 'Wait', terminal: 'Terminal', jump: 'Jump', fallback: 'Fallback', rootcause: 'Root-cause' })[t] || t; }
+function truncate(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; }
+
 function renderInspector() {
-  if (!selection) { inspector.innerHTML = '<div class="empty"><div class="icon">🎨</div>Select a node or edge to edit.<br/><br/>Or drag a node type from the palette onto the canvas.</div>'; return; }
+  if (!selection) { inspector.innerHTML = '<div class="empty"><div class="icon">🎨</div>Select a node or connection to edit.<br/><br/>Or drag a node type from the palette onto the canvas.</div>'; return; }
   if (selection.kind === 'node') {
     const n = curFlow.nodes.find(x => x.id === selection.id);
     if (!n) { selection = null; return renderInspector(); }
-    let html = `<h2><span class="pill" style="background:${TYPE_COLORS[n.type]}">${n.type}</span></h2><div class="meta">${n.id}</div>`;
+    let html = `<h2><span class="pill" style="background:${TYPE_COLORS[n.type]}">${typeLabel(n.type)}</span></h2><div class="meta">${n.id}</div>`;
     html += `<label>Label</label><input id="i-label" value="${escapeHtml(n.label || '')}">`;
-    if (['action', 'entry', 'terminal', 'wait', 'fallback'].includes(n.type)) {
+
+    if (['action', 'entry', 'terminal', 'wait', 'fallback', 'answer', 'rootcause'].includes(n.type)) {
       html += `<label>Description</label><textarea id="i-sub" placeholder="Optional notes…">${escapeHtml(n.sub || '')}</textarea>`;
     }
-    if (n.type === 'question') {
-      html += `<label>Answer options</label><div class="options" id="i-options">`;
-      (n.options || []).forEach((opt, i) => {
-        html += `<div class="row"><input data-i="${i}" value="${escapeHtml(opt)}"><button data-del="${i}">×</button></div>`;
+
+    if (n.type === 'question' || n.type === 'rootcause') {
+      // Question-type selector
+      if (n.type === 'question') {
+        html += `<label>Question type</label><select id="i-qtype">`;
+        QTYPES.forEach(q => { html += `<option value="${q.id}" ${n.qtype === q.id ? 'selected' : ''}>${q.label}</option>`; });
+        html += `</select>`;
+      }
+      // Routing table
+      html += `<label>Options &amp; routes</label><div class="route-table" id="i-options">`;
+      n.options = n.options || [];
+      n.options.forEach((opt, i) => {
+        const dest = opt.route ? findRouteValue(opt.route) : '';
+        html += `<div class="route-row">
+          <input data-i="${i}" data-field="text" value="${escapeHtml(opt.text || '')}" placeholder="Option text">
+          <select data-i="${i}" data-field="route">${destinationOptions(n.id).replace(`value="${dest}"`, `value="${dest}" selected`)}</select>
+          <button data-del="${i}" title="Remove">×</button>
+        </div>`;
       });
-      html += `</div><button class="add-btn" id="i-add-opt">+ Add option</button>`;
+      html += `</div>`;
+      html += `<button class="add-btn" id="i-add-opt">+ Add option</button>`;
+      html += `<button class="gen-btn" id="i-gen-cards">⚡ Generate / refresh answer cards</button>`;
+      html += `<div class="help">Creates an Answer-card node for each option and routes it to the chosen destination. Existing cards are preserved.</div>`;
     }
+
     if (n.type === 'jump') {
       html += `<label>Target flow (same tree)</label><select id="i-target">
         <option value="">— select target —</option>
@@ -558,17 +651,34 @@ function renderInspector() {
     if (n.type === 'wait') {
       html += `<label>Duration</label><input id="i-dur" value="${escapeHtml(n.duration || '')}" placeholder="e.g. 1 hour, 30 min">`;
     }
+    if (n.type === 'answer' && n.linkedOption) {
+      html += `<div class="help" style="margin-top:14px">🔗 Linked to question option <code style="background:var(--panel-soft);padding:1px 4px;border-radius:3px">${n.linkedOption}</code>. Editing the question regenerates this card.</div>`;
+    }
+
     html += `<button class="danger" id="i-delete">🗑 Delete node</button>`;
     inspector.innerHTML = html;
 
     document.getElementById('i-label').oninput = e => { n.label = e.target.value; render(); };
     const sub = document.getElementById('i-sub'); if (sub) sub.oninput = e => { n.sub = e.target.value; render(); };
+    const qt = document.getElementById('i-qtype'); if (qt) qt.onchange = e => { n.qtype = e.target.value; render(); };
     const tgt = document.getElementById('i-target'); if (tgt) tgt.onchange = e => { n.target = e.target.value; render(); };
     const dur = document.getElementById('i-dur'); if (dur) dur.oninput = e => { n.duration = e.target.value; render(); };
-    if (n.type === 'question') {
-      document.querySelectorAll('#i-options input').forEach(inp => { inp.oninput = e => { n.options[+e.target.dataset.i] = e.target.value; persist(); }; });
-      document.querySelectorAll('#i-options button').forEach(btn => { btn.onclick = e => { n.options.splice(+e.target.dataset.del, 1); render(); }; });
-      document.getElementById('i-add-opt').onclick = () => { n.options = n.options || []; n.options.push('New option'); render(); };
+
+    if (n.type === 'question' || n.type === 'rootcause') {
+      document.querySelectorAll('#i-options input').forEach(inp => {
+        inp.oninput = e => { n.options[+e.target.dataset.i].text = e.target.value; persist(); };
+      });
+      document.querySelectorAll('#i-options select').forEach(sel => {
+        sel.onchange = e => { n.options[+e.target.dataset.i].route = parseRouteValue(e.target.value); persist(); };
+      });
+      document.querySelectorAll('#i-options button[data-del]').forEach(btn => {
+        btn.onclick = e => { n.options.splice(+e.target.dataset.del, 1); render(); };
+      });
+      document.getElementById('i-add-opt').onclick = () => {
+        n.options.push({ id: uid('opt_'), text: 'New option', route: '' });
+        render();
+      };
+      document.getElementById('i-gen-cards').onclick = () => generateAnswerCards(n);
     }
     document.getElementById('i-delete').onclick = () => deleteNode(n.id);
   } else if (selection.kind === 'edge') {
@@ -578,7 +688,7 @@ function renderInspector() {
     inspector.innerHTML = `
       <h2>Connection</h2>
       <div class="meta">${escapeHtml(a?.label || '?')} → ${escapeHtml(b?.label || '?')}</div>
-      <label>Condition</label>
+      <label>Condition (optional label)</label>
       <input id="i-cond" value="${escapeHtml(e.cond || '')}" placeholder="e.g. answer = Yes, DO < 2 mg/L">
       <button class="danger" id="i-delete">🗑 Delete connection</button>
     `;
@@ -586,6 +696,68 @@ function renderInspector() {
     document.getElementById('i-delete').onclick = () => { curFlow.edges = curFlow.edges.filter(x => x.id !== e.id); selection = null; render(); };
   }
 }
+
+function findRouteValue(route) {
+  // route can be: "node:<id>", "flow:<id>", "end", or an old plain node id
+  if (!route) return '';
+  if (route.startsWith('node:') || route.startsWith('flow:') || route === 'end') return route;
+  if (curFlow.nodes.find(n => n.id === route)) return 'node:' + route;
+  return '';
+}
+function parseRouteValue(v) { return v || ''; }
+
+// =========================================================
+// Generate / refresh answer cards for a question
+// =========================================================
+function generateAnswerCards(qNode) {
+  if (!qNode.options) return;
+  const baseX = qNode.x + 260;
+  let baseY = qNode.y - ((qNode.options.length - 1) * 90) / 2;
+  if (baseY < 40) baseY = 40;
+
+  qNode.options.forEach((opt, i) => {
+    let card = curFlow.nodes.find(n => n.type === 'answer' && n.linkedOption === opt.id);
+    if (!card) {
+      card = { id: uid('ans_'), type: 'answer', x: baseX, y: baseY + i * 90, label: opt.text, linkedOption: opt.id };
+      curFlow.nodes.push(card);
+    } else {
+      card.label = opt.text; // keep position
+    }
+    // Edge: question → answer card
+    if (!curFlow.edges.find(e => e.from === qNode.id && e.to === card.id)) {
+      curFlow.edges.push({ id: uid('e_'), from: qNode.id, to: card.id });
+    }
+    // Edge: answer card → routed destination
+    // First remove any old outgoing edges from this card
+    curFlow.edges = curFlow.edges.filter(e => e.from !== card.id);
+    if (opt.route) {
+      if (opt.route.startsWith('node:')) {
+        const targetId = opt.route.slice(5);
+        if (curFlow.nodes.find(n => n.id === targetId)) {
+          curFlow.edges.push({ id: uid('e_'), from: card.id, to: targetId });
+        }
+      } else if (opt.route.startsWith('flow:')) {
+        // Create or reuse a Jump node next to the card
+        const flowId = opt.route.slice(5);
+        let jump = curFlow.nodes.find(n => n.type === 'jump' && n.target === flowId);
+        if (!jump) {
+          jump = { id: uid('jmp_'), type: 'jump', x: card.x + 260, y: card.y, label: 'Next flow', target: flowId };
+          curFlow.nodes.push(jump);
+        }
+        curFlow.edges.push({ id: uid('e_'), from: card.id, to: jump.id });
+      } else if (opt.route === 'end') {
+        let term = curFlow.nodes.find(n => n.type === 'terminal' && n.id === 'auto_end');
+        if (!term) {
+          term = { id: 'auto_end', type: 'terminal', x: card.x + 260, y: card.y, label: 'End diagnosis' };
+          curFlow.nodes.push(term);
+        }
+        curFlow.edges.push({ id: uid('e_'), from: card.id, to: term.id });
+      }
+    }
+  });
+  render();
+}
+
 function deleteNode(id) {
   curFlow.nodes = curFlow.nodes.filter(x => x.id !== id);
   curFlow.edges = curFlow.edges.filter(e => e.from !== id && e.to !== id);
@@ -653,8 +825,8 @@ function attachNodeHandlers(el, n) {
 // Pan / zoom
 // =========================================================
 wrap.addEventListener('mousedown', ev => {
-  if (ev.target !== wrap && ev.target !== canvas && ev.target.tagName !== 'svg' && ev.target.tagName !== 'path') { return; }
   if (ev.target.tagName === 'path') return;
+  if (ev.target !== wrap && ev.target !== canvas && ev.target.tagName !== 'svg' && !ev.target.id) return;
   selection = null; render();
   const start = { x: ev.clientX, y: ev.clientY, px: pan.x, py: pan.y };
   const move = e => { pan.x = start.px + (e.clientX - start.x); pan.y = start.py + (e.clientY - start.y); applyTransform(); };
@@ -666,19 +838,19 @@ wrap.addEventListener('wheel', ev => {
   const r = wrap.getBoundingClientRect();
   const mx = ev.clientX - r.left, my = ev.clientY - r.top;
   const delta = ev.deltaY > 0 ? 0.9 : 1.1;
-  const nz = Math.max(0.25, Math.min(2, zoom * delta));
+  const nz = Math.max(0.2, Math.min(2, zoom * delta));
   pan.x = mx - (mx - pan.x) * (nz / zoom);
   pan.y = my - (my - pan.y) * (nz / zoom);
   zoom = nz; applyTransform();
 }, { passive: false });
 document.getElementById('zoom-in').onclick = () => { zoom = Math.min(2, zoom * 1.2); applyTransform(); };
-document.getElementById('zoom-out').onclick = () => { zoom = Math.max(0.25, zoom / 1.2); applyTransform(); };
+document.getElementById('zoom-out').onclick = () => { zoom = Math.max(0.2, zoom / 1.2); applyTransform(); };
 document.getElementById('zoom-fit').onclick = () => fitToView();
 function fitToView() {
   if (!curFlow.nodes.length) { pan = { x: 40, y: 40 }; zoom = 1; applyTransform(); return; }
   const xs = curFlow.nodes.map(n => n.x), ys = curFlow.nodes.map(n => n.y);
-  const minX = Math.min(...xs), maxX = Math.max(...xs.map((x, i) => x + 220));
-  const minY = Math.min(...ys), maxY = Math.max(...ys.map((y, i) => y + 120));
+  const minX = Math.min(...xs), maxX = Math.max(...xs.map(x => x + 220));
+  const minY = Math.min(...ys), maxY = Math.max(...ys.map(y => y + 120));
   const rect = wrap.getBoundingClientRect();
   const zx = (rect.width - 80) / (maxX - minX);
   const zy = (rect.height - 80) / (maxY - minY);
@@ -689,7 +861,7 @@ function fitToView() {
 }
 
 // =========================================================
-// Palette drag-and-drop
+// Palette
 // =========================================================
 document.querySelectorAll('.palette-item').forEach(item => {
   item.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', item.dataset.type));
@@ -703,39 +875,36 @@ wrap.addEventListener('drop', e => {
   const x = (e.clientX - r.left - pan.x) / zoom;
   const y = (e.clientY - r.top - pan.y) / zoom;
   const node = { id: uid('n_'), type, x: x - 90, y: y - 30, label: defaultLabel(type) };
-  if (type === 'question') node.options = ['Yes', 'No'];
+  if (type === 'question') { node.qtype = 'single'; node.options = [{ id: uid('opt_'), text: 'Yes', route: '' }, { id: uid('opt_'), text: 'No', route: '' }]; }
+  if (type === 'rootcause') { node.options = [{ id: uid('opt_'), text: 'Cause 1', route: '' }, { id: uid('opt_'), text: 'Cause 2', route: '' }, { id: uid('opt_'), text: 'Other (unmapped)', route: '' }]; }
   curFlow.nodes.push(node);
   selection = { kind: 'node', id: node.id };
   render();
 });
 function defaultLabel(t) {
-  return { entry: 'Flow entry', question: 'New question', action: 'New action', wait: 'Wait', terminal: 'Done', jump: 'Jump to flow', fallback: 'Fallback' }[t] || 'Node';
+  return ({ entry: 'Flow entry', question: 'New question', answer: 'Answer', action: 'New action', wait: 'Wait', terminal: 'End', jump: 'Jump to flow', fallback: 'Fallback', rootcause: 'Root-cause selector' })[t] || 'Node';
 }
 
 // =========================================================
 // Palette actions
 // =========================================================
 document.getElementById('auto-layout').onclick = () => {
-  // simple BFS layered layout
   const entries = curFlow.nodes.filter(n => n.type === 'entry');
   if (!entries.length && curFlow.nodes.length) entries.push(curFlow.nodes[0]);
-  const levels = {}; const visited = new Set();
-  const queue = entries.map(n => ({ id: n.id, lvl: 0 }));
+  const depth = {}; const queue = entries.map(n => ({ id: n.id, lvl: 0 }));
+  const visited = new Set();
   while (queue.length) {
     const { id, lvl } = queue.shift();
-    if (visited.has(id)) continue;
-    visited.add(id);
-    levels[lvl] = levels[lvl] || []; levels[lvl].push(id);
+    if (visited.has(id)) { depth[id] = Math.max(depth[id], lvl); continue; }
+    visited.add(id); depth[id] = lvl;
     curFlow.edges.filter(e => e.from === id).forEach(e => queue.push({ id: e.to, lvl: lvl + 1 }));
   }
-  // orphans
-  curFlow.nodes.forEach(n => { if (!visited.has(n.id)) { levels[0] = levels[0] || []; levels[0].push(n.id); } });
-  const COL_W = 280, ROW_H = 130;
-  Object.entries(levels).forEach(([lvl, ids]) => {
-    ids.forEach((id, i) => {
-      const n = curFlow.nodes.find(x => x.id === id);
-      n.x = 40 + lvl * COL_W; n.y = 60 + i * ROW_H;
-    });
+  curFlow.nodes.forEach(n => { if (!(n.id in depth)) depth[n.id] = 0; });
+  const byLevel = {};
+  curFlow.nodes.forEach(n => { (byLevel[depth[n.id]] = byLevel[depth[n.id]] || []).push(n); });
+  const COL_W = 280, ROW_H = 110;
+  Object.entries(byLevel).forEach(([lvl, nodes]) => {
+    nodes.forEach((n, i) => { n.x = 60 + (+lvl) * COL_W; n.y = 80 + i * ROW_H; });
   });
   render(); fitToView();
 };
@@ -753,9 +922,8 @@ document.getElementById('save-btn').onclick = () => {
   const a = document.createElement('a'); a.href = url; a.download = 'flows.json'; a.click();
   URL.revokeObjectURL(url);
 };
-document.getElementById('mode-btn').onclick = () => alert('Simulate mode will walk an operator through the flow — coming next.');
+document.getElementById('mode-btn').onclick = () => alert('Simulate mode coming soon — will walk through the flow as an operator would.');
 
-// New flow modal
 const newModal = document.getElementById('new-modal');
 document.getElementById('new-btn').onclick = () => {
   document.getElementById('new-flow-tree').innerHTML =
@@ -777,7 +945,7 @@ document.getElementById('new-confirm').onclick = () => {
   } else {
     targetTree = data.trees.find(t => t.id === treeId);
   }
-  const flow = { id: uid('flow_'), name, nodes: [{ id: uid('n_'), type: 'entry', x: 60, y: 80, label: name }], edges: [] };
+  const flow = { id: uid('flow_'), name, nodes: [{ id: uid('n_'), type: 'entry', x: 60, y: 100, label: name }], edges: [] };
   targetTree.flows.push(flow);
   curTree = targetTree; curFlow = flow; selection = null;
   newModal.style.display = 'none';
@@ -785,7 +953,7 @@ document.getElementById('new-confirm').onclick = () => {
 };
 
 // =========================================================
-// Welcome modal — first-run choice
+// Welcome modal
 // =========================================================
 function showWelcome() {
   const modal = document.getElementById('welcome-modal');
@@ -797,7 +965,6 @@ function showWelcome() {
         buildDummyFlow3();
         curFlow = data.trees[0].flows[2];
       } else {
-        // scratch: clean slate
         data.trees = [{ id: uid('tree_'), name: 'My first tree', flows: [{ id: uid('flow_'), name: 'My first flow', nodes: [{ id: uid('n_'), type: 'entry', x: 100, y: 100, label: 'Flow entry' }], edges: [] }] }];
         curTree = data.trees[0]; curFlow = curTree.flows[0];
       }
@@ -817,13 +984,13 @@ document.addEventListener('keydown', e => {
   }
 });
 
-function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 // =========================================================
 // Init
 // =========================================================
 (function init() {
-  pan = { x: 40, y: 40 }; zoom = 0.7;
+  pan = { x: 40, y: 40 }; zoom = 0.65;
   if (!loadPersisted()) {
     showWelcome();
     render();
