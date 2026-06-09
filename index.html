@@ -6,36 +6,34 @@
 <title>FlowConfig — Diagnostic Flow Designer</title>
 <style>
   :root {
-    --bg: #fafbfc;
+    --bg: #f3f4f6;
+    --canvas-bg: #f8fafc;
     --panel: #ffffff;
     --panel-soft: #f8fafc;
     --border: #e5e7eb;
     --border-2: #f1f5f9;
-    --text: #0f172a;
-    --muted: #64748b;
-    --muted-2: #94a3b8;
-    --accent: #1e3a8a;
+    --text: #111827;
+    --muted: #6b7280;
+    --muted-2: #9ca3af;
+    --header: #111827;
+    --accent: #10b981;
     --accent-2: #6366f1;
     --accent-soft: #eef2ff;
     --green: #10b981;
     --yellow: #f59e0b;
     --red: #ef4444;
-    --step-done: #10b981;
-    --step-active: #1e3a8a;
-    --step-future: #cbd5e1;
 
-    /* Node type colors (header pills) */
-    --c-trigger: #fef3c7; --c-trigger-fg: #92400e;
-    --c-question: #fef3c7; --c-question-fg: #92400e;
-    --c-answer: #d1fae5; --c-answer-fg: #047857;
-    --c-action: #dbeafe; --c-action-fg: #1e40af;
+    --c-trigger: #d1fae5; --c-trigger-fg: #065f46;
+    --c-question: #fed7aa; --c-question-fg: #9a3412;
+    --c-answer: #ddd6fe; --c-answer-fg: #5b21b6;
+    --c-action: #cffafe; --c-action-fg: #155e75;
     --c-waiting: #fef3c7; --c-waiting-fg: #92400e;
     --c-rootcause: #fce7f3; --c-rootcause-fg: #9d174d;
     --c-observation: #e0e7ff; --c-observation-fg: #3730a3;
     --c-sensor: #cffafe; --c-sensor-fg: #155e75;
-    --c-reassign: #ffedd5; --c-reassign-fg: #9a3412;
-    --c-jump: #fce7f3; --c-jump-fg: #9d174d;
-    --c-end: #f1f5f9; --c-end-fg: #475569;
+    --c-reassign: #fed7aa; --c-reassign-fg: #9a3412;
+    --c-jump: #fbcfe8; --c-jump-fg: #831843;
+    --c-end: #e5e7eb; --c-end-fg: #374151;
 
     --shadow-sm: 0 1px 2px rgba(15,23,42,0.04);
     --shadow-md: 0 4px 14px rgba(15,23,42,0.06);
@@ -44,96 +42,112 @@
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; font-family: -apple-system, "Inter", "Segoe UI", Roboto, sans-serif; color: var(--text); background: var(--bg); user-select: none; -webkit-font-smoothing: antialiased; overflow: hidden; }
 
-  #app { display: grid; grid-template-rows: 64px 60px 1fr; height: 100vh; }
+  #app { display: grid; grid-template-rows: 56px 1fr; height: 100vh; }
 
-  /* ======= STEPPER ======= */
-  #stepper { display: flex; align-items: center; justify-content: center; gap: 0; background: var(--panel); border-bottom: 1px solid var(--border-2); padding: 0 32px; }
-  .step { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 14px; font-weight: 500; }
-  .step .num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; background: var(--step-future); color: #fff; }
-  .step.done .num { background: var(--step-done); }
-  .step.done .lbl { color: var(--text); }
-  .step.active .num { background: var(--step-active); }
-  .step.active .lbl { color: var(--text); font-weight: 600; }
-  .step-line { width: 80px; height: 3px; background: var(--step-future); margin: 0 18px; border-radius: 2px; }
-  .step-line.done { background: var(--step-done); }
-  .step-line.half { background: linear-gradient(90deg, var(--step-done) 50%, var(--step-future) 50%); }
+  /* ============ HEADER (dark) ============ */
+  #header { background: var(--header); color: #fff; display: flex; align-items: center; padding: 0 18px; gap: 14px; }
+  #header .logo { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+  #header .logo .lg-ic { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #6366f1, #ec4899); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  #header .menu-btn { width: 32px; height: 32px; border-radius: 8px; background: transparent; border: none; color: #9ca3af; cursor: pointer; font-size: 16px; }
+  #header .menu-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  #header .crumb { color: #6b7280; font-size: 13px; padding: 0 6px; }
+  #header select { background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 7px 28px 7px 12px; font-size: 13px; appearance: none; cursor: pointer; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%239ca3af' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>"); background-repeat: no-repeat; background-position: right 10px center; }
+  #header select:hover { background-color: rgba(255,255,255,0.1); }
+  #header .stepper-mini { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 10px; background: rgba(255,255,255,0.06); border-radius: 999px; }
+  .step-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 500; color: #9ca3af; }
+  .step-chip.done { color: #d1fae5; }
+  .step-chip.active { background: var(--accent); color: #fff; font-weight: 600; }
+  .step-chip .n { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+  .step-chip.done .n { background: rgba(16,185,129,0.35); }
+  .step-chip.active .n { background: rgba(255,255,255,0.2); }
+  #header .spacer { flex: 1; }
+  #header .h-pill-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #e5e7eb; padding: 7px 14px; border-radius: 8px; font-size: 12.5px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+  #header .h-pill-btn:hover { background: rgba(255,255,255,0.1); }
+  #header .h-pill-btn.primary { background: var(--accent); border-color: transparent; color: #fff; font-weight: 600; }
+  #header .h-pill-btn.primary:hover { background: #059669; }
+  #header .avs { display: flex; }
+  #header .avs .av { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--header); margin-left: -8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 700; }
+  #header .avs .av:nth-child(1) { background: linear-gradient(135deg, #f97316, #ec4899); }
+  #header .avs .av:nth-child(2) { background: linear-gradient(135deg, #06b6d4, #10b981); }
+  #header .avs .av:nth-child(3) { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+  #header .avs .more { background: rgba(255,255,255,0.1); color: #9ca3af; font-size: 9px; }
 
-  /* ======= HEADER ======= */
-  #header { display: flex; align-items: center; padding: 0 24px; background: var(--panel); border-bottom: 1px solid var(--border-2); gap: 16px; }
-  #header .avatar { width: 36px; height: 36px; border-radius: 10px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
-  #header .pname { font-weight: 600; font-size: 15px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 8px; }
-  #header .pname:hover { color: var(--accent-2); }
-  #header .pname .chev { font-size: 10px; color: var(--muted); }
-  .header-spacer { flex: 1; }
-  .toggle-group { display: inline-flex; padding: 4px; background: var(--panel-soft); border-radius: 10px; border: 1px solid var(--border); }
-  .toggle-group button { padding: 6px 16px; border: none; background: transparent; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border-radius: 7px; transition: all 0.15s; }
-  .toggle-group button.active { background: var(--accent); color: #fff; }
-  .toggle-group button:hover:not(.active) { color: var(--text); }
-  .hbtn { padding: 9px 16px; border: 1px solid var(--border); border-radius: 9px; background: var(--panel); cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text); display: inline-flex; align-items: center; gap: 7px; transition: all 0.15s; }
-  .hbtn:hover { border-color: var(--accent-2); color: var(--accent-2); }
-  .hbtn.primary { background: var(--accent); color: #fff; border: none; }
-  .hbtn.primary:hover { background: #1e40af; color: #fff; }
-  .hbtn .ic { font-size: 14px; }
-
-  /* ======= MAIN ======= */
+  /* ============ MAIN ============ */
   #main { display: grid; grid-template-columns: auto 1fr; position: relative; overflow: hidden; }
-  #sidebar { background: var(--panel); border-right: 1px solid var(--border-2); width: 230px; padding: 18px 14px; overflow-y: auto; transition: width 0.2s; position: relative; }
-  #sidebar.collapsed { width: 50px; padding: 18px 6px; }
-  #sidebar.collapsed .sidebar-head .lbl, #sidebar.collapsed .step-item .lbl { display: none; }
-  #sidebar.collapsed .step-item { justify-content: center; }
-  .sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: 0 6px 14px; }
-  .sidebar-head .lbl { font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--muted); letter-spacing: 0.08em; }
-  .sidebar-head .collapse { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; color: var(--muted); font-size: 11px; display: flex; align-items: center; justify-content: center; }
-  .sidebar-head .collapse:hover { color: var(--accent-2); border-color: var(--accent-2); }
-  .step-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; cursor: grab; transition: all 0.15s; margin-bottom: 4px; position: relative; }
-  .step-item:hover { background: var(--panel-soft); }
-  .step-item:active { cursor: grabbing; }
-  .step-item .ic { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
-  .step-item .lbl { font-size: 13px; font-weight: 500; color: var(--text); }
-  .step-item .help-trigger { position: absolute; right: 8px; opacity: 0; transition: opacity 0.15s; width: 16px; height: 16px; border-radius: 50%; background: var(--border-2); color: var(--muted); font-size: 10px; font-weight: 700; border: none; cursor: help; display: flex; align-items: center; justify-content: center; }
-  .step-item:hover .help-trigger { opacity: 1; }
-  .step-item .help-trigger:hover { background: var(--accent-2); color: #fff; }
 
-  .step-item .ic.t-trigger { background: var(--c-trigger); color: var(--c-trigger-fg); }
-  .step-item .ic.t-question { background: var(--c-question); color: var(--c-question-fg); }
-  .step-item .ic.t-answer { background: var(--c-answer); color: var(--c-answer-fg); }
-  .step-item .ic.t-action { background: var(--c-action); color: var(--c-action-fg); }
-  .step-item .ic.t-waiting { background: var(--c-waiting); color: var(--c-waiting-fg); }
-  .step-item .ic.t-rootcause { background: var(--c-rootcause); color: var(--c-rootcause-fg); }
-  .step-item .ic.t-observation { background: var(--c-observation); color: var(--c-observation-fg); }
-  .step-item .ic.t-sensor { background: var(--c-sensor); color: var(--c-sensor-fg); }
-  .step-item .ic.t-reassign { background: var(--c-reassign); color: var(--c-reassign-fg); }
-  .step-item .ic.t-jump { background: var(--c-jump); color: var(--c-jump-fg); }
-  .step-item .ic.t-end { background: var(--c-end); color: var(--c-end-fg); }
+  /* ============ SIDEBAR (palette) ============ */
+  #sidebar { background: var(--panel); border-right: 1px solid var(--border-2); width: 252px; padding: 14px; overflow-y: auto; transition: width 0.2s; }
+  #sidebar.collapsed { width: 56px; padding: 14px 6px; }
+  #sidebar.collapsed .panel-search, #sidebar.collapsed .pgroup-head .lbl, #sidebar.collapsed .pcard .lbl, #sidebar.collapsed .pgroup-head .ct { display: none; }
+  #sidebar.collapsed .pgroup-grid { grid-template-columns: 1fr; }
+  #sidebar.collapsed .pcard { padding: 8px 6px; }
+  .panel-search { position: relative; margin-bottom: 14px; }
+  .panel-search input { width: 100%; padding: 9px 12px 9px 34px; border: 1px solid var(--border); border-radius: 9px; font-size: 12.5px; background: var(--panel-soft); transition: all 0.15s; }
+  .panel-search input:focus { outline: none; border-color: var(--accent-2); background: #fff; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .panel-search::before { content: '🔍'; position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 11px; opacity: 0.5; }
+  .pgroup { margin-bottom: 14px; }
+  .pgroup-head { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 8px; }
+  .pgroup-head .lbl { font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--muted); letter-spacing: 0.05em; }
+  .pgroup-head .ct { font-size: 10px; color: var(--muted-2); }
+  .pgroup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .pcard {
+    padding: 12px 8px; border: 1px solid var(--border); border-radius: 12px;
+    background: var(--panel); cursor: grab; transition: all 0.15s;
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 7px;
+    position: relative; min-height: 78px;
+  }
+  .pcard:hover { border-color: var(--accent-2); background: var(--panel-soft); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .pcard:active { cursor: grabbing; }
+  .pcard .pic { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .pcard .lbl { font-size: 11px; font-weight: 600; line-height: 1.2; }
+  .pcard.notif::after { content: ''; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
+  .pic.t-trigger { background: var(--c-trigger); color: var(--c-trigger-fg); }
+  .pic.t-question { background: var(--c-question); color: var(--c-question-fg); }
+  .pic.t-answer { background: var(--c-answer); color: var(--c-answer-fg); }
+  .pic.t-action { background: var(--c-action); color: var(--c-action-fg); }
+  .pic.t-waiting { background: var(--c-waiting); color: var(--c-waiting-fg); }
+  .pic.t-rootcause { background: var(--c-rootcause); color: var(--c-rootcause-fg); }
+  .pic.t-observation { background: var(--c-observation); color: var(--c-observation-fg); }
+  .pic.t-sensor { background: var(--c-sensor); color: var(--c-sensor-fg); }
+  .pic.t-reassign { background: var(--c-reassign); color: var(--c-reassign-fg); }
+  .pic.t-jump { background: var(--c-jump); color: var(--c-jump-fg); }
+  .pic.t-end { background: var(--c-end); color: var(--c-end-fg); }
 
-  /* ======= CANVAS ======= */
+  /* ============ CANVAS ============ */
   #canvas-wrap {
     position: relative; overflow: hidden;
-    background: var(--bg);
+    background: var(--canvas-bg);
     background-image: radial-gradient(circle at 1px 1px, #d1d5db 1px, transparent 0);
-    background-size: 20px 20px;
+    background-size: 22px 22px;
   }
   #canvas { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
   #edges { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; transform-origin: 0 0; }
   #edges path.edge { pointer-events: stroke; transition: stroke 0.15s; }
   #edges path.edge:hover { stroke: var(--accent-2); }
 
-  /* ======= NODES ======= */
+  /* Canvas top filters */
+  .canvas-top { position: absolute; top: 14px; left: 14px; display: flex; gap: 6px; z-index: 4; }
+  .filter-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 7px; font-size: 12px; color: var(--text); box-shadow: var(--shadow-sm); }
+  .filter-chip .ic { color: var(--muted); font-size: 10px; }
+  .saved-status { position: absolute; top: 14px; right: 14px; font-size: 11.5px; color: var(--muted); background: var(--panel); padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 6px; z-index: 4; }
+  .saved-status::before { content: '✓'; color: var(--accent); font-weight: 700; }
+
+  /* ============ NODES ============ */
   .node {
-    position: absolute; width: 260px;
+    position: absolute; width: 240px;
     background: var(--panel); border: 1px solid var(--border);
-    border-radius: 14px; padding: 14px 16px;
+    border-radius: 12px; padding: 12px 14px;
     box-shadow: var(--shadow-sm);
     cursor: move; transition: box-shadow 0.15s, border-color 0.15s;
   }
   .node:hover { box-shadow: var(--shadow-md); border-color: var(--muted-2); }
   .node.selected { box-shadow: 0 0 0 3px rgba(99,102,241,0.2), var(--shadow-md); border-color: var(--accent-2) !important; }
-  .node .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; }
-  .node .label { font-size: 14px; font-weight: 600; line-height: 1.35; margin-top: 10px; color: var(--text); }
-  .node .sub { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+  .node .nhead { display: flex; align-items: center; gap: 8px; }
+  .node .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 5px; font-size: 9.5px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; }
+  .node .label { font-size: 13px; font-weight: 600; line-height: 1.35; margin-top: 8px; color: var(--text); }
+  .node .sub { font-size: 11.5px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
 
-  /* Type-specific badges */
-  .node.t-trigger { border-color: #fde68a; }
+  .node.t-trigger { border-color: #a7f3d0; }
   .node.t-trigger .badge { background: var(--c-trigger); color: var(--c-trigger-fg); }
   .node.t-question .badge { background: var(--c-question); color: var(--c-question-fg); }
   .node.t-answer .badge { background: var(--c-answer); color: var(--c-answer-fg); }
@@ -144,51 +158,86 @@
   .node.t-sensor .badge { background: var(--c-sensor); color: var(--c-sensor-fg); }
   .node.t-reassign .badge { background: var(--c-reassign); color: var(--c-reassign-fg); }
   .node.t-jump .badge { background: var(--c-jump); color: var(--c-jump-fg); }
+  .node.t-end { border-radius: 24px; padding: 10px 22px; width: 220px; text-align: center; }
   .node.t-end .badge { background: var(--c-end); color: var(--c-end-fg); }
-  .node.t-end { border-radius: 28px; padding-left: 22px; padding-right: 22px; width: 220px; text-align: center; }
 
-  /* Sensor threshold inline bar */
-  .node .thresholds { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 6px; }
-  .node .thr-row { display: flex; align-items: center; gap: 8px; font-size: 11.5px; }
+  /* Per-option rows with their own ports — FIXED HEIGHTS */
+  .node .options { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 5px; }
+  .node .opt-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; background: var(--panel-soft);
+    border-radius: 7px; position: relative;
+    height: 30px;
+  }
+  .node .opt-row:hover { background: var(--accent-soft); }
+  .node .opt-row .opt-num { width: 18px; height: 18px; border-radius: 5px; background: var(--accent-2); color: #fff; font-size: 9.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .node .opt-row .opt-text { font-size: 11.5px; flex: 1; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .node .opt-row .opt-rt { font-size: 9.5px; color: var(--muted); background: #fff; padding: 1px 6px; border-radius: 3px; border: 1px solid var(--border); }
+
+  /* The PER-OPTION port — child of its row, follows naturally during drag */
+  .node .opt-port {
+    position: absolute; right: -7px; top: 50%; transform: translateY(-50%);
+    width: 14px; height: 14px; background: #fff; border: 2px solid var(--muted-2);
+    border-radius: 50%; cursor: crosshair; transition: all 0.15s; z-index: 3;
+  }
+  .node .opt-port:hover, .node .opt-port.hot { background: var(--accent-2); border-color: var(--accent-2); transform: translateY(-50%) scale(1.4); box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
+
+  /* Add-branch row */
+  .node .opt-add { padding: 5px 8px; height: 26px; background: transparent; border: 1px dashed var(--border); border-radius: 6px; color: var(--muted); font-size: 11px; cursor: pointer; text-align: center; font-weight: 600; }
+  .node .opt-add:hover { border-color: var(--accent-2); color: var(--accent-2); }
+
+  /* Sensor thresholds inline */
+  .node .thresholds { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 5px; }
+  .node .thr-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--panel-soft); border-radius: 7px; height: 30px; position: relative; }
   .node .thr-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .node .thr-dot.safe { background: var(--green); }
   .node .thr-dot.warn { background: var(--yellow); }
   .node .thr-dot.crit { background: var(--red); }
-  .node .thr-row .lbl { flex: 1; color: var(--text); font-weight: 500; }
-  .node .thr-row .range { color: var(--muted); font-size: 10.5px; }
+  .node .thr-row .lbl { flex: 1; font-size: 11.5px; font-weight: 500; }
+  .node .thr-row .range { color: var(--muted); font-size: 10px; }
 
-  /* Node ports — 4 sides */
+  /* 4-side generic ports */
   .port {
-    position: absolute; width: 14px; height: 14px;
+    position: absolute; width: 12px; height: 12px;
     background: #fff; border: 2px solid var(--muted-2); border-radius: 50%;
     cursor: crosshair; transition: all 0.15s; z-index: 3;
   }
   .port:hover, .port.hot { background: var(--accent-2); border-color: var(--accent-2); transform: scale(1.4); box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
-  .port.top    { top: -7px;    left: 50%; transform: translateX(-50%); }
-  .port.right  { right: -7px;  top: 50%;  transform: translateY(-50%); }
-  .port.bottom { bottom: -7px; left: 50%; transform: translateX(-50%); }
-  .port.left   { left: -7px;   top: 50%;  transform: translateY(-50%); }
+  .port.top    { top: -6px;    left: 50%; transform: translateX(-50%); }
+  .port.right  { right: -6px;  top: 28px; }
+  .port.bottom { bottom: -6px; left: 50%; transform: translateX(-50%); }
+  .port.left   { left: -6px;   top: 28px; }
   .port.top:hover, .port.top.hot { transform: translateX(-50%) scale(1.4); }
-  .port.right:hover, .port.right.hot { transform: translateY(-50%) scale(1.4); }
   .port.bottom:hover, .port.bottom.hot { transform: translateX(-50%) scale(1.4); }
-  .port.left:hover, .port.left.hot { transform: translateY(-50%) scale(1.4); }
 
-  /* Floating zoom pill */
-  .zoom-pill { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; border-radius: 999px; padding: 6px 8px; display: flex; align-items: center; gap: 4px; font-size: 12.5px; box-shadow: var(--shadow-md); z-index: 5; }
-  .zoom-pill button { background: transparent; border: none; color: #fff; padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 12.5px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: background 0.15s; }
-  .zoom-pill button:hover { background: rgba(255,255,255,0.1); }
-  .zoom-pill .lvl { padding: 6px 10px; font-weight: 600; color: #fff; min-width: 50px; text-align: center; }
+  /* The little "+" button beside a port on hover — shortcut to insert */
+  .node:hover .port-add { opacity: 1; }
+  .port-add { position: absolute; right: -32px; top: 28px; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; border: none; cursor: pointer; font-size: 13px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; opacity: 0; transition: all 0.15s; box-shadow: var(--shadow-sm); z-index: 3; }
+  .port-add:hover { background: #059669; transform: scale(1.15); }
 
-  /* ======= INSPECTOR (slide-in drawer) ======= */
-  #inspector { position: absolute; top: 0; right: 0; bottom: 0; width: 380px; background: var(--panel); border-left: 1px solid var(--border-2); box-shadow: var(--shadow-lg); transform: translateX(100%); transition: transform 0.25s ease; z-index: 10; display: flex; flex-direction: column; }
+  /* ============ ZOOM PILL ============ */
+  .zoom-pill { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--header); color: #fff; border-radius: 999px; padding: 5px 8px; display: flex; align-items: center; gap: 4px; font-size: 12.5px; box-shadow: var(--shadow-md); z-index: 5; }
+  .zoom-pill button { background: transparent; border: none; color: #fff; padding: 6px 12px; border-radius: 999px; cursor: pointer; font-size: 12.5px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: background 0.15s; }
+  .zoom-pill button:hover { background: rgba(255,255,255,0.08); }
+  .zoom-pill .lvl { padding: 6px 10px; font-weight: 600; min-width: 50px; text-align: center; }
+  .zoom-pill .div { width: 1px; height: 16px; background: rgba(255,255,255,0.12); margin: 0 4px; }
+  .quick-pill { position: absolute; bottom: 20px; right: 30px; background: var(--header); color: #fff; border-radius: 999px; padding: 5px 8px 5px 14px; display: flex; align-items: center; gap: 6px; font-size: 12.5px; box-shadow: var(--shadow-md); z-index: 5; cursor: pointer; }
+  .quick-pill:hover { background: #1f2937; }
+  .quick-pill .qa-btn { background: var(--accent); color: #fff; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+
+  /* ============ INSPECTOR DRAWER ============ */
+  #inspector { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; background: var(--panel); border-left: 1px solid var(--border-2); box-shadow: var(--shadow-lg); transform: translateX(100%); transition: transform 0.25s ease; z-index: 10; display: flex; flex-direction: column; }
   #inspector.open { transform: translateX(0); }
-  .insp-head { padding: 18px 20px; border-bottom: 1px solid var(--border-2); display: flex; align-items: center; gap: 10px; }
-  .insp-head .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; }
-  .insp-head .htitle { flex: 1; }
+  .insp-head { padding: 16px 20px; border-bottom: 1px solid var(--border-2); display: flex; align-items: center; gap: 10px; }
+  .insp-head .badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; }
+  .insp-head .htitle { flex: 1; min-width: 0; }
   .insp-head .t { font-size: 14px; font-weight: 700; }
   .insp-head .s { font-size: 11px; color: var(--muted); font-family: ui-monospace, monospace; }
   .insp-head .x { width: 30px; height: 30px; border-radius: 8px; background: var(--panel-soft); border: 1px solid var(--border); color: var(--muted); cursor: pointer; font-size: 16px; }
   .insp-head .x:hover { background: var(--bg); color: var(--text); }
+  .insp-tabs { display: flex; padding: 0 20px; border-bottom: 1px solid var(--border-2); gap: 18px; }
+  .insp-tab { padding: 10px 0 11px; font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
+  .insp-tab.active { color: var(--accent-2); border-bottom-color: var(--accent-2); }
   .insp-body { flex: 1; overflow-y: auto; padding: 18px 20px; font-size: 13px; }
   .insp-body label { display: block; font-size: 10px; text-transform: uppercase; color: var(--muted); margin: 16px 0 6px; letter-spacing: 0.08em; font-weight: 700; }
   .insp-body label:first-child { margin-top: 0; }
@@ -196,10 +245,10 @@
   .insp-body input:focus, .insp-body textarea:focus, .insp-body select:focus { outline: none; border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
   .insp-body textarea { min-height: 64px; resize: vertical; }
   .helper-box { background: var(--accent-soft); border: 1px solid #c7d2fe; border-radius: 10px; padding: 11px 13px; margin-bottom: 16px; font-size: 12.5px; color: #3730a3; line-height: 1.5; display: flex; gap: 9px; }
-  .helper-box .ic { font-size: 14px; }
+  .helper-box .ic { font-size: 14px; flex-shrink: 0; }
 
   .route-table { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #fff; }
-  .route-row { padding: 10px; border-bottom: 1px solid var(--border-2); display: grid; grid-template-columns: 22px 1fr 24px; gap: 8px; align-items: start; }
+  .route-row { padding: 9px; border-bottom: 1px solid var(--border-2); display: grid; grid-template-columns: 22px 1fr 24px; gap: 8px; align-items: start; }
   .route-row:last-child { border-bottom: none; }
   .route-row .num { width: 22px; height: 22px; border-radius: 6px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; color: #fff; margin-top: 4px; }
   .num.safe { background: var(--green); } .num.warn { background: var(--yellow); } .num.crit { background: var(--red); } .num.opt { background: var(--accent-2); }
@@ -209,19 +258,29 @@
   .route-row .del:hover { background: #fee2e2; }
   .row-range { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
 
-  .add-btn { background: var(--panel-soft); border: 1px dashed var(--muted-2); padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; font-weight: 600; }
+  .add-btn { background: var(--panel-soft); border: 1px dashed var(--muted-2); padding: 9px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; font-weight: 600; }
   .add-btn:hover { border-color: var(--accent-2); color: var(--accent-2); background: #fff; }
-  .gen-btn { width: 100%; padding: 11px; background: var(--accent); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12.5px; margin-top: 10px; }
-  .gen-btn:hover { background: #1e40af; }
+  .gen-btn { width: 100%; padding: 10px; background: var(--header); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12.5px; margin-top: 10px; }
+  .gen-btn:hover { background: #1f2937; }
   .danger-btn { background: #fff; border: 1px solid #fecaca; color: var(--red); padding: 10px 14px; border-radius: 8px; cursor: pointer; margin-top: 24px; width: 100%; font-weight: 600; font-size: 12.5px; }
   .danger-btn:hover { background: var(--red); color: #fff; }
 
-  /* ======= TOOLTIP ======= */
-  .tooltip { position: fixed; background: #0f172a; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 11.5px; max-width: 240px; line-height: 1.5; box-shadow: var(--shadow-lg); z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+  /* ============ INSERT POPOVER ============ */
+  .insert-popover { position: absolute; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-lg); padding: 12px; width: 280px; z-index: 100; animation: pop 0.15s; }
+  .insert-popover h4 { font-size: 11px; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; letter-spacing: 0.06em; font-weight: 700; }
+  .insert-popover .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .insert-popover .ip-card { padding: 10px 8px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; transition: all 0.15s; }
+  .insert-popover .ip-card:hover { border-color: var(--accent-2); background: var(--accent-soft); }
+  .insert-popover .ip-card .pic { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .insert-popover .ip-card .lbl { font-size: 11px; font-weight: 600; }
+  .insert-popover .close { position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
+
+  /* ============ TOOLTIP ============ */
+  .tooltip { position: fixed; background: var(--header); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 11.5px; max-width: 240px; line-height: 1.5; box-shadow: var(--shadow-lg); z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
   .tooltip.show { opacity: 1; }
 
-  /* ======= MODALS ======= */
-  .modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; animation: fade 0.2s; }
+  /* ============ MODALS ============ */
+  .modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; animation: fade 0.2s; }
   .modal { background: var(--panel); border-radius: 16px; padding: 28px; width: 540px; max-width: 92vw; box-shadow: var(--shadow-lg); animation: pop 0.25s; max-height: 86vh; overflow-y: auto; }
   .modal h2 { margin: 0 0 6px; font-size: 18px; font-weight: 700; }
   .modal p { color: var(--muted); margin: 0 0 18px; font-size: 13.5px; line-height: 1.5; }
@@ -234,7 +293,7 @@
   .modal input, .modal select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; }
   .modal button { font-size: 13px; padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; font-weight: 500; }
   .modal button.primary { background: var(--accent); color: #fff; border: none; font-weight: 600; }
-  .modal button.primary:hover { background: #1e40af; }
+  .modal button.primary:hover { background: #059669; }
   @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
   @keyframes pop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
@@ -251,59 +310,68 @@
   .edge-label { fill: var(--text); font-size: 11px; font-weight: 600; }
   .edge-label-bg { fill: #fff; stroke: #fff; stroke-width: 5; paint-order: stroke; }
 
-  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; padding: 11px 20px; border-radius: 999px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); z-index: 200; animation: pop 0.2s; }
+  .toast { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); background: var(--header); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); z-index: 300; animation: pop 0.2s; }
 </style>
 </head>
 <body>
 <div id="app">
-  <!-- Stepper -->
-  <div id="stepper">
-    <div class="step done"><div class="num">✓</div><div class="lbl">Set up</div></div>
-    <div class="step-line done"></div>
-    <div class="step active"><div class="num">2</div><div class="lbl">Build the flow</div></div>
-    <div class="step-line"></div>
-    <div class="step"><div class="num">3</div><div class="lbl">Review</div></div>
-  </div>
-
-  <!-- Header -->
   <div id="header">
-    <div class="avatar" id="proj-init">DP</div>
-    <div class="pname" id="proj-name">Low DO in Aeration Tank <span class="chev">▾</span></div>
-    <select id="flow-sel" style="border:1px solid var(--border);padding:7px 28px 7px 12px;border-radius:8px;background:var(--panel) url(&quot;data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>&quot;) no-repeat right 10px center;appearance:none;font-size:13px;color:var(--text);cursor:pointer;font-weight:500"></select>
-    <div class="header-spacer"></div>
-    <div class="toggle-group">
-      <button class="active">Canvas</button>
-      <button onclick="toast('Form view coming soon')">Form</button>
-      <button onclick="toast('Delta view coming soon')">Delta</button>
+    <button class="menu-btn" id="btn-collapse">≡</button>
+    <div class="logo"><div class="lg-ic">⚡</div>flowconfig.io</div>
+    <span class="crumb">/</span>
+    <select id="tree-sel"></select>
+    <span class="crumb">/</span>
+    <select id="flow-sel"></select>
+    <div class="stepper-mini">
+      <div class="step-chip done"><span class="n">✓</span>Set up</div>
+      <div class="step-chip active"><span class="n">2</span>Build the flow</div>
+      <div class="step-chip"><span class="n">3</span>Review</div>
     </div>
-    <div class="header-spacer"></div>
-    <button class="hbtn" id="btn-templates"><span class="ic">📚</span> Templates</button>
-    <button class="hbtn primary" id="btn-save-tpl"><span class="ic">💾</span> Save as template</button>
-    <button class="hbtn" id="btn-clear"><span class="ic">🗑</span> Clear canvas</button>
+    <div class="spacer"></div>
+    <button class="h-pill-btn" id="btn-templates">📚 Templates</button>
+    <button class="h-pill-btn primary" id="btn-save-tpl">💾 Save as template</button>
+    <div class="avs">
+      <div class="av">MS</div>
+      <div class="av">RA</div>
+      <div class="av">AK</div>
+      <div class="av more">+2</div>
+    </div>
   </div>
 
-  <!-- Main: sidebar + canvas -->
   <div id="main">
     <div id="sidebar">
-      <div class="sidebar-head">
-        <div class="lbl">ADD STEP</div>
-        <button class="collapse" id="btn-collapse" title="Collapse">«</button>
+      <div class="panel-search"><input id="palette-search" placeholder="Search node types…" /></div>
+
+      <div class="pgroup">
+        <div class="pgroup-head"><div class="lbl">Step blocks</div><div class="ct" id="ct-step">7</div></div>
+        <div class="pgroup-grid" id="pg-step"></div>
       </div>
-      <div id="palette-list"></div>
+      <div class="pgroup">
+        <div class="pgroup-head"><div class="lbl">Helpers</div><div class="ct" id="ct-help">4</div></div>
+        <div class="pgroup-grid" id="pg-help"></div>
+      </div>
     </div>
 
     <div id="canvas-wrap">
       <svg id="edges"></svg>
       <div id="canvas"></div>
 
-      <div class="zoom-pill">
-        <button id="zoom-out">− Zoom out</button>
-        <span class="lvl" id="zoom-lvl">100%</span>
-        <button id="zoom-in">+ Zoom in</button>
+      <div class="canvas-top">
+        <div class="filter-chip">📊 <span id="filter-flow">Flow</span></div>
+        <div class="filter-chip">Status: pending <span class="ic">✕</span></div>
       </div>
+      <div class="saved-status">saved just now</div>
+
+      <div class="zoom-pill">
+        <button id="zoom-out">−</button>
+        <span class="lvl" id="zoom-lvl">100%</span>
+        <button id="zoom-in">+</button>
+        <span class="div"></span>
+        <button id="zoom-fit">⊡ Fit</button>
+      </div>
+      <div class="quick-pill" id="quick-add">＋ Quick add <span class="qa-btn">⌘K</span></div>
     </div>
 
-    <!-- Inspector drawer -->
     <div id="inspector">
       <div class="insp-head">
         <div class="badge" id="insp-badge">—</div>
@@ -315,29 +383,25 @@
   </div>
 </div>
 
+<!-- Insert popover (shown when port-drag drops on empty canvas) -->
+<div class="insert-popover" id="insert-popover" style="display:none">
+  <button class="close" id="ip-close">×</button>
+  <h4>Pick a node to insert</h4>
+  <div class="grid" id="ip-grid"></div>
+</div>
+
 <div class="tooltip" id="tooltip"></div>
 
-<!-- Welcome -->
 <div class="modal-bg" id="welcome-modal" style="display:none">
   <div class="modal">
     <h2>Welcome to FlowConfig</h2>
-    <p>Design diagnostic flows on a canvas. Pick how you want to start:</p>
-    <div class="choice" data-action="dummy">
-      <h3><span class="em">🧪</span> Load demo: "Low DO in Aeration Tank"</h3>
-      <p>Tree with 6 flows. Flow 3 is fully built.</p>
-    </div>
-    <div class="choice" data-action="template">
-      <h3><span class="em">📚</span> Start from a template</h3>
-      <p>Pick from built-in templates or your saved ones.</p>
-    </div>
-    <div class="choice" data-action="scratch">
-      <h3><span class="em">✨</span> Start from scratch</h3>
-      <p>Blank canvas with a single Trigger node.</p>
-    </div>
+    <p>Pick how you want to start:</p>
+    <div class="choice" data-action="dummy"><h3><span class="em">🧪</span> Load demo · "Low DO in Aeration Tank"</h3><p>6-flow diagnostic tree. Flow 3 fully built.</p></div>
+    <div class="choice" data-action="template"><h3><span class="em">📚</span> Start from a template</h3><p>Built-in or saved templates.</p></div>
+    <div class="choice" data-action="scratch"><h3><span class="em">✨</span> Start from scratch</h3><p>Blank canvas with a single Trigger.</p></div>
   </div>
 </div>
 
-<!-- Template library -->
 <div class="modal-bg" id="tpl-modal" style="display:none">
   <div class="modal" style="width: 640px">
     <h2>📚 Template library</h2>
@@ -347,91 +411,83 @@
   </div>
 </div>
 
-<!-- Save template -->
 <div class="modal-bg" id="tpl-save-modal" style="display:none">
   <div class="modal">
     <h2>💾 Save as template</h2>
-    <p>Saves the <b>current tree</b> (all flows) for reuse.</p>
+    <p>Saves the <b>current tree</b> for reuse.</p>
     <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin-bottom:6px">Template name</label>
-    <input id="tpl-save-name" placeholder="e.g. Standard wastewater diagnostic" />
+    <input id="tpl-save-name" />
     <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin:14px 0 6px">Emoji</label>
-    <input id="tpl-save-emoji" placeholder="⭐" maxlength="2" />
+    <input id="tpl-save-emoji" maxlength="2" />
     <div class="actions"><button id="tpl-save-cancel">Cancel</button><button class="primary" id="tpl-save-confirm">Save</button></div>
   </div>
 </div>
 
 <script>
-// ============================================================
+// =============================================================
 // Node-type metadata
-// ============================================================
+// =============================================================
 const NTYPES = {
-  trigger:     { label: 'Issue / Trigger', icon: '⚠', help: 'The entry point of a flow. The issue or event that kicks off the diagnostic.' },
-  question:    { label: 'Question',        icon: '?', help: 'A decision step. Define options in the inspector — each option becomes a downstream Answer card with its own route.' },
-  answer:      { label: 'Answer',          icon: '💬', help: 'A tappable answer card. Has an Action selector — pick what happens when this answer is chosen.' },
-  waiting:     { label: 'Waiting',         icon: '⏱', help: 'Pause the flow for a duration or until an event occurs.' },
-  rootcause:   { label: 'Root cause',      icon: '🌱', help: 'Pick from a list of diagnosed root causes. Each cause routes to its own resolution path.' },
-  action:      { label: 'Action',          icon: '✓', help: 'A task the operator performs. Has an Action selector — Photo upload, Send message, Call supervisor, Form input, RCA, etc.' },
-  observation: { label: 'Observation',     icon: '👁', help: 'Operator records what they observe. Use for visual/manual checks that don\'t need branching.' },
-  sensor:      { label: 'Sensor reading',  icon: '📡', help: 'Read a sensor value and branch by threshold band — Safe / Warning / Critical. Each band routes to a different flow.' },
-  reassign:    { label: 'Reassignment',    icon: '↻', help: 'Hand the flow to a different role / user. Has a User selector.' },
-  jump:        { label: 'Jump to flow',    icon: '↗', help: 'Hand off to another flow in the same tree.' },
-  end:         { label: 'End',             icon: '■', help: 'Marks the end of the flow. Use multiple ends for different resolutions.' }
+  trigger:     { label: 'Trigger',         icon: '⚠', group: 'step',  help: 'The entry point of a flow.' },
+  question:    { label: 'Question',        icon: '?', group: 'step',  help: 'A decision step. Each option in the inspector becomes its own outgoing port on the right edge.' },
+  answer:      { label: 'Answer',          icon: '💬', group: 'step', help: 'A tappable answer card with an Action selector for what happens next.' },
+  action:      { label: 'Action',          icon: '✓', group: 'step',  help: 'A task the operator performs. Pick Action type in the inspector.' },
+  observation: { label: 'Observation',     icon: '👁', group: 'step', help: 'Passive recording — visual or manual check, no branching.' },
+  sensor:      { label: 'Sensor reading',  icon: '📡', group: 'step', help: 'Read a sensor value and branch by Safe / Warning / Critical thresholds.' },
+  rootcause:   { label: 'Root cause',      icon: '🌱', group: 'step', help: 'Pick from diagnosed root causes; each routes to a resolution.' },
+  waiting:     { label: 'Waiting',         icon: '⏱', group: 'help', help: 'Pause the flow by time or event.' },
+  reassign:    { label: 'Reassign',        icon: '↻', group: 'help', help: 'Hand off to another role / user.' },
+  jump:        { label: 'Jump to flow',    icon: '↗', group: 'help', help: 'Hand off to another flow in the tree.' },
+  end:         { label: 'End',             icon: '■', group: 'help', help: 'Terminates the flow.' }
 };
 
-const QTYPES = [{id:'single',label:'Single-choice'},{id:'yesno',label:'Yes / No'},{id:'multi',label:'Multi-select'},{id:'numeric',label:'Numeric'},{id:'photo',label:'Photo upload'},{id:'freetext',label:'Free text'}];
-
-// Action selector — types of actions an Action or Answer node can perform
 const ACTION_TYPES = [
-  { id: 'photo',      label: 'Photo upload' },
-  { id: 'message',    label: 'Send message' },
-  { id: 'call',       label: 'Call supervisor' },
-  { id: 'form',       label: 'Form input' },
-  { id: 'rca',        label: 'Root-cause selector' },
-  { id: 'photo_rca',  label: 'Photo + RCA' },
-  { id: 'escalate',   label: 'Escalate' },
-  { id: 'custom',     label: 'Custom' }
+  { id: 'photo',     label: 'Photo upload' },
+  { id: 'message',   label: 'Send message' },
+  { id: 'call',      label: 'Call supervisor' },
+  { id: 'form',      label: 'Form input' },
+  { id: 'rca',       label: 'RCA selector' },
+  { id: 'photo_rca', label: 'Photo + RCA' },
+  { id: 'escalate',  label: 'Escalate' },
+  { id: 'custom',    label: 'Custom' }
 ];
-
 const ROLES = ['Supervisor','Maintenance','Process Engineer','Lab Technician','Field Operator','Custom'];
 
-// ============================================================
-// Data + templates
-// ============================================================
+// =============================================================
+// Data + persistence
+// =============================================================
 const data = { trees: [] };
 let nextId = 1000;
 function uid(p) { return `${p}${++nextId}`; }
-const STORAGE_KEY = 'flowconfig-v4';
+const STORAGE_KEY = 'flowconfig-v5';
 const TEMPLATES_KEY = 'flowconfig-templates-v1';
 
 function persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (_) {} }
 function loadPersisted() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    const p = JSON.parse(raw);
-    if (!p.trees || !p.trees.length) return false;
-    data.trees = p.trees;
-    curTree = data.trees[0]; curFlow = curTree.flows[0];
-    return true;
+  try { const r = localStorage.getItem(STORAGE_KEY); if (!r) return false;
+    const p = JSON.parse(r); if (!p.trees || !p.trees.length) return false;
+    data.trees = p.trees; curTree = data.trees[0]; curFlow = curTree.flows[0]; return true;
   } catch (_) { return false; }
 }
 function loadTemplates() { try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || '[]'); } catch (_) { return []; } }
 function saveTemplates(l) { try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(l)); } catch (_) {} }
 
+// =============================================================
+// Demo trees
+// =============================================================
 function buildLowDoTree() {
-  const tree = { id: uid('tree_'), name: 'Low DO in Aeration Tank', flows: [] };
+  const t = { id: uid('tree_'), name: 'Low DO in Aeration Tank', flows: [] };
   ['Blower OFF check','Blower performance','Uneven bubbling / dead zones','DO sensor failure','Sludge bulking','Shock load / toxicity'].forEach((nm, i) => {
-    if (i === 2) tree.flows.push(buildFlow3());
-    else tree.flows.push({ id: uid('f_'), name: `Flow ${i+1} · ${nm}`, nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: nm }], edges: [] });
+    if (i === 2) t.flows.push(buildFlow3());
+    else t.flows.push({ id: uid('f_'), name: `Flow ${i+1} · ${nm}`, nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: nm }], edges: [] });
   });
-  return tree;
+  return t;
 }
 function buildPumpTree() {
-  const tree = { id: uid('tree_'), name: 'Pump leakage', flows: [] };
-  ['Discharge pressure','Filter choking','Mechanical seal','Gland packing','Bearing failure'].forEach((nm, i) => {
-    tree.flows.push({ id: uid('f_'), name: `Flow ${i+1} · ${nm}`, nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: nm }], edges: [] });
-  });
-  return tree;
+  const t = { id: uid('tree_'), name: 'Pump leakage', flows: [] };
+  ['Discharge pressure','Filter choking','Mechanical seal','Gland packing','Bearing failure'].forEach((nm, i) =>
+    t.flows.push({ id: uid('f_'), name: `Flow ${i+1} · ${nm}`, nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: nm }], edges: [] }));
+  return t;
 }
 function buildBasicTree() {
   const t = uid('n_'), q = uid('n_'), a1 = uid('n_'), a2 = uid('n_'), e = uid('n_');
@@ -439,106 +495,106 @@ function buildBasicTree() {
     id: uid('f_'), name: 'Flow 1 · Triage',
     nodes: [
       { id: t, type: 'trigger', x: 80, y: 200, label: 'Issue reported' },
-      { id: q, type: 'question', x: 400, y: 200, label: 'Is the issue urgent?', qtype: 'yesno', options: [
+      { id: q, type: 'question', x: 400, y: 180, label: 'Is the issue urgent?', options: [
         { id: uid('opt_'), text: 'Yes', route: 'node:' + a1 },
         { id: uid('opt_'), text: 'No',  route: 'node:' + a2 }
       ]},
-      { id: a1, type: 'action', x: 740, y: 100, label: 'Escalate', actionType: 'escalate' },
-      { id: a2, type: 'action', x: 740, y: 320, label: 'Log & monitor', actionType: 'form' },
-      { id: e,  type: 'end', x: 1060, y: 200, label: 'Done' }
+      { id: a1, type: 'action', x: 780, y: 100, label: 'Escalate', actionType: 'escalate' },
+      { id: a2, type: 'action', x: 780, y: 280, label: 'Log & monitor', actionType: 'form' },
+      { id: e,  type: 'end',    x: 1100, y: 200, label: 'Done' }
     ],
-    edges: [
-      { id: uid('e_'), from: t, to: q },
-      { id: uid('e_'), from: a1, to: e },
-      { id: uid('e_'), from: a2, to: e }
-    ]
+    edges: [{ id: uid('e_'), from: t, to: q }, { id: uid('e_'), from: a1, to: e }, { id: uid('e_'), from: a2, to: e }]
   }]};
 }
-
-// Clean Flow 3 with the new model
 function buildFlow3() {
-  const ids = {};
-  ['t','q1','q2','a_call','a_skip','a_diff','jmp','a_rca','a_reasn','end1','sens'].forEach(k => ids[k] = uid('n_'));
-  const nodes = [
-    { id: ids.t,      type: 'trigger',  x: 80,   y: 320, label: 'Low DO in Aeration tank' },
-    { id: ids.q1,     type: 'question', x: 420,  y: 320, label: 'Is aeration even across the tank?', qtype: 'single', options: [
-      { id: uid('opt_'), text: 'Yes — bubbles normal', route: 'node:' + ids.q2 },
-      { id: uid('opt_'), text: 'Moderate bubbling',     route: 'node:' + ids.q2 },
-      { id: uid('opt_'), text: 'No bubbles',             route: 'node:' + ids.a_call },
-      { id: uid('opt_'), text: 'Skip to end',            route: 'node:' + ids.a_skip }
-    ]},
-    { id: ids.q2,     type: 'question', x: 800,  y: 120, label: 'Are dead zones created?', qtype: 'multi', options: [
-      { id: uid('opt_'), text: 'Sludge accumulation',        route: 'node:' + ids.a_diff },
-      { id: uid('opt_'), text: 'Dark / black water',          route: 'node:' + ids.a_diff },
-      { id: uid('opt_'), text: 'Uneven DO readings',          route: 'node:' + ids.sens },
-      { id: uid('opt_'), text: 'Reduced treatment',           route: 'node:' + ids.sens },
-      { id: uid('opt_'), text: 'Skip to end',                  route: 'node:' + ids.a_rca },
-      { id: uid('opt_'), text: 'Reassignment',                 route: 'node:' + ids.a_reasn }
-    ]},
-    { id: ids.a_call, type: 'action',   x: 800,  y: 540, label: 'Call supervisor', sub: 'Diffusers appear choked', actionType: 'call' },
-    { id: ids.a_skip, type: 'action',   x: 800,  y: 700, label: 'Photo + RCA', actionType: 'photo_rca' },
-    { id: ids.a_diff, type: 'action',   x: 1140, y: 100, label: 'Diffusers choked — plan cleaning', actionType: 'message' },
-    { id: ids.sens,   type: 'sensor',   x: 1140, y: 240, label: 'Verify DO sensor reading', sensorName: 'DO sensor', unit: 'mg/L', thresholds: [
-      { id: 'safe', label: 'Safe',     min: 2,   max: null, route: '' },
-      { id: 'warn', label: 'Warning',  min: 1,   max: 2,    route: 'flow:' + (window.__f4 || '') },
-      { id: 'crit', label: 'Critical', min: null,max: 1,    route: 'flow:' + (window.__f4 || '') }
-    ]},
-    { id: ids.jmp,    type: 'jump',     x: 1480, y: 220, label: 'Next flow', targetFlow: null },
-    { id: ids.a_rca,  type: 'action',   x: 1140, y: 380, label: 'Media upload + RCA', actionType: 'photo_rca' },
-    { id: ids.a_reasn,type: 'reassign', x: 1140, y: 520, label: 'Reassign to Supervisor', role: 'Supervisor' },
-    { id: ids.end1,   type: 'end',      x: 1480, y: 700, label: 'Done' }
-  ];
-  const edges = [
-    { id: uid('e_'), from: ids.t, to: ids.q1 },
-    { id: uid('e_'), from: ids.a_call, to: ids.end1 },
-    { id: uid('e_'), from: ids.a_skip, to: ids.end1 },
-    { id: uid('e_'), from: ids.a_diff, to: ids.jmp },
-    { id: uid('e_'), from: ids.sens, to: ids.jmp },
-    { id: uid('e_'), from: ids.a_rca, to: ids.jmp },
-    { id: uid('e_'), from: ids.a_reasn, to: ids.end1 }
-  ];
-  return { id: uid('f_'), name: 'Flow 3 · Uneven bubbling', nodes, edges };
+  const i = {};
+  ['t','q1','q2','aCall','aSkip','aDiff','sens','aRca','aReasn','end1'].forEach(k => i[k] = uid('n_'));
+  return { id: uid('f_'), name: 'Flow 3 · Uneven bubbling',
+    nodes: [
+      { id: i.t,     type: 'trigger',  x: 60,   y: 320, label: 'Low DO in Aeration tank' },
+      { id: i.q1,    type: 'question', x: 380,  y: 240, label: 'Is aeration even across the tank?', options: [
+        { id: uid('opt_'), text: 'Yes — bubbles normal', route: 'node:' + i.q2 },
+        { id: uid('opt_'), text: 'Moderate bubbling',     route: 'node:' + i.q2 },
+        { id: uid('opt_'), text: 'No bubbles',             route: 'node:' + i.aCall },
+        { id: uid('opt_'), text: 'Skip to end',            route: 'node:' + i.aSkip }
+      ]},
+      { id: i.q2,    type: 'question', x: 780,  y: 80, label: 'Are dead zones created?', options: [
+        { id: uid('opt_'), text: 'Sludge accumulation',         route: 'node:' + i.aDiff },
+        { id: uid('opt_'), text: 'Dark / black water',           route: 'node:' + i.aDiff },
+        { id: uid('opt_'), text: 'Uneven DO readings',           route: 'node:' + i.sens },
+        { id: uid('opt_'), text: 'Reduced treatment performance',route: 'node:' + i.sens },
+        { id: uid('opt_'), text: 'Skip',                          route: 'node:' + i.aRca },
+        { id: uid('opt_'), text: 'Reassignment',                  route: 'node:' + i.aReasn }
+      ]},
+      { id: i.aCall, type: 'action',  x: 780, y: 540, label: 'Call supervisor', actionType: 'call', sub: 'Diffusers appear choked' },
+      { id: i.aSkip, type: 'action',  x: 780, y: 670, label: 'Photo + RCA', actionType: 'photo_rca' },
+      { id: i.aDiff, type: 'action',  x: 1180, y: 80, label: 'Diffusers choked — plan cleaning', actionType: 'message' },
+      { id: i.sens,  type: 'sensor',  x: 1180, y: 240, label: 'Verify DO reading', sensorName: 'DO sensor', unit: 'mg/L', thresholds: [
+        { id: 'safe', label: 'Safe',     min: 2,    max: null, route: '' },
+        { id: 'warn', label: 'Warning',  min: 1,    max: 2,    route: '' },
+        { id: 'crit', label: 'Critical', min: null, max: 1,    route: '' }
+      ]},
+      { id: i.aRca,    type: 'action',  x: 1180, y: 460, label: 'Media upload + RCA', actionType: 'photo_rca' },
+      { id: i.aReasn,  type: 'reassign',x: 1180, y: 600, label: 'Reassign', role: 'Supervisor' },
+      { id: i.end1,    type: 'end',     x: 1540, y: 540, label: 'Done' }
+    ],
+    edges: [
+      { id: uid('e_'), from: i.t, to: i.q1 },
+      { id: uid('e_'), from: i.aCall, to: i.end1 },
+      { id: uid('e_'), from: i.aSkip, to: i.end1 },
+      { id: uid('e_'), from: i.aDiff, to: i.end1 },
+      { id: uid('e_'), from: i.aRca, to: i.end1 },
+      { id: uid('e_'), from: i.aReasn, to: i.end1 }
+    ]
+  };
 }
 
 const BUILTIN_TEMPLATES = [
-  { id: 't1', name: 'Low DO Diagnostic',  emoji: '🌊', desc: '6 flows · aeration tank',     builder: buildLowDoTree },
-  { id: 't2', name: 'Pump Leakage',       emoji: '💧', desc: '5 flows · filter feed pump',  builder: buildPumpTree },
-  { id: 't3', name: 'Basic Triage',       emoji: '🧭', desc: '1 flow · starter',             builder: buildBasicTree }
+  { id: 't1', name: 'Low DO Diagnostic',  emoji: '🌊', desc: '6 flows · aeration tank',    builder: buildLowDoTree },
+  { id: 't2', name: 'Pump Leakage',       emoji: '💧', desc: '5 flows · feed pump',         builder: buildPumpTree },
+  { id: 't3', name: 'Basic Triage',       emoji: '🧭', desc: '1 flow · starter',            builder: buildBasicTree }
 ];
 
-// ============================================================
-// State
-// ============================================================
+// =============================================================
+// State + DOM
+// =============================================================
 let curTree, curFlow;
 let selection = null;
 let pan = { x: 0, y: 0 }, zoom = 1;
+let dragInProgress = false;
 
-// DOM
 const canvas = document.getElementById('canvas');
 const edgesSvg = document.getElementById('edges');
 const wrap = document.getElementById('canvas-wrap');
 const tooltip = document.getElementById('tooltip');
 const inspector = document.getElementById('inspector');
+const treeSel = document.getElementById('tree-sel');
 const flowSel = document.getElementById('flow-sel');
+const insertPop = document.getElementById('insert-popover');
 
-// ============================================================
+// Fixed pixel constants for option-port positioning (matches CSS)
+const NODE_HEAD_H = 64;   // top padding + badge + label margin (approx — only used for layout, not per-row)
+const OPT_ROW_H = 35;     // row height (30) + gap (5)
+
+// =============================================================
 // Palette
-// ============================================================
-const PALETTE_ORDER = ['trigger','question','answer','waiting','rootcause','action','observation','sensor','reassign','jump','end'];
+// =============================================================
 function renderPalette() {
-  const list = document.getElementById('palette-list');
-  list.innerHTML = PALETTE_ORDER.map(t => {
-    const m = NTYPES[t];
-    return `<div class="step-item" draggable="true" data-type="${t}">
-      <div class="ic t-${t}">${m.icon}</div>
-      <div class="lbl">${m.label}</div>
-      <button class="help-trigger" data-help="${escapeHtml(m.help)}">?</button>
-    </div>`;
-  }).join('');
-  list.querySelectorAll('.step-item').forEach(it => {
-    it.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', it.dataset.type));
-    it.querySelector('.help-trigger').addEventListener('mouseenter', e => showTooltip(e.target.dataset.help, e.target));
-    it.querySelector('.help-trigger').addEventListener('mouseleave', hideTooltip);
+  const search = (document.getElementById('palette-search').value || '').toLowerCase();
+  ['step', 'help'].forEach(grp => {
+    const el = document.getElementById('pg-' + grp);
+    const items = Object.entries(NTYPES).filter(([id, m]) => m.group === grp && (!search || m.label.toLowerCase().includes(search) || id.includes(search)));
+    el.innerHTML = items.map(([id, m]) => `
+      <div class="pcard" draggable="true" data-type="${id}" data-help="${escapeHtml(m.help)}">
+        <div class="pic t-${id}">${m.icon}</div>
+        <div class="lbl">${m.label}</div>
+      </div>`).join('');
+    document.getElementById('ct-' + grp).textContent = items.length;
+  });
+  document.querySelectorAll('.pcard').forEach(c => {
+    c.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', c.dataset.type));
+    c.addEventListener('mouseenter', e => showTooltip(c.dataset.help, c));
+    c.addEventListener('mouseleave', hideTooltip);
   });
 }
 function showTooltip(t, el) {
@@ -552,19 +608,19 @@ function showTooltip(t, el) {
 function hideTooltip() { tooltip.classList.remove('show'); }
 
 document.getElementById('btn-collapse').onclick = () => {
-  const sb = document.getElementById('sidebar');
-  sb.classList.toggle('collapsed');
-  document.getElementById('btn-collapse').textContent = sb.classList.contains('collapsed') ? '»' : '«';
+  document.getElementById('sidebar').classList.toggle('collapsed');
 };
+document.getElementById('palette-search').oninput = renderPalette;
 
-// ============================================================
+// =============================================================
 // Header
-// ============================================================
+// =============================================================
 function refreshHeader() {
-  document.getElementById('proj-init').textContent = curTree.name.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
-  document.getElementById('proj-name').firstChild.textContent = curTree.name + ' ';
+  treeSel.innerHTML = data.trees.map(t => `<option value="${t.id}" ${t === curTree ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('');
   flowSel.innerHTML = curTree.flows.map(f => `<option value="${f.id}" ${f === curFlow ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('') + `<option value="__new__">＋ New flow…</option>`;
+  document.getElementById('filter-flow').textContent = curFlow.name;
 }
+treeSel.onchange = e => { curTree = data.trees.find(t => t.id === e.target.value); curFlow = curTree.flows[0]; selection = null; closeInspector(); render(); fitView(); };
 flowSel.onchange = e => {
   if (e.target.value === '__new__') {
     const nm = prompt('Flow name?', 'New flow');
@@ -576,9 +632,9 @@ flowSel.onchange = e => {
   selection = null; closeInspector(); render(); fitView();
 };
 
-// ============================================================
+// =============================================================
 // Render
-// ============================================================
+// =============================================================
 function applyTransform() {
   canvas.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
   edgesSvg.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
@@ -588,11 +644,35 @@ function render() {
   refreshHeader();
   canvas.innerHTML = '';
   curFlow.nodes.forEach(n => canvas.appendChild(renderNode(n)));
+  // After DOM insertion, cache option-row offsets for each question node (used for edge endpoint Y)
+  curFlow.nodes.forEach(n => {
+    if ((n.type === 'question' || n.type === 'rootcause') && n.options) cacheOptOffsets(n);
+    if (n.type === 'sensor') cacheThresholdOffsets(n);
+  });
   renderEdges();
   if (selection) renderInspector();
   applyTransform();
   persist();
 }
+function cacheOptOffsets(n) {
+  const el = canvas.querySelector(`[data-id="${n.id}"]`);
+  if (!el) return;
+  n._optY = {};
+  n.options.forEach(o => {
+    const row = el.querySelector(`.opt-row[data-opt="${o.id}"]`);
+    if (row) n._optY[o.id] = row.offsetTop + row.offsetHeight / 2;
+  });
+}
+function cacheThresholdOffsets(n) {
+  const el = canvas.querySelector(`[data-id="${n.id}"]`);
+  if (!el) return;
+  n._thrY = {};
+  n.thresholds.forEach(t => {
+    const row = el.querySelector(`.thr-row[data-thr="${t.id}"]`);
+    if (row) n._thrY[t.id] = row.offsetTop + row.offsetHeight / 2;
+  });
+}
+
 function renderNode(n) {
   const m = NTYPES[n.type] || NTYPES.action;
   const el = document.createElement('div');
@@ -612,60 +692,79 @@ function renderNode(n) {
     const at = ACTION_TYPES.find(a => a.id === n.actionType);
     if (at) sub = '⚙ ' + at.label;
   }
-  if (n.type === 'question' && n.options) sub = `${n.options.length} option${n.options.length === 1 ? '' : 's'} · ${qtypeLbl(n.qtype)}`;
-  if (n.type === 'sensor') sub = (n.sensorName || 'Sensor') + (n.unit ? ' · ' + n.unit : '');
 
-  let thresholdsHtml = '';
-  if (n.type === 'sensor' && n.thresholds) {
-    thresholdsHtml = `<div class="thresholds">` + n.thresholds.map(t => {
-      const range = t.min != null && t.max != null ? `${t.min}–${t.max}` : t.min != null ? `≥ ${t.min}` : t.max != null ? `< ${t.max}` : 'any';
-      const c = t.id === 'safe' ? 'safe' : t.id === 'warn' ? 'warn' : 'crit';
-      return `<div class="thr-row"><div class="thr-dot ${c}"></div><div class="lbl">${escapeHtml(t.label)}</div><div class="range">${range} ${n.unit || ''}</div></div>`;
-    }).join('') + `</div>`;
-  }
-
-  el.innerHTML = `
-    <div class="badge">${m.icon} ${m.label}</div>
+  // Build inner HTML
+  let inner = `
+    <div class="nhead"><div class="badge">${m.icon} ${m.label}</div></div>
     <div class="label">${escapeHtml(n.label || '(untitled)')}</div>
     ${sub ? `<div class="sub">${escapeHtml(sub)}</div>` : ''}
-    ${thresholdsHtml}
-    <div class="port top" data-port="top"></div>
-    <div class="port right" data-port="right"></div>
-    <div class="port bottom" data-port="bottom"></div>
-    <div class="port left" data-port="left"></div>
   `;
 
+  const isBranching = (n.type === 'question' || n.type === 'rootcause') && n.options;
+  const isSensor = n.type === 'sensor';
+
+  if (isBranching) {
+    inner += `<div class="options">` + n.options.map((o, i) => {
+      const rt = routeLabel(o.route);
+      return `<div class="opt-row" data-opt="${o.id}">
+        <div class="opt-num">${i+1}</div>
+        <div class="opt-text" title="${escapeHtml(o.text)}">${escapeHtml(o.text)}</div>
+        <div class="opt-rt" title="${escapeHtml(rt)}">${escapeHtml(rt)}</div>
+        <div class="opt-port" data-opt-port="${o.id}"></div>
+      </div>`;
+    }).join('') + `<div class="opt-add" data-add-opt="1">+ Add option</div></div>`;
+  } else if (isSensor && n.thresholds) {
+    inner += `<div class="thresholds">` + n.thresholds.map(t => {
+      const c = t.id === 'safe' ? 'safe' : t.id === 'warn' ? 'warn' : 'crit';
+      const range = t.min != null && t.max != null ? `${t.min}–${t.max}` : t.min != null ? `≥ ${t.min}` : t.max != null ? `< ${t.max}` : 'any';
+      return `<div class="thr-row" data-thr="${t.id}">
+        <div class="thr-dot ${c}"></div>
+        <div class="lbl">${escapeHtml(t.label)}</div>
+        <div class="range">${range} ${n.unit || ''}</div>
+        <div class="opt-port" data-thr-port="${t.id}"></div>
+      </div>`;
+    }).join('') + `</div>`;
+  } else {
+    // generic 4-side ports for non-branching nodes
+    if (n.type !== 'end') {
+      inner += `<div class="port right" data-port="right"></div>`;
+      inner += `<button class="port-add" title="Add next step">+</button>`;
+    }
+    if (n.type !== 'trigger') inner += `<div class="port left" data-port="left"></div>`;
+    inner += `<div class="port top" data-port="top"></div>`;
+    if (n.type !== 'end') inner += `<div class="port bottom" data-port="bottom"></div>`;
+  }
+
+  // Input port (left side) for branching nodes too
+  if (isBranching || isSensor) {
+    inner += `<div class="port left" data-port="left" style="top:28px"></div>`;
+  }
+
+  el.innerHTML = inner;
   attachNodeHandlers(el, n);
-  el.querySelectorAll('.port').forEach(p => attachPortHandler(p, n));
+  el.querySelectorAll('.port').forEach(p => attachPortHandler(p, n, null));
+  el.querySelectorAll('.opt-port').forEach(p => {
+    if (p.dataset.optPort) attachPortHandler(p, n, { kind: 'option', id: p.dataset.optPort });
+    if (p.dataset.thrPort) attachPortHandler(p, n, { kind: 'threshold', id: p.dataset.thrPort });
+  });
+  const addOptBtn = el.querySelector('[data-add-opt]');
+  if (addOptBtn) addOptBtn.onclick = ev => { ev.stopPropagation(); n.options.push({ id: uid('opt_'), text: 'New option', route: '' }); selection = { kind: 'node', id: n.id }; openInspector(); render(); };
+  const portAdd = el.querySelector('.port-add');
+  if (portAdd) portAdd.onclick = ev => { ev.stopPropagation(); openInsertPopover(n, null, n.x + 280, n.y + 30); };
+
   return el;
 }
-function qtypeLbl(id) { return (QTYPES.find(q => q.id === id) || { label: 'Single' }).label; }
-
-// Smart edge routing — pick the best port pair (closest sides)
-function pickPorts(a, b, aEl, bEl) {
-  const ax = a.x + aEl.offsetWidth / 2, ay = a.y + aEl.offsetHeight / 2;
-  const bx = b.x + bEl.offsetWidth / 2, by = b.y + bEl.offsetHeight / 2;
-  const dx = bx - ax, dy = by - ay;
-  let fromSide, toSide;
-  if (Math.abs(dx) > Math.abs(dy)) {
-    fromSide = dx > 0 ? 'right' : 'left';
-    toSide   = dx > 0 ? 'left' : 'right';
-  } else {
-    fromSide = dy > 0 ? 'bottom' : 'top';
-    toSide   = dy > 0 ? 'top' : 'bottom';
-  }
-  return { fromSide, toSide };
-}
-function portCoords(n, el, side) {
-  const w = el.offsetWidth, h = el.offsetHeight;
-  switch (side) {
-    case 'right':  return { x: n.x + w,     y: n.y + h / 2 };
-    case 'left':   return { x: n.x,         y: n.y + h / 2 };
-    case 'top':    return { x: n.x + w / 2, y: n.y };
-    case 'bottom': return { x: n.x + w / 2, y: n.y + h };
-  }
+function routeLabel(route) {
+  if (!route) return 'no route';
+  if (route === 'end') return '→ End';
+  if (route.startsWith('node:')) { const id = route.slice(5); const x = curFlow.nodes.find(n => n.id === id); return x ? '→ ' + truncate(x.label, 18) : '→ ?'; }
+  if (route.startsWith('flow:')) { const fid = route.slice(5); const f = curTree.flows.find(x => x.id === fid); return f ? '↗ ' + truncate(f.name, 18) : '↗ ?'; }
+  return route;
 }
 
+// =============================================================
+// Edge rendering — uses cached option/threshold offsets for stable endpoints
+// =============================================================
 function renderEdges() {
   edgesSvg.innerHTML = `
     <defs>
@@ -676,16 +775,13 @@ function renderEdges() {
       <marker id="arrow-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/></marker>
     </defs>`;
 
-  // Collect: regular edges + implicit option/threshold routes
   const all = [...curFlow.edges];
   curFlow.nodes.forEach(n => {
     if ((n.type === 'question' || n.type === 'rootcause') && n.options) {
-      n.options.forEach((o, i) => {
+      n.options.forEach(o => {
         if (o.route && o.route.startsWith('node:')) {
           const tid = o.route.slice(5);
-          if (curFlow.nodes.find(x => x.id === tid)) {
-            all.push({ id: 'opt_' + o.id, from: n.id, to: tid, cond: o.text, implicit: true });
-          }
+          if (curFlow.nodes.find(x => x.id === tid)) all.push({ id: 'opt_' + o.id, from: n.id, to: tid, cond: o.text, fromOption: o.id, implicit: true });
         }
       });
     }
@@ -693,9 +789,7 @@ function renderEdges() {
       n.thresholds.forEach(t => {
         if (t.route && t.route.startsWith('node:')) {
           const tid = t.route.slice(5);
-          if (curFlow.nodes.find(x => x.id === tid)) {
-            all.push({ id: 'thr_' + n.id + '_' + t.id, from: n.id, to: tid, cond: t.label, implicit: true, marker: t.id });
-          }
+          if (curFlow.nodes.find(x => x.id === tid)) all.push({ id: 'thr_' + n.id + '_' + t.id, from: n.id, to: tid, cond: t.label, fromThreshold: t.id, marker: t.id, implicit: true });
         }
       });
     }
@@ -708,8 +802,21 @@ function renderEdges() {
     const aEl = canvas.querySelector(`[data-id="${a.id}"]`);
     const bEl = canvas.querySelector(`[data-id="${b.id}"]`);
     if (!aEl || !bEl) continue;
-    const { fromSide, toSide } = pickPorts(a, b, aEl, bEl);
-    const A = portCoords(a, aEl, fromSide), B = portCoords(b, bEl, toSide);
+
+    let ax, ay;
+    if (e.fromOption && a._optY && a._optY[e.fromOption] != null) {
+      ax = a.x + aEl.offsetWidth;
+      ay = a.y + a._optY[e.fromOption];
+    } else if (e.fromThreshold && a._thrY && a._thrY[e.fromThreshold] != null) {
+      ax = a.x + aEl.offsetWidth;
+      ay = a.y + a._thrY[e.fromThreshold];
+    } else {
+      ax = a.x + aEl.offsetWidth;
+      ay = a.y + aEl.offsetHeight / 2;
+    }
+    const bx = b.x;
+    const by = b.y + (bEl.offsetHeight > 80 ? 28 : bEl.offsetHeight / 2);
+
     const isSel = selection && selection.kind === 'edge' && selection.id === e.id;
     let stroke = '#94a3b8', marker = 'arrow';
     if (isSel) { stroke = '#6366f1'; marker = 'arrow-sel'; }
@@ -717,15 +824,8 @@ function renderEdges() {
     else if (e.marker === 'warn') { stroke = '#f59e0b'; marker = 'arrow-y'; }
     else if (e.marker === 'crit') { stroke = '#ef4444'; marker = 'arrow-r'; }
 
-    // bezier with horizontal or vertical preference
-    let d;
-    if (fromSide === 'right' || fromSide === 'left') {
-      const dx = Math.max(60, Math.abs(B.x - A.x) * 0.5) * (fromSide === 'right' ? 1 : -1);
-      d = `M ${A.x} ${A.y} C ${A.x + dx} ${A.y}, ${B.x - dx} ${B.y}, ${B.x} ${B.y}`;
-    } else {
-      const dy = Math.max(50, Math.abs(B.y - A.y) * 0.5) * (fromSide === 'bottom' ? 1 : -1);
-      d = `M ${A.x} ${A.y} C ${A.x} ${A.y + dy}, ${B.x} ${B.y - dy}, ${B.x} ${B.y}`;
-    }
+    const dx = Math.max(40, Math.abs(bx - ax) * 0.4);
+    const d = `M ${ax} ${ay} C ${ax + dx} ${ay}, ${bx - dx} ${by}, ${bx} ${by}`;
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', d);
     path.setAttribute('stroke', stroke);
@@ -738,27 +838,27 @@ function renderEdges() {
     edgesSvg.appendChild(path);
 
     if (e.cond) {
-      const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2 - 4;
+      const mx = (ax + bx) / 2, my = (ay + by) / 2 - 4;
       const bg = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       bg.setAttribute('x', mx); bg.setAttribute('y', my); bg.setAttribute('text-anchor', 'middle');
       bg.setAttribute('class', 'edge-label edge-label-bg');
       bg.textContent = truncate(e.cond, 28);
       edgesSvg.appendChild(bg);
-      const tx = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      tx.setAttribute('x', mx); tx.setAttribute('y', my); tx.setAttribute('text-anchor', 'middle');
-      tx.setAttribute('class', 'edge-label');
-      tx.textContent = truncate(e.cond, 28);
-      edgesSvg.appendChild(tx);
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', mx); t.setAttribute('y', my); t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('class', 'edge-label');
+      t.textContent = truncate(e.cond, 28);
+      edgesSvg.appendChild(t);
     }
   }
-  const w = Math.max(2800, ...curFlow.nodes.map(n => n.x + 400));
-  const h = Math.max(1800, ...curFlow.nodes.map(n => n.y + 400));
+  const w = Math.max(3000, ...curFlow.nodes.map(n => n.x + 400));
+  const h = Math.max(1800, ...curFlow.nodes.map(n => n.y + 500));
   edgesSvg.setAttribute('width', w); edgesSvg.setAttribute('height', h);
 }
 
-// ============================================================
+// =============================================================
 // Inspector
-// ============================================================
+// =============================================================
 function openInspector() { inspector.classList.add('open'); renderInspector(); }
 function closeInspector() { inspector.classList.remove('open'); selection = null; render(); }
 document.getElementById('insp-close').onclick = closeInspector;
@@ -770,40 +870,31 @@ function renderInspector() {
     if (!n) { closeInspector(); return; }
     const m = NTYPES[n.type];
     document.getElementById('insp-badge').textContent = m.icon + ' ' + m.label;
-    document.getElementById('insp-badge').style.cssText = `background:var(--c-${badgeKey(n.type)});color:var(--c-${badgeKey(n.type)}-fg)`;
+    document.getElementById('insp-badge').className = 'badge';
+    document.getElementById('insp-badge').style.cssText = `background:var(--c-${n.type});color:var(--c-${n.type}-fg)`;
     document.getElementById('insp-title').textContent = n.label || m.label;
     document.getElementById('insp-sub').textContent = n.id;
 
     let h = `<div class="helper-box"><div class="ic">💡</div><div>${escapeHtml(m.help)}</div></div>`;
     h += `<label>Label</label><input id="i-label" value="${escapeHtml(n.label || '')}">`;
-
     if (['trigger','action','answer','observation','reassign','waiting','end'].includes(n.type)) {
-      h += `<label>Description (optional)</label><textarea id="i-sub" placeholder="Notes shown to operator…">${escapeHtml(n.sub || '')}</textarea>`;
+      h += `<label>Description</label><textarea id="i-sub" placeholder="Operator-facing notes…">${escapeHtml(n.sub || '')}</textarea>`;
     }
     if (n.type === 'action' || n.type === 'answer') {
-      h += `<label>Action type</label><select id="i-actype">`;
-      h += `<option value="">— pick action —</option>`;
+      h += `<label>Action type</label><select id="i-actype"><option value="">— pick action —</option>`;
       ACTION_TYPES.forEach(a => h += `<option value="${a.id}" ${n.actionType === a.id ? 'selected' : ''}>${a.label}</option>`);
       h += `</select>`;
-      if (n.actionType === 'custom') h += `<label>Custom action name</label><input id="i-custact" value="${escapeHtml(n.customAction || '')}" placeholder="e.g. Reset breaker">`;
+      if (n.actionType === 'custom') h += `<label>Custom action name</label><input id="i-custact" value="${escapeHtml(n.customAction || '')}">`;
     }
     if (n.type === 'reassign') {
-      h += `<label>Assign to role</label><select id="i-role">`;
-      h += `<option value="">— pick role —</option>`;
+      h += `<label>Assign to role</label><select id="i-role"><option value="">— pick role —</option>`;
       ROLES.forEach(r => h += `<option value="${r}" ${n.role === r ? 'selected' : ''}>${r}</option>`);
       h += `</select>`;
-      h += `<label>User / name (optional)</label><input id="i-user" value="${escapeHtml(n.userName || '')}" placeholder="e.g. R. Sharma">`;
+      h += `<label>User / name (optional)</label><input id="i-user" value="${escapeHtml(n.userName || '')}">`;
     }
-    if (n.type === 'waiting') {
-      h += `<label>Wait for</label><input id="i-dur" value="${escapeHtml(n.duration || '')}" placeholder="e.g. 1 hour, until DO > 2">`;
-    }
+    if (n.type === 'waiting') h += `<label>Wait for</label><input id="i-dur" value="${escapeHtml(n.duration || '')}" placeholder="1 hour, until DO > 2…">`;
     if (n.type === 'question' || n.type === 'rootcause') {
-      if (n.type === 'question') {
-        h += `<label>Question type</label><select id="i-qtype">`;
-        QTYPES.forEach(q => h += `<option value="${q.id}" ${n.qtype === q.id ? 'selected' : ''}>${q.label}</option>`);
-        h += `</select>`;
-      }
-      h += `<label>Branches</label><div class="route-table" id="i-opts">`;
+      h += `<label>Branches (each is its own port on the right)</label><div class="route-table" id="i-opts">`;
       n.options = n.options || [];
       n.options.forEach((o, i) => {
         h += `<div class="route-row">
@@ -815,20 +906,19 @@ function renderInspector() {
           <button class="del" data-del="${i}">×</button>
         </div>`;
       });
-      h += `</div><button class="add-btn" id="i-add">+ Add branch</button>`;
-      h += `<button class="gen-btn" id="i-gen">⚡ Generate Answer cards downstream</button>`;
+      h += `</div><button class="add-btn" id="i-add">+ Add option</button>`;
     }
     if (n.type === 'sensor') {
-      h += `<label>Sensor name</label><input id="i-sname" value="${escapeHtml(n.sensorName || '')}" placeholder="e.g. DO sensor">`;
-      h += `<label>Unit</label><input id="i-unit" value="${escapeHtml(n.unit || '')}" placeholder="mg/L, bar, °C">`;
-      h += `<label>Threshold bands</label><div class="route-table">`;
+      h += `<label>Sensor name</label><input id="i-sname" value="${escapeHtml(n.sensorName || '')}">`;
+      h += `<label>Unit</label><input id="i-unit" value="${escapeHtml(n.unit || '')}" placeholder="mg/L, bar…">`;
+      h += `<label>Threshold bands (each its own port)</label><div class="route-table">`;
       n.thresholds = n.thresholds || [{id:'safe',label:'Safe',min:null,max:null,route:''},{id:'warn',label:'Warning',min:null,max:null,route:''},{id:'crit',label:'Critical',min:null,max:null,route:''}];
       n.thresholds.forEach((t, i) => {
         const c = t.id === 'safe' ? 'safe' : t.id === 'warn' ? 'warn' : 'crit';
         h += `<div class="route-row">
           <div class="num ${c}">${t.id === 'safe' ? 'S' : t.id === 'warn' ? 'W' : 'C'}</div>
           <div class="rfields">
-            <input data-thr="${i}" data-f="label" value="${escapeHtml(t.label)}" placeholder="Band name">
+            <input data-thr="${i}" data-f="label" value="${escapeHtml(t.label)}">
             <div class="row-range">
               <input data-thr="${i}" data-f="min" value="${t.min == null ? '' : t.min}" placeholder="Min">
               <input data-thr="${i}" data-f="max" value="${t.max == null ? '' : t.max}" placeholder="Max">
@@ -839,15 +929,12 @@ function renderInspector() {
         </div>`;
       });
       h += `</div>`;
-      h += `<div class="helper-box" style="background:#fef3c7;border-color:#fde68a;color:#92400e;margin-top:14px"><div class="ic">⚠</div><div>Each threshold routes to its own destination. Edges are auto-drawn and color-coded (🟢 safe, 🟡 warning, 🔴 critical).</div></div>`;
     }
     if (n.type === 'jump') {
-      h += `<label>Target flow</label><select id="i-tflow">
-        <option value="">— select —</option>
-        ${curTree.flows.filter(f => f !== curFlow).map(f => `<option value="${f.id}" ${n.targetFlow === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
-      </select>`;
+      h += `<label>Target flow</label><select id="i-tflow"><option value="">— pick flow —</option>`;
+      curTree.flows.filter(f => f !== curFlow).forEach(f => h += `<option value="${f.id}" ${n.targetFlow === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`);
+      h += `</select>`;
     }
-
     h += `<button class="danger-btn" id="i-del">Delete node</button>`;
     document.getElementById('insp-body').innerHTML = h;
     bindInspector(n);
@@ -862,39 +949,28 @@ function renderInspector() {
     document.getElementById('insp-body').innerHTML = `
       <div class="helper-box"><div class="ic">🔗</div><div>${escapeHtml(a?.label || '?')} → ${escapeHtml(b?.label || '?')}</div></div>
       <label>Condition label</label>
-      <input id="i-cond" value="${escapeHtml(e.cond || '')}" placeholder="e.g. answer = Yes">
-      <button class="danger-btn" id="i-del">Delete connection</button>
-    `;
+      <input id="i-cond" value="${escapeHtml(e.cond || '')}">
+      <button class="danger-btn" id="i-del">Delete connection</button>`;
     document.getElementById('i-cond').oninput = ev => { e.cond = ev.target.value; render(); };
     document.getElementById('i-del').onclick = () => { curFlow.edges = curFlow.edges.filter(x => x.id !== e.id); closeInspector(); };
   }
 }
-function badgeKey(t) { return ({trigger:'trigger',question:'question',answer:'answer',action:'action',waiting:'waiting',rootcause:'rootcause',observation:'observation',sensor:'sensor',reassign:'reassign',jump:'jump',end:'end'})[t] || 'end'; }
-
 function bindInspector(n) {
   const $ = id => document.getElementById(id);
   if ($('i-label')) $('i-label').oninput = e => { n.label = e.target.value; render(); };
   if ($('i-sub')) $('i-sub').oninput = e => { n.sub = e.target.value; render(); };
   if ($('i-actype')) $('i-actype').onchange = e => { n.actionType = e.target.value; render(); };
-  if ($('i-custact')) $('i-custact').oninput = e => { n.customAction = e.target.value; render(); };
+  if ($('i-custact')) $('i-custact').oninput = e => { n.customAction = e.target.value; };
   if ($('i-role')) $('i-role').onchange = e => { n.role = e.target.value; render(); };
   if ($('i-user')) $('i-user').oninput = e => { n.userName = e.target.value; render(); };
   if ($('i-dur')) $('i-dur').oninput = e => { n.duration = e.target.value; render(); };
   if ($('i-tflow')) $('i-tflow').onchange = e => { n.targetFlow = e.target.value; render(); };
-  if ($('i-qtype')) $('i-qtype').onchange = e => {
-    n.qtype = e.target.value;
-    if (n.qtype === 'yesno') n.options = [{ id: uid('opt_'), text: 'Yes', route: '' }, { id: uid('opt_'), text: 'No', route: '' }];
-    render();
-  };
   if ($('i-sname')) $('i-sname').oninput = e => { n.sensorName = e.target.value; render(); };
   if ($('i-unit')) $('i-unit').oninput = e => { n.unit = e.target.value; render(); };
-
   document.querySelectorAll('#i-opts input').forEach(inp => inp.oninput = e => { n.options[+e.target.dataset.i].text = e.target.value; render(); });
   document.querySelectorAll('#i-opts select').forEach(sel => sel.onchange = e => { n.options[+e.target.dataset.i].route = e.target.value; render(); });
   document.querySelectorAll('#i-opts .del').forEach(b => b.onclick = e => { n.options.splice(+e.target.dataset.del, 1); render(); });
   if ($('i-add')) $('i-add').onclick = () => { n.options.push({ id: uid('opt_'), text: 'New option', route: '' }); render(); };
-  if ($('i-gen')) $('i-gen').onclick = () => genAnswerCards(n);
-
   document.querySelectorAll('[data-thr]').forEach(inp => {
     inp.oninput = inp.onchange = e => {
       const t = n.thresholds[+e.target.dataset.thr];
@@ -904,10 +980,8 @@ function bindInspector(n) {
       render();
     };
   });
-
   $('i-del').onclick = () => deleteNode(n.id);
 }
-
 function destOpts(excludeId, selected) {
   let h = `<option value="" ${!selected ? 'selected' : ''}>— pick destination —</option>`;
   h += `<optgroup label="Nodes in this flow">`;
@@ -915,40 +989,16 @@ function destOpts(excludeId, selected) {
     const v = 'node:' + n.id;
     h += `<option value="${v}" ${selected === v ? 'selected' : ''}>${typeLabel(n.type)} · ${escapeHtml(truncate(n.label, 32))}</option>`;
   });
-  h += `</optgroup><optgroup label="Other flows in this tree">`;
+  h += `</optgroup><optgroup label="Other flows">`;
   curTree.flows.filter(f => f !== curFlow).forEach(f => {
     const v = 'flow:' + f.id;
     h += `<option value="${v}" ${selected === v ? 'selected' : ''}>↗ ${escapeHtml(f.name)}</option>`;
   });
-  h += `</optgroup><optgroup label="Special">`;
-  h += `<option value="end" ${selected === 'end' ? 'selected' : ''}>→ End diagnosis</option>`;
-  h += `</optgroup>`;
+  h += `</optgroup><optgroup label="Special"><option value="end" ${selected === 'end' ? 'selected' : ''}>→ End</option></optgroup>`;
   return h;
 }
 function typeLabel(t) { return (NTYPES[t] || { label: t }).label; }
 function truncate(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; }
-
-function genAnswerCards(qNode) {
-  if (!qNode.options) return;
-  const baseX = qNode.x + 320;
-  const baseY = qNode.y - ((qNode.options.length - 1) * 70) / 2;
-  qNode.options.forEach((opt, i) => {
-    let card = curFlow.nodes.find(c => c.type === 'answer' && c.linkedOption === opt.id);
-    if (!card) {
-      card = { id: uid('ans_'), type: 'answer', x: baseX, y: Math.max(40, baseY + i * 130), label: opt.text, linkedOption: opt.id, actionType: '' };
-      curFlow.nodes.push(card);
-    } else card.label = opt.text;
-    if (!curFlow.edges.find(e => e.from === qNode.id && e.to === card.id))
-      curFlow.edges.push({ id: uid('e_'), from: qNode.id, to: card.id });
-    curFlow.edges = curFlow.edges.filter(e => e.from !== card.id);
-    if (opt.route && opt.route.startsWith('node:')) {
-      curFlow.edges.push({ id: uid('e_'), from: card.id, to: opt.route.slice(5) });
-    }
-    opt.route = 'node:' + card.id;
-  });
-  render();
-  toast('Generated ' + qNode.options.length + ' answer cards');
-}
 
 function deleteNode(id) {
   curFlow.nodes = curFlow.nodes.filter(x => x.id !== id);
@@ -960,12 +1010,12 @@ function deleteNode(id) {
   closeInspector();
 }
 
-// ============================================================
-// Drag node + ports — bug fixes here
-// ============================================================
+// =============================================================
+// Node drag handlers — bug fix: edges follow node smoothly
+// =============================================================
 function attachNodeHandlers(el, n) {
   el.addEventListener('mousedown', ev => {
-    if (ev.target.classList.contains('port')) return;
+    if (ev.target.classList.contains('port') || ev.target.classList.contains('opt-port') || ev.target.classList.contains('opt-add') || ev.target.classList.contains('port-add')) return;
     if (ev.button !== 0) return;
     ev.stopPropagation();
     const wasSelected = selection && selection.kind === 'node' && selection.id === n.id;
@@ -992,12 +1042,21 @@ function attachNodeHandlers(el, n) {
   });
 }
 
-function attachPortHandler(port, n) {
+function attachPortHandler(port, n, sub) {
   port.addEventListener('mousedown', ev => {
     ev.stopPropagation();
-    const side = port.dataset.port;
     const el = canvas.querySelector(`[data-id="${n.id}"]`);
-    const A = portCoords(n, el, side);
+    let A;
+    if (sub && sub.kind === 'option') A = { x: n.x + el.offsetWidth, y: n.y + (n._optY?.[sub.id] || 30) };
+    else if (sub && sub.kind === 'threshold') A = { x: n.x + el.offsetWidth, y: n.y + (n._thrY?.[sub.id] || 30) };
+    else {
+      const side = port.dataset.port || 'right';
+      const w = el.offsetWidth, h = el.offsetHeight;
+      A = side === 'right' ? { x: n.x + w, y: n.y + 28 } :
+          side === 'left'  ? { x: n.x,     y: n.y + 28 } :
+          side === 'top'   ? { x: n.x + w/2, y: n.y } :
+                             { x: n.x + w/2, y: n.y + h };
+    }
     const tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     tempPath.setAttribute('stroke', '#6366f1');
     tempPath.setAttribute('stroke-width', '2.4');
@@ -1009,11 +1068,11 @@ function attachPortHandler(port, n) {
       const r = wrap.getBoundingClientRect();
       const mx = (e.clientX - r.left - pan.x) / zoom;
       const my = (e.clientY - r.top - pan.y) / zoom;
-      const dx = Math.max(50, Math.abs(mx - A.x) * 0.5);
+      const dx = Math.max(40, Math.abs(mx - A.x) * 0.5);
       tempPath.setAttribute('d', `M ${A.x} ${A.y} C ${A.x + dx} ${A.y}, ${mx - dx} ${my}, ${mx} ${my}`);
       const hover = document.elementFromPoint(e.clientX, e.clientY);
       if (lastTarget && lastTarget !== hover) lastTarget.classList.remove('hot');
-      if (hover && hover.classList.contains('port')) { hover.classList.add('hot'); lastTarget = hover; }
+      if (hover && (hover.classList.contains('port') || hover.classList.contains('opt-port'))) { hover.classList.add('hot'); lastTarget = hover; }
       else lastTarget = null;
     };
     const up = e => {
@@ -1022,26 +1081,94 @@ function attachPortHandler(port, n) {
       tempPath.remove();
       if (lastTarget) lastTarget.classList.remove('hot');
       const tgt = document.elementFromPoint(e.clientX, e.clientY);
-      if (tgt && tgt.classList.contains('port')) {
+      if (tgt && (tgt.classList.contains('port') || tgt.classList.contains('opt-port'))) {
         const tNodeEl = tgt.closest('.node');
         const tid = tNodeEl.dataset.id;
-        if (tid !== n.id && !curFlow.edges.find(x => x.from === n.id && x.to === tid)) {
-          curFlow.edges.push({ id: uid('e_'), from: n.id, to: tid });
+        if (tid !== n.id) {
+          if (sub && sub.kind === 'option') {
+            const opt = n.options.find(o => o.id === sub.id);
+            if (opt) opt.route = 'node:' + tid;
+          } else if (sub && sub.kind === 'threshold') {
+            const t = n.thresholds.find(x => x.id === sub.id);
+            if (t) t.route = 'node:' + tid;
+          } else if (!curFlow.edges.find(x => x.from === n.id && x.to === tid)) {
+            curFlow.edges.push({ id: uid('e_'), from: n.id, to: tid });
+          }
         }
+        render();
+      } else {
+        // Dropped on empty canvas — open insert popover
+        const r = wrap.getBoundingClientRect();
+        const mx = (e.clientX - r.left - pan.x) / zoom;
+        const my = (e.clientY - r.top - pan.y) / zoom;
+        openInsertPopover(n, sub, mx, my, e.clientX, e.clientY);
       }
-      render();
     };
     document.addEventListener('mousemove', move);
     document.addEventListener('mouseup', up);
   });
 }
 
-// ============================================================
+// =============================================================
+// Insert popover — create + connect a new node when port-drag drops on empty space
+// =============================================================
+function openInsertPopover(sourceNode, sub, canvasX, canvasY, screenX, screenY) {
+  const grid = document.getElementById('ip-grid');
+  grid.innerHTML = Object.entries(NTYPES).filter(([id]) => id !== 'trigger').map(([id, m]) => `
+    <div class="ip-card" data-type="${id}">
+      <div class="pic t-${id}">${m.icon}</div>
+      <div class="lbl">${m.label}</div>
+    </div>`).join('');
+  // Position popover near drop location (use screen coords if provided)
+  const x = screenX != null ? screenX + 10 : (canvasX * zoom + pan.x + wrap.getBoundingClientRect().left + 60);
+  const y = screenY != null ? screenY + 10 : (canvasY * zoom + pan.y + wrap.getBoundingClientRect().top);
+  insertPop.style.left = Math.min(x, window.innerWidth - 300) + 'px';
+  insertPop.style.top  = Math.min(y, window.innerHeight - 400) + 'px';
+  insertPop.style.display = 'block';
+
+  grid.querySelectorAll('.ip-card').forEach(c => {
+    c.onclick = () => {
+      const type = c.dataset.type;
+      const node = { id: uid('n_'), type, x: canvasX, y: canvasY - 30, label: NTYPES[type].label };
+      if (type === 'question') node.options = [{ id: uid('opt_'), text: 'Yes', route: '' }, { id: uid('opt_'), text: 'No', route: '' }];
+      if (type === 'rootcause') node.options = [{ id: uid('opt_'), text: 'Cause A', route: '' }, { id: uid('opt_'), text: 'Cause B', route: '' }];
+      if (type === 'sensor') {
+        node.sensorName = ''; node.unit = '';
+        node.thresholds = [
+          { id:'safe', label:'Safe', min:null, max:null, route:'' },
+          { id:'warn', label:'Warning', min:null, max:null, route:'' },
+          { id:'crit', label:'Critical', min:null, max:null, route:'' }
+        ];
+      }
+      curFlow.nodes.push(node);
+      // Wire source → new node
+      if (sub && sub.kind === 'option') {
+        const opt = sourceNode.options.find(o => o.id === sub.id);
+        if (opt) opt.route = 'node:' + node.id;
+      } else if (sub && sub.kind === 'threshold') {
+        const t = sourceNode.thresholds.find(x => x.id === sub.id);
+        if (t) t.route = 'node:' + node.id;
+      } else if (sourceNode) {
+        curFlow.edges.push({ id: uid('e_'), from: sourceNode.id, to: node.id });
+      }
+      insertPop.style.display = 'none';
+      selection = { kind: 'node', id: node.id };
+      openInspector();
+      render();
+    };
+  });
+}
+document.getElementById('ip-close').onclick = () => insertPop.style.display = 'none';
+document.addEventListener('click', e => {
+  if (insertPop.style.display === 'block' && !insertPop.contains(e.target)) insertPop.style.display = 'none';
+});
+
+// =============================================================
 // Pan / zoom
-// ============================================================
+// =============================================================
 wrap.addEventListener('mousedown', ev => {
   if (ev.target.tagName === 'path') return;
-  if (ev.target.closest('.node') || ev.target.closest('.zoom-pill')) return;
+  if (ev.target.closest('.node') || ev.target.closest('.zoom-pill') || ev.target.closest('.quick-pill') || ev.target.closest('.canvas-top') || ev.target.closest('.saved-status')) return;
   if (selection) closeInspector();
   const start = { x: ev.clientX, y: ev.clientY, px: pan.x, py: pan.y };
   const move = e => { pan.x = start.px + (e.clientX - start.x); pan.y = start.py + (e.clientY - start.y); applyTransform(); };
@@ -1060,23 +1187,24 @@ wrap.addEventListener('wheel', ev => {
 }, { passive: false });
 document.getElementById('zoom-in').onclick = () => { zoom = Math.min(2, zoom * 1.15); applyTransform(); };
 document.getElementById('zoom-out').onclick = () => { zoom = Math.max(0.2, zoom / 1.15); applyTransform(); };
+document.getElementById('zoom-fit').onclick = fitView;
 function fitView() {
-  if (!curFlow.nodes.length) { pan = { x: 40, y: 40 }; zoom = 1; applyTransform(); return; }
+  if (!curFlow.nodes.length) { pan = { x: 60, y: 60 }; zoom = 1; applyTransform(); return; }
   const xs = curFlow.nodes.map(n => n.x), ys = curFlow.nodes.map(n => n.y);
   const minX = Math.min(...xs), maxX = Math.max(...xs.map(x => x + 280));
-  const minY = Math.min(...ys), maxY = Math.max(...ys.map(y => y + 200));
+  const minY = Math.min(...ys), maxY = Math.max(...ys.map(y => y + 240));
   const rect = wrap.getBoundingClientRect();
-  const zx = (rect.width - 80) / (maxX - minX);
-  const zy = (rect.height - 80) / (maxY - minY);
+  const zx = (rect.width - 100) / (maxX - minX);
+  const zy = (rect.height - 100) / (maxY - minY);
   zoom = Math.min(1, Math.min(zx, zy));
-  pan.x = -minX * zoom + 40;
-  pan.y = -minY * zoom + 40;
+  pan.x = -minX * zoom + 50;
+  pan.y = -minY * zoom + 50;
   applyTransform();
 }
 
-// ============================================================
+// =============================================================
 // Drop from palette
-// ============================================================
+// =============================================================
 wrap.addEventListener('dragover', e => e.preventDefault());
 wrap.addEventListener('drop', e => {
   e.preventDefault();
@@ -1085,14 +1213,14 @@ wrap.addEventListener('drop', e => {
   const r = wrap.getBoundingClientRect();
   const x = (e.clientX - r.left - pan.x) / zoom;
   const y = (e.clientY - r.top - pan.y) / zoom;
-  const node = { id: uid('n_'), type, x: x - 130, y: y - 40, label: NTYPES[type].label };
-  if (type === 'question') { node.qtype = 'single'; node.options = [{id:uid('opt_'),text:'Yes',route:''},{id:uid('opt_'),text:'No',route:''}]; }
-  if (type === 'rootcause') node.options = [{id:uid('opt_'),text:'Cause A',route:''},{id:uid('opt_'),text:'Cause B',route:''},{id:uid('opt_'),text:'Other',route:''}];
+  const node = { id: uid('n_'), type, x: x - 120, y: y - 30, label: NTYPES[type].label };
+  if (type === 'question') node.options = [{ id: uid('opt_'), text: 'Yes', route: '' }, { id: uid('opt_'), text: 'No', route: '' }];
+  if (type === 'rootcause') node.options = [{ id: uid('opt_'), text: 'Cause A', route: '' }, { id: uid('opt_'), text: 'Cause B', route: '' }];
   if (type === 'sensor') {
     node.sensorName = ''; node.unit = '';
     node.thresholds = [
-      { id:'safe', label:'Safe',     min:null, max:null, route:'' },
-      { id:'warn', label:'Warning',  min:null, max:null, route:'' },
+      { id:'safe', label:'Safe', min:null, max:null, route:'' },
+      { id:'warn', label:'Warning', min:null, max:null, route:'' },
       { id:'crit', label:'Critical', min:null, max:null, route:'' }
     ];
   }
@@ -1102,13 +1230,9 @@ wrap.addEventListener('drop', e => {
   render();
 });
 
-// ============================================================
-// Header buttons
-// ============================================================
-document.getElementById('btn-clear').onclick = () => {
-  if (!confirm('Clear all nodes and connections in this flow?')) return;
-  curFlow.nodes = []; curFlow.edges = []; closeInspector();
-};
+// =============================================================
+// Templates + Welcome
+// =============================================================
 document.getElementById('btn-templates').onclick = showTemplates;
 document.getElementById('btn-save-tpl').onclick = () => {
   document.getElementById('tpl-save-name').value = curTree.name;
@@ -1125,7 +1249,6 @@ document.getElementById('tpl-save-confirm').onclick = () => {
   document.getElementById('tpl-save-modal').style.display = 'none';
   toast('Template saved');
 };
-
 function showTemplates() {
   const grid = document.getElementById('tpl-grid');
   let h = '';
@@ -1138,15 +1261,10 @@ function showTemplates() {
       if (ev.target.classList.contains('del')) return;
       if (c.dataset.builtin) {
         const t = BUILTIN_TEMPLATES.find(x => x.id === c.dataset.builtin);
-        const nt = t.builder();
-        data.trees.push(nt); curTree = nt; curFlow = nt.flows[0];
+        const nt = t.builder(); data.trees.push(nt); curTree = nt; curFlow = nt.flows[0];
       } else if (c.dataset.saved) {
         const sv = loadTemplates().find(x => x.id === c.dataset.saved);
-        if (sv) {
-          const cl = JSON.parse(JSON.stringify(sv.tree));
-          cl.id = uid('tree_');
-          data.trees.push(cl); curTree = cl; curFlow = cl.flows[0];
-        }
+        if (sv) { const cl = JSON.parse(JSON.stringify(sv.tree)); cl.id = uid('tree_'); data.trees.push(cl); curTree = cl; curFlow = cl.flows[0]; }
       }
       document.getElementById('tpl-modal').style.display = 'none';
       closeInspector(); fitView();
@@ -1162,9 +1280,6 @@ function showTemplates() {
 }
 document.getElementById('tpl-close').onclick = () => document.getElementById('tpl-modal').style.display = 'none';
 
-// ============================================================
-// Welcome
-// ============================================================
 function showWelcome() {
   const m = document.getElementById('welcome-modal');
   m.style.display = 'flex';
@@ -1186,35 +1301,30 @@ function showWelcome() {
   });
 }
 
-// ============================================================
-// Keyboard
-// ============================================================
+// Quick add (⌘K) — opens insert popover at center of canvas
+document.getElementById('quick-add').onclick = () => {
+  const r = wrap.getBoundingClientRect();
+  openInsertPopover(null, null, (r.width/2 - pan.x)/zoom, (r.height/2 - pan.y)/zoom, r.left + r.width/2, r.top + r.height/2);
+};
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); document.getElementById('quick-add').click(); }
   if ((e.key === 'Delete' || e.key === 'Backspace') && selection) {
     if (selection.kind === 'node') deleteNode(selection.id);
     else if (selection.kind === 'edge') { curFlow.edges = curFlow.edges.filter(x => x.id !== selection.id); closeInspector(); }
   }
-  if (e.key === 'Escape') closeInspector();
+  if (e.key === 'Escape') { closeInspector(); insertPop.style.display = 'none'; }
 });
 
-// ============================================================
-// Util
-// ============================================================
 function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function toast(msg) {
-  const t = document.createElement('div');
-  t.className = 'toast'; t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 2200);
-}
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2200); }
 
-// ============================================================
+// =============================================================
 // Init
-// ============================================================
+// =============================================================
 (function init() {
   renderPalette();
-  pan = { x: 40, y: 40 }; zoom = 0.7;
+  pan = { x: 50, y: 50 }; zoom = 0.7;
   if (!loadPersisted()) {
     data.trees = [buildLowDoTree()];
     curTree = data.trees[0]; curFlow = curTree.flows[2];
