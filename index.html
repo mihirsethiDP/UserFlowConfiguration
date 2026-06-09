@@ -428,18 +428,30 @@
 // Node-type metadata
 // =============================================================
 const NTYPES = {
-  trigger:     { label: 'Trigger',         icon: '⚠', group: 'step',  help: 'The entry point of a flow.' },
-  question:    { label: 'Question',        icon: '?', group: 'step',  help: 'A decision step. Each option in the inspector becomes its own outgoing port on the right edge.' },
-  answer:      { label: 'Answer',          icon: '💬', group: 'step', help: 'A tappable answer card with an Action selector for what happens next.' },
-  action:      { label: 'Action',          icon: '✓', group: 'step',  help: 'A task the operator performs. Pick Action type in the inspector.' },
-  observation: { label: 'Observation',     icon: '👁', group: 'step', help: 'Passive recording — visual or manual check, no branching.' },
-  sensor:      { label: 'Sensor reading',  icon: '📡', group: 'step', help: 'Read a sensor value and branch by Safe / Warning / Critical thresholds.' },
-  rootcause:   { label: 'Root cause',      icon: '🌱', group: 'step', help: 'Pick from diagnosed root causes; each routes to a resolution.' },
-  waiting:     { label: 'Waiting',         icon: '⏱', group: 'help', help: 'Pause the flow by time or event.' },
-  reassign:    { label: 'Reassign',        icon: '↻', group: 'help', help: 'Hand off to another role / user.' },
-  jump:        { label: 'Jump to flow',    icon: '↗', group: 'help', help: 'Hand off to another flow in the tree.' },
-  end:         { label: 'End',             icon: '■', group: 'help', help: 'Terminates the flow.' }
+  // === HIERARCHY: Trigger → Possible Root Causes → flow steps → End/Jump ===
+  trigger:     { label: 'Trigger',               icon: '⚠', group: 'step',  help: 'Entry point of the diagnostic tree. Issue or event that kicks things off. Usually followed by Possible Root Causes.' },
+  rootcause:   { label: 'Possible Root Causes',  icon: '🌱', group: 'step', help: 'List of possible root causes. Each cause has a sequence (display order) and routes to its own flow. Operator picks the matching one to start the right diagnostic.' },
+  question:    { label: 'Question',              icon: '?',  group: 'step', help: 'A decision step inside a flow. Each option becomes its own port on the right edge. Set a sequence to control the order questions appear to the operator.' },
+  answer:      { label: 'Answer',                icon: '💬', group: 'step', help: 'A tappable answer card with an Action selector for what happens next.' },
+  action:      { label: 'Action',                icon: '✓',  group: 'step', help: 'A task the operator performs. Pick an Action type in the inspector — Escalate also lets you pick a user.' },
+  sensor:      { label: 'Sensor reading',        icon: '📡', group: 'step', help: 'Read a sensor by Tag — thresholds (Safe/Warning/Critical) are inherited from the tag and can be overridden.' },
+  observation: { label: 'Observation',           icon: '👁', group: 'step', help: 'Passive recording — visual or manual check, no branching.' },
+  reassign:    { label: 'Reassign',              icon: '↻',  group: 'help', help: 'Hand the flow off to another role / user.' },
+  waiting:     { label: 'Waiting',               icon: '⏱', group: 'help', help: 'Pause the flow by time or event.' },
+  jump:        { label: 'Jump to flow',          icon: '↗',  group: 'help', help: 'Transition to another flow in the tree. Use to chain root-cause flows or hand off to a related diagnostic.' },
+  end:         { label: 'Done',                  icon: '■',  group: 'help', help: 'Terminates the flow. The flow ends here.' }
 };
+
+// Preset sensor tags — selecting a tag inherits its unit + threshold bands
+const SENSOR_TAGS = [
+  { id: 'DO_TANK_01',       label: 'DO Tank 01',         unit: 'mg/L', safe: { min: 2,    max: null }, warn: { min: 1,    max: 2 },    crit: { min: null, max: 1 } },
+  { id: 'DO_TANK_02',       label: 'DO Tank 02',         unit: 'mg/L', safe: { min: 2,    max: null }, warn: { min: 1,    max: 2 },    crit: { min: null, max: 1 } },
+  { id: 'PRESSURE_HEADER',  label: 'Header pressure',    unit: 'bar',  safe: { min: 0.5,  max: 1.5 },  warn: { min: 0.2,  max: 0.5 },  crit: { min: null, max: 0.2 } },
+  { id: 'TEMP_REACTOR',     label: 'Reactor temp',       unit: '°C',   safe: { min: 20,   max: 35 },   warn: { min: 35,   max: 45 },   crit: { min: 45,   max: null } },
+  { id: 'PH_INLET',         label: 'Inlet pH',           unit: 'pH',   safe: { min: 6.5,  max: 8.5 },  warn: { min: 6,    max: 6.5 },  crit: { min: null, max: 6 } },
+  { id: 'FLOW_RECIRC',      label: 'Recirculation flow', unit: 'm³/h', safe: { min: 50,   max: null }, warn: { min: 20,   max: 50 },   crit: { min: null, max: 20 } },
+  { id: 'MLSS',             label: 'MLSS',               unit: 'mg/L', safe: { min: 2500, max: 4000 }, warn: { min: 1500, max: 2500 }, crit: { min: null, max: 1500 } }
+];
 
 const ACTION_TYPES = [
   { id: 'photo',     label: 'Photo upload' },
@@ -477,10 +489,25 @@ function saveTemplates(l) { try { localStorage.setItem(TEMPLATES_KEY, JSON.strin
 // =============================================================
 function buildLowDoTree() {
   const t = { id: uid('tree_'), name: 'Low DO in Aeration Tank', flows: [] };
-  ['Blower OFF check','Blower performance','Uneven bubbling / dead zones','DO sensor failure','Sludge bulking','Shock load / toxicity'].forEach((nm, i) => {
+  const causes = ['Blower OFF check','Blower performance','Uneven bubbling / dead zones','DO sensor failure','Sludge bulking','Shock load / toxicity'];
+  // Build child flows first so we can reference their IDs in the triage root-cause selector
+  causes.forEach((nm, i) => {
     if (i === 2) t.flows.push(buildFlow3());
     else t.flows.push({ id: uid('f_'), name: `Flow ${i+1} · ${nm}`, nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: nm }], edges: [] });
   });
+  // Insert Triage flow as flow 0 — Trigger → Possible Root Causes
+  const tId = uid('n_'), rcId = uid('n_');
+  const triage = {
+    id: uid('f_'), name: 'Flow 0 · Triage',
+    nodes: [
+      { id: tId, type: 'trigger', x: 80, y: 280, label: 'Low DO alarm in Aeration tank' },
+      { id: rcId, type: 'rootcause', x: 440, y: 200, label: 'Possible Root Causes',
+        options: t.flows.map((f, i) => ({ id: uid('opt_'), text: causes[i], route: 'flow:' + f.id, sequence: i + 1 }))
+      }
+    ],
+    edges: [{ id: uid('e_'), from: tId, to: rcId }]
+  };
+  t.flows.unshift(triage);
   return t;
 }
 function buildPumpTree() {
@@ -690,12 +717,22 @@ function renderNode(n) {
   if (n.type === 'reassign' && n.role) sub = '👤 ' + n.role + (n.userName ? ' · ' + n.userName : '');
   if ((n.type === 'action' || n.type === 'answer') && n.actionType) {
     const at = ACTION_TYPES.find(a => a.id === n.actionType);
-    if (at) sub = '⚙ ' + at.label;
+    if (at) {
+      sub = '⚙ ' + at.label;
+      if (n.actionType === 'escalate' && n.escalateRole) sub += ' → ' + n.escalateRole + (n.escalateUser ? ' (' + n.escalateUser + ')' : '');
+    }
+  }
+  if (n.type === 'sensor') {
+    if (n.sensorTag && n.sensorTag !== '__custom__') {
+      const tag = SENSOR_TAGS.find(s => s.id === n.sensorTag);
+      if (tag) sub = '🏷 ' + tag.label + ' · ' + tag.unit;
+    } else if (n.sensorName) sub = '🏷 ' + n.sensorName + (n.unit ? ' · ' + n.unit : '');
   }
 
   // Build inner HTML
+  const seqChip = (n.type === 'question' && n.sequence) ? `<div style="margin-left:auto;font-size:10px;background:var(--accent-soft);color:var(--accent-2);padding:2px 7px;border-radius:4px;font-weight:700">#${n.sequence}</div>` : '';
   let inner = `
-    <div class="nhead"><div class="badge">${m.icon} ${m.label}</div></div>
+    <div class="nhead"><div class="badge">${m.label}</div>${seqChip}</div>
     <div class="label">${escapeHtml(n.label || '(untitled)')}</div>
     ${sub ? `<div class="sub">${escapeHtml(sub)}</div>` : ''}
   `;
@@ -704,15 +741,18 @@ function renderNode(n) {
   const isSensor = n.type === 'sensor';
 
   if (isBranching) {
-    inner += `<div class="options">` + n.options.map((o, i) => {
+    // Sort options by sequence (rootcause especially — operator sees them in this order)
+    const sortedOpts = [...n.options].map((o, i) => ({ o, i })).sort((a, b) => (a.o.sequence || a.i + 1) - (b.o.sequence || b.i + 1));
+    inner += `<div class="options">` + sortedOpts.map(({ o, i }) => {
       const rt = routeLabel(o.route);
+      const seq = o.sequence || i + 1;
       return `<div class="opt-row" data-opt="${o.id}">
-        <div class="opt-num">${i+1}</div>
+        <div class="opt-num">${seq}</div>
         <div class="opt-text" title="${escapeHtml(o.text)}">${escapeHtml(o.text)}</div>
         <div class="opt-rt" title="${escapeHtml(rt)}">${escapeHtml(rt)}</div>
         <div class="opt-port" data-opt-port="${o.id}"></div>
       </div>`;
-    }).join('') + `<div class="opt-add" data-add-opt="1">+ Add option</div></div>`;
+    }).join('') + `<div class="opt-add" data-add-opt="1">+ Add ${n.type === 'rootcause' ? 'root cause' : 'option'}</div></div>`;
   } else if (isSensor && n.thresholds) {
     inner += `<div class="thresholds">` + n.thresholds.map(t => {
       const c = t.id === 'safe' ? 'safe' : t.id === 'warn' ? 'warn' : 'crit';
@@ -869,7 +909,7 @@ function renderInspector() {
     const n = curFlow.nodes.find(x => x.id === selection.id);
     if (!n) { closeInspector(); return; }
     const m = NTYPES[n.type];
-    document.getElementById('insp-badge').textContent = m.icon + ' ' + m.label;
+    document.getElementById('insp-badge').textContent = m.label;
     document.getElementById('insp-badge').className = 'badge';
     document.getElementById('insp-badge').style.cssText = `background:var(--c-${n.type});color:var(--c-${n.type}-fg)`;
     document.getElementById('insp-title').textContent = n.label || m.label;
@@ -885,6 +925,12 @@ function renderInspector() {
       ACTION_TYPES.forEach(a => h += `<option value="${a.id}" ${n.actionType === a.id ? 'selected' : ''}>${a.label}</option>`);
       h += `</select>`;
       if (n.actionType === 'custom') h += `<label>Custom action name</label><input id="i-custact" value="${escapeHtml(n.customAction || '')}">`;
+      if (n.actionType === 'escalate') {
+        h += `<label>Escalate to role</label><select id="i-erole"><option value="">— pick role —</option>`;
+        ROLES.forEach(r => h += `<option value="${r}" ${n.escalateRole === r ? 'selected' : ''}>${r}</option>`);
+        h += `</select>`;
+        h += `<label>Escalate to (user — optional)</label><input id="i-euser" value="${escapeHtml(n.escalateUser || '')}" placeholder="e.g. R. Sharma">`;
+      }
     }
     if (n.type === 'reassign') {
       h += `<label>Assign to role</label><select id="i-role"><option value="">— pick role —</option>`;
@@ -893,23 +939,43 @@ function renderInspector() {
       h += `<label>User / name (optional)</label><input id="i-user" value="${escapeHtml(n.userName || '')}">`;
     }
     if (n.type === 'waiting') h += `<label>Wait for</label><input id="i-dur" value="${escapeHtml(n.duration || '')}" placeholder="1 hour, until DO > 2…">`;
+    if (n.type === 'question') {
+      h += `<label>Sequence (display order in flow)</label><input id="i-seq" type="number" min="1" value="${n.sequence || ''}" placeholder="e.g. 1, 2, 3…">`;
+    }
     if (n.type === 'question' || n.type === 'rootcause') {
-      h += `<label>Branches (each is its own port on the right)</label><div class="route-table" id="i-opts">`;
+      const isRC = n.type === 'rootcause';
+      h += `<label>${isRC ? 'Possible root causes — each routes to its own flow' : 'Branches — each option is its own port'}</label>`;
+      h += `<div class="route-table" id="i-opts">`;
       n.options = n.options || [];
-      n.options.forEach((o, i) => {
+      // Show in current sequence order
+      const ordered = [...n.options].map((o, i) => ({ o, idx: i })).sort((a, b) => (a.o.sequence || a.idx + 1) - (b.o.sequence || b.idx + 1));
+      ordered.forEach(({ o, idx }, displayIdx) => {
+        const seq = o.sequence || displayIdx + 1;
         h += `<div class="route-row">
-          <div class="num opt">${i+1}</div>
+          <div class="num opt">${seq}</div>
           <div class="rfields">
-            <input data-i="${i}" data-f="text" value="${escapeHtml(o.text || '')}" placeholder="Option text">
-            <select data-i="${i}" data-f="route">${destOpts(n.id, o.route)}</select>
+            ${isRC ? `<input data-i="${idx}" data-f="sequence" type="number" min="1" value="${o.sequence || displayIdx + 1}" placeholder="Sequence" style="width:80px">` : ''}
+            <input data-i="${idx}" data-f="text" value="${escapeHtml(o.text || '')}" placeholder="${isRC ? 'Root cause name' : 'Option text'}">
+            <select data-i="${idx}" data-f="route">${destOpts(n.id, o.route, isRC)}</select>
           </div>
-          <button class="del" data-del="${i}">×</button>
+          <button class="del" data-del="${idx}">×</button>
         </div>`;
       });
-      h += `</div><button class="add-btn" id="i-add">+ Add option</button>`;
+      h += `</div><button class="add-btn" id="i-add">+ Add ${isRC ? 'root cause' : 'option'}</button>`;
+      if (isRC) {
+        h += `<div class="helper-box" style="margin-top:14px"><div class="ic">🌱</div><div>Each root cause should route to its own flow. The flow's terminal is either <b>Done</b> or a <b>Jump</b> to another root-cause flow.</div></div>`;
+      }
     }
     if (n.type === 'sensor') {
-      h += `<label>Sensor name</label><input id="i-sname" value="${escapeHtml(n.sensorName || '')}">`;
+      h += `<label>Sensor tag (preset)</label><select id="i-stag">
+        <option value="">— pick tag —</option>
+        ${SENSOR_TAGS.map(t => `<option value="${t.id}" ${n.sensorTag === t.id ? 'selected' : ''}>${escapeHtml(t.label)} · ${t.unit}</option>`).join('')}
+        <option value="__custom__" ${n.sensorTag === '__custom__' ? 'selected' : ''}>＋ Custom tag…</option>
+      </select>`;
+      h += `<div class="helper-box" style="margin-top:8px;margin-bottom:8px;background:#fef3c7;border-color:#fde68a;color:#92400e"><div class="ic">💡</div><div>Selecting a tag inherits its unit and Safe / Warning / Critical thresholds. You can override below.</div></div>`;
+      if (n.sensorTag === '__custom__' || !n.sensorTag) {
+        h += `<label>Sensor name</label><input id="i-sname" value="${escapeHtml(n.sensorName || '')}" placeholder="e.g. DO sensor (custom)">`;
+      }
       h += `<label>Unit</label><input id="i-unit" value="${escapeHtml(n.unit || '')}" placeholder="mg/L, bar…">`;
       h += `<label>Threshold bands (each its own port)</label><div class="route-table">`;
       n.thresholds = n.thresholds || [{id:'safe',label:'Safe',min:null,max:null,route:''},{id:'warn',label:'Warning',min:null,max:null,route:''},{id:'crit',label:'Critical',min:null,max:null,route:''}];
@@ -961,16 +1027,42 @@ function bindInspector(n) {
   if ($('i-sub')) $('i-sub').oninput = e => { n.sub = e.target.value; render(); };
   if ($('i-actype')) $('i-actype').onchange = e => { n.actionType = e.target.value; render(); };
   if ($('i-custact')) $('i-custact').oninput = e => { n.customAction = e.target.value; };
+  if ($('i-erole')) $('i-erole').onchange = e => { n.escalateRole = e.target.value; render(); };
+  if ($('i-euser')) $('i-euser').oninput = e => { n.escalateUser = e.target.value; render(); };
+  if ($('i-seq')) $('i-seq').oninput = e => { n.sequence = e.target.value === '' ? null : +e.target.value; render(); };
+  if ($('i-stag')) $('i-stag').onchange = e => {
+    n.sensorTag = e.target.value;
+    const preset = SENSOR_TAGS.find(t => t.id === n.sensorTag);
+    if (preset) {
+      n.sensorName = preset.label;
+      n.unit = preset.unit;
+      n.thresholds = [
+        { id: 'safe', label: 'Safe',     min: preset.safe.min, max: preset.safe.max, route: n.thresholds?.find(x => x.id === 'safe')?.route || '' },
+        { id: 'warn', label: 'Warning',  min: preset.warn.min, max: preset.warn.max, route: n.thresholds?.find(x => x.id === 'warn')?.route || '' },
+        { id: 'crit', label: 'Critical', min: preset.crit.min, max: preset.crit.max, route: n.thresholds?.find(x => x.id === 'crit')?.route || '' }
+      ];
+    }
+    render();
+  };
   if ($('i-role')) $('i-role').onchange = e => { n.role = e.target.value; render(); };
   if ($('i-user')) $('i-user').oninput = e => { n.userName = e.target.value; render(); };
   if ($('i-dur')) $('i-dur').oninput = e => { n.duration = e.target.value; render(); };
   if ($('i-tflow')) $('i-tflow').onchange = e => { n.targetFlow = e.target.value; render(); };
   if ($('i-sname')) $('i-sname').oninput = e => { n.sensorName = e.target.value; render(); };
   if ($('i-unit')) $('i-unit').oninput = e => { n.unit = e.target.value; render(); };
-  document.querySelectorAll('#i-opts input').forEach(inp => inp.oninput = e => { n.options[+e.target.dataset.i].text = e.target.value; render(); });
+  document.querySelectorAll('#i-opts input').forEach(inp => inp.oninput = e => {
+    const i = +e.target.dataset.i, f = e.target.dataset.f;
+    if (f === 'sequence') n.options[i].sequence = e.target.value === '' ? null : +e.target.value;
+    else n.options[i][f] = e.target.value;
+    render();
+  });
   document.querySelectorAll('#i-opts select').forEach(sel => sel.onchange = e => { n.options[+e.target.dataset.i].route = e.target.value; render(); });
   document.querySelectorAll('#i-opts .del').forEach(b => b.onclick = e => { n.options.splice(+e.target.dataset.del, 1); render(); });
-  if ($('i-add')) $('i-add').onclick = () => { n.options.push({ id: uid('opt_'), text: 'New option', route: '' }); render(); };
+  if ($('i-add')) $('i-add').onclick = () => {
+    const isRC = n.type === 'rootcause';
+    n.options.push({ id: uid('opt_'), text: isRC ? 'New root cause' : 'New option', route: '', sequence: isRC ? n.options.length + 1 : undefined });
+    render();
+  };
   document.querySelectorAll('[data-thr]').forEach(inp => {
     inp.oninput = inp.onchange = e => {
       const t = n.thresholds[+e.target.dataset.thr];
@@ -982,19 +1074,29 @@ function bindInspector(n) {
   });
   $('i-del').onclick = () => deleteNode(n.id);
 }
-function destOpts(excludeId, selected) {
+function destOpts(excludeId, selected, preferFlows) {
   let h = `<option value="" ${!selected ? 'selected' : ''}>— pick destination —</option>`;
-  h += `<optgroup label="Nodes in this flow">`;
-  curFlow.nodes.filter(n => n.id !== excludeId).forEach(n => {
-    const v = 'node:' + n.id;
-    h += `<option value="${v}" ${selected === v ? 'selected' : ''}>${typeLabel(n.type)} · ${escapeHtml(truncate(n.label, 32))}</option>`;
-  });
-  h += `</optgroup><optgroup label="Other flows">`;
-  curTree.flows.filter(f => f !== curFlow).forEach(f => {
-    const v = 'flow:' + f.id;
-    h += `<option value="${v}" ${selected === v ? 'selected' : ''}>↗ ${escapeHtml(f.name)}</option>`;
-  });
-  h += `</optgroup><optgroup label="Special"><option value="end" ${selected === 'end' ? 'selected' : ''}>→ End</option></optgroup>`;
+  const flowsGroup = () => {
+    let s = `<optgroup label="Flows in this tree (recommended for root causes)">`;
+    curTree.flows.filter(f => f !== curFlow).forEach(f => {
+      const v = 'flow:' + f.id;
+      s += `<option value="${v}" ${selected === v ? 'selected' : ''}>↗ ${escapeHtml(f.name)}</option>`;
+    });
+    s += `</optgroup>`;
+    return s;
+  };
+  const nodesGroup = () => {
+    let s = `<optgroup label="Nodes in this flow">`;
+    curFlow.nodes.filter(n => n.id !== excludeId).forEach(n => {
+      const v = 'node:' + n.id;
+      s += `<option value="${v}" ${selected === v ? 'selected' : ''}>${typeLabel(n.type)} · ${escapeHtml(truncate(n.label, 32))}</option>`;
+    });
+    s += `</optgroup>`;
+    return s;
+  };
+  if (preferFlows) { h += flowsGroup() + nodesGroup(); }
+  else { h += nodesGroup() + flowsGroup(); }
+  h += `<optgroup label="Special"><option value="end" ${selected === 'end' ? 'selected' : ''}>→ Done</option></optgroup>`;
   return h;
 }
 function typeLabel(t) { return (NTYPES[t] || { label: t }).label; }
