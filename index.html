@@ -6,66 +6,125 @@
 <title>FlowConfig — Diagnostic Flow Designer</title>
 <style>
   :root {
-    --bg: #0f172a;
-    --bg-soft: #1e293b;
+    --bg-grad: linear-gradient(135deg, #e0f2fe 0%, #ddfbe9 100%);
+    --rail: #0f172a;
+    --rail-2: #1e293b;
     --panel: #ffffff;
     --panel-soft: #f8fafc;
-    --border: #e2e8f0;
+    --border: #e5e7eb;
+    --border-2: #f1f5f9;
     --text: #0f172a;
     --muted: #64748b;
+    --muted-2: #94a3b8;
     --accent: #6366f1;
+    --accent-2: #8b5cf6;
+    --accent-soft: #eef2ff;
     --accent-grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
 
     --entry: #10b981;
-    --question: #3b82f6;
+    --question: #6366f1;
     --answer: #0ea5e9;
     --action: #f59e0b;
+    --action-soft: #fef3c7;
     --wait: #8b5cf6;
-    --terminal: #64748b;
+    --terminal: #475569;
     --jump: #ec4899;
     --fallback: #ef4444;
     --rootcause: #14b8a6;
+    --skip: #94a3b8;
+    --reassign: #f97316;
 
     --shadow-sm: 0 1px 2px rgba(15,23,42,0.06);
-    --shadow-md: 0 4px 12px rgba(15,23,42,0.10);
-    --shadow-lg: 0 12px 40px rgba(15,23,42,0.18);
+    --shadow-md: 0 4px 14px rgba(15,23,42,0.08);
+    --shadow-lg: 0 18px 50px rgba(15,23,42,0.18);
+    --shadow-node: 0 2px 4px rgba(15,23,42,0.04), 0 4px 14px rgba(15,23,42,0.06);
+    --shadow-node-hover: 0 4px 8px rgba(15,23,42,0.06), 0 12px 32px rgba(99,102,241,0.18);
   }
   * { box-sizing: border-box; }
-  html, body { height: 100%; margin: 0; font-family: -apple-system, "Segoe UI", "Inter", Roboto, sans-serif; color: var(--text); background: var(--panel-soft); user-select: none; -webkit-font-smoothing: antialiased; }
-  #app { display: grid; grid-template-columns: 240px 1fr 340px; grid-template-rows: 56px 1fr; height: 100vh; }
+  html, body { height: 100%; margin: 0; font-family: -apple-system, "Inter", "Segoe UI", Roboto, sans-serif; color: var(--text); background: var(--bg-grad); user-select: none; -webkit-font-smoothing: antialiased; overflow: hidden; }
 
-  /* ============ TOPBAR ============ */
-  #topbar { grid-column: 1 / 4; background: var(--bg); color: #fff; display: flex; align-items: center; padding: 0 20px; gap: 12px; font-size: 13px; box-shadow: var(--shadow-md); position: relative; z-index: 10; }
-  #topbar .logo { font-weight: 700; font-size: 15px; background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: -0.01em; }
-  #topbar .crumb { color: #475569; font-size: 14px; }
-  #topbar select { font-size: 13px; padding: 6px 26px 6px 10px; border: 1px solid #334155; border-radius: 6px; background: var(--bg-soft) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>") no-repeat right 8px center; color: #e2e8f0; appearance: none; cursor: pointer; font-weight: 500; max-width: 280px; text-overflow: ellipsis; }
-  #topbar select:hover { border-color: var(--accent); }
-  #topbar .spacer { flex: 1; }
-  #topbar button { font-size: 12px; padding: 7px 14px; border: 1px solid #334155; border-radius: 6px; background: var(--bg-soft); color: #e2e8f0; cursor: pointer; font-weight: 500; transition: all 0.15s; }
-  #topbar button:hover { background: #334155; transform: translateY(-1px); }
-  #topbar button.primary { background: var(--accent-grad); border-color: transparent; color: #fff; font-weight: 600; box-shadow: 0 2px 8px rgba(99,102,241,0.4); }
-  #topbar button.primary:hover { box-shadow: 0 4px 16px rgba(99,102,241,0.6); transform: translateY(-1px); }
-  #topbar button.ghost { background: transparent; }
-  .badge-mode { font-size: 10px; padding: 3px 8px; border-radius: 999px; background: rgba(99,102,241,0.2); color: #a5b4fc; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  #app { display: grid; grid-template-columns: 60px 280px 1fr 360px; grid-template-rows: 1fr; height: 100vh; gap: 0; padding: 14px; }
 
-  /* ============ PALETTE ============ */
-  #palette { background: var(--panel); border-right: 1px solid var(--border); padding: 16px; overflow-y: auto; }
-  #palette h3 { font-size: 10px; text-transform: uppercase; color: var(--muted); margin: 14px 0 8px; letter-spacing: 0.08em; font-weight: 700; }
-  #palette h3:first-child { margin-top: 0; }
-  .palette-item { padding: 9px 12px; margin-bottom: 6px; border: 1px solid var(--border); border-radius: 8px; font-size: 12.5px; cursor: grab; background: var(--panel); display: flex; align-items: center; gap: 10px; transition: all 0.15s; font-weight: 500; }
-  .palette-item:hover { border-color: var(--accent); transform: translateX(2px); box-shadow: var(--shadow-sm); }
-  .palette-item:active { cursor: grabbing; }
-  .palette-item .icon { width: 18px; height: 18px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-  .palette-actions { padding-top: 14px; border-top: 1px dashed var(--border); margin-top: 16px; }
-  .palette-actions button { width: 100%; margin-bottom: 6px; font-size: 12px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; font-weight: 500; transition: all 0.15s; }
-  .palette-actions button:hover { border-color: var(--accent); background: var(--panel-soft); }
-  .palette-actions button.danger:hover { border-color: var(--fallback); color: var(--fallback); }
+  /* ============ DARK RAIL ============ */
+  #rail { background: var(--rail); border-radius: 18px; display: flex; flex-direction: column; align-items: center; padding: 16px 0; gap: 8px; box-shadow: var(--shadow-md); }
+  #rail .logo { width: 36px; height: 36px; border-radius: 10px; background: var(--accent-grad); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 800; margin-bottom: 8px; box-shadow: 0 4px 14px rgba(139,92,246,0.4); }
+  #rail .rail-btn { width: 38px; height: 38px; border-radius: 10px; border: none; background: transparent; color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.15s; }
+  #rail .rail-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  #rail .rail-btn.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,0.4); }
+  #rail .spacer { flex: 1; }
+
+  /* ============ LEFT PANEL ============ */
+  #panel { background: var(--panel); border-radius: 18px; margin-left: 12px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; overflow: hidden; }
+  .panel-head { padding: 14px 16px; border-bottom: 1px solid var(--border-2); }
+  .panel-head .switcher { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .panel-head .switcher:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .panel-head .switcher .ico { width: 28px; height: 28px; border-radius: 7px; background: var(--accent-grad); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .panel-head .switcher .lbl { flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .panel-head .switcher .lbl small { display: block; font-weight: 500; color: var(--muted); font-size: 10.5px; margin-top: 1px; }
+  .panel-head .switcher .chev { color: var(--muted); font-size: 10px; }
+  .panel-head select { width: 100%; padding: 7px 30px 7px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; background: var(--panel) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>") no-repeat right 10px center; appearance: none; cursor: pointer; font-weight: 500; margin-top: 8px; color: var(--text); }
+  .panel-head select:hover { border-color: var(--accent); }
+
+  .panel-search { padding: 10px 14px; border-bottom: 1px solid var(--border-2); }
+  .panel-search input { width: 100%; padding: 8px 12px 8px 32px; border: 1px solid var(--border); border-radius: 8px; font-size: 12.5px; background: var(--panel-soft) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='m21 21-4.3-4.3'/></svg>") no-repeat 10px center; }
+  .panel-search input:focus { outline: none; border-color: var(--accent); background-color: #fff; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+
+  .panel-tabs { display: flex; padding: 0 14px; gap: 18px; border-bottom: 1px solid var(--border-2); }
+  .panel-tab { padding: 10px 0 11px; font-size: 11.5px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; letter-spacing: 0.02em; }
+  .panel-tab:hover { color: var(--text); }
+  .panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .panel-body { flex: 1; overflow-y: auto; padding: 14px; }
+  .pgroup { margin-bottom: 16px; }
+  .pgroup-head { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 8px; }
+  .pgroup-head h3 { font-size: 11px; text-transform: uppercase; color: var(--muted); margin: 0; letter-spacing: 0.06em; font-weight: 700; }
+  .pgroup-head .count { font-size: 10px; color: var(--muted-2); background: var(--border-2); padding: 2px 6px; border-radius: 999px; }
+  .pgroup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pcard {
+    padding: 12px 10px; border: 1px solid var(--border); border-radius: 12px;
+    background: var(--panel); cursor: grab; transition: all 0.15s;
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px;
+    position: relative;
+  }
+  .pcard:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); transform: translateY(-1px); background: linear-gradient(180deg, var(--accent-soft) 0%, #fff 100%); }
+  .pcard:active { cursor: grabbing; }
+  .pcard .ico { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; }
+  .pcard .lbl { font-size: 11px; font-weight: 600; line-height: 1.2; color: var(--text); }
+  .pcard .help-btn { position: absolute; top: 4px; right: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--border-2); border: none; color: var(--muted); font-size: 9px; font-weight: 700; cursor: help; opacity: 0; transition: opacity 0.15s; }
+  .pcard:hover .help-btn { opacity: 1; }
+  .pcard .help-btn:hover { background: var(--accent); color: #fff; }
+
+  /* tooltips */
+  .tooltip { position: fixed; background: var(--rail); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 11.5px; max-width: 240px; line-height: 1.4; box-shadow: var(--shadow-lg); z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+  .tooltip.show { opacity: 1; }
+  .tooltip::before { content: ''; position: absolute; left: -4px; top: 14px; width: 8px; height: 8px; background: var(--rail); transform: rotate(45deg); }
 
   /* ============ CANVAS ============ */
+  #canvas-area { margin-left: 12px; display: flex; flex-direction: column; }
+  #canvas-top { display: flex; align-items: center; gap: 10px; padding: 0 4px 12px; }
+  .crumb-pill { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; font-size: 12px; box-shadow: var(--shadow-sm); }
+  .crumb-pill .av { width: 24px; height: 24px; border-radius: 50%; background: var(--accent-grad); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .crumb-pill .info { line-height: 1.2; }
+  .crumb-pill .info .name { font-weight: 600; color: var(--text); }
+  .crumb-pill .info .role { font-size: 10px; color: var(--muted); }
+  .canvas-top-spacer { flex: 1; }
+  .top-btn { padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); cursor: pointer; font-size: 12px; font-weight: 500; color: var(--text); display: inline-flex; align-items: center; gap: 6px; box-shadow: var(--shadow-sm); transition: all 0.15s; }
+  .top-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+  .top-btn.primary { background: var(--accent-grad); color: #fff; border: none; box-shadow: 0 2px 8px rgba(99,102,241,0.4); }
+  .top-btn.primary:hover { box-shadow: 0 6px 18px rgba(99,102,241,0.5); color: #fff; }
+  .avatars { display: flex; }
+  .avatars .av { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff; margin-left: -6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 700; box-shadow: var(--shadow-sm); }
+  .avatars .av:nth-child(1) { background: linear-gradient(135deg, #f43f5e, #f59e0b); }
+  .avatars .av:nth-child(2) { background: linear-gradient(135deg, #10b981, #06b6d4); }
+  .avatars .av:nth-child(3) { background: linear-gradient(135deg, #6366f1, #ec4899); }
+
   #canvas-wrap {
+    flex: 1;
     position: relative; overflow: hidden;
-    background-color: #f1f5f9;
-    background-image: radial-gradient(circle at 1px 1px, rgba(99,102,241,0.15) 1px, transparent 0);
+    background: var(--panel);
+    border-radius: 18px;
+    box-shadow: var(--shadow-md);
+    background-image: radial-gradient(circle at 1px 1px, rgba(99,102,241,0.18) 1.2px, transparent 0);
     background-size: 24px 24px;
   }
   #canvas { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
@@ -73,196 +132,256 @@
   #edges path.edge { pointer-events: stroke; transition: stroke 0.15s; }
   #edges path.edge:hover { stroke: var(--accent); }
 
+  /* ============ NODES ============ */
   .node {
-    position: absolute; width: 210px;
-    background: var(--panel); border: 2px solid var(--border);
-    border-radius: 10px; padding: 12px 14px 12px 14px; font-size: 12.5px;
-    box-shadow: var(--shadow-sm);
-    cursor: move; transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
+    position: absolute; width: 220px;
+    background: var(--panel); border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 14px 14px 12px;
+    box-shadow: var(--shadow-node);
+    cursor: move; transition: all 0.15s;
   }
-  .node:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-  .node.selected { box-shadow: 0 0 0 3px rgba(99,102,241,0.3), var(--shadow-md); border-color: var(--accent) !important; }
-  .node .label { font-weight: 600; line-height: 1.35; color: var(--text); font-size: 12.5px; }
+  .node:hover { box-shadow: var(--shadow-node-hover); transform: translateY(-1px); }
+  .node.selected { box-shadow: 0 0 0 3px rgba(99,102,241,0.25), var(--shadow-node-hover); border-color: var(--accent) !important; }
+
+  .node .nhead { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .node .nicon { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .node .ntype { font-size: 9.5px; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.06em; }
+  .node .nbranch { font-size: 10px; color: var(--accent); font-weight: 600; }
+  .node .label { font-weight: 600; line-height: 1.35; color: var(--text); font-size: 13px; }
   .node .sub { color: var(--muted); font-size: 11px; margin-top: 4px; line-height: 1.35; }
-  .node .type-tag {
-    position: absolute; top: -11px; left: 10px;
-    font-size: 9px; text-transform: uppercase; padding: 3px 8px;
-    border-radius: 4px; color: #fff; letter-spacing: 0.06em; font-weight: 700;
-    box-shadow: var(--shadow-sm);
-  }
-  .node .stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 8px 0 0 8px; }
+  .node .qtype { display: inline-block; font-size: 9.5px; padding: 2px 7px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); font-weight: 600; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* Per-option rows (for branching questions) */
+  .node .options-list { margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .node .opt-row { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: 6px; background: var(--panel-soft); position: relative; }
+  .node .opt-row:hover { background: var(--accent-soft); }
+  .node .opt-row .opt-num { width: 18px; height: 18px; border-radius: 5px; background: var(--accent); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .node .opt-row .opt-text { font-size: 11.5px; flex: 1; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .node .opt-row .opt-route { font-size: 9.5px; color: var(--muted); background: #fff; padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); }
+
   .port {
-    position: absolute; width: 14px; height: 14px;
-    background: #fff; border: 2px solid #94a3b8; border-radius: 50%;
+    position: absolute; width: 12px; height: 12px;
+    background: #fff; border: 2px solid var(--muted-2); border-radius: 50%;
     cursor: crosshair; transition: all 0.15s; z-index: 2;
   }
-  .port:hover, .port.hot { background: var(--accent); border-color: var(--accent); transform: scale(1.3); }
-  .port.in { left: -8px; top: 50%; transform: translateY(-50%); }
-  .port.in:hover { transform: translateY(-50%) scale(1.3); }
-  .port.out { right: -8px; top: 50%; transform: translateY(-50%); }
-  .port.out:hover { transform: translateY(-50%) scale(1.3); }
+  .port:hover, .port.hot { background: var(--accent); border-color: var(--accent); transform: scale(1.4); box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
+  .port.in { left: -7px; top: 24px; }
+  .port.out { right: -7px; top: 50%; transform: translateY(-50%); }
+  .port.out-opt { right: -7px; width: 10px; height: 10px; }
 
-  /* Node type styling */
-  .t-entry      { border-color: var(--entry); }
-  .t-entry .type-tag      { background: var(--entry); }
-  .t-entry .stripe        { background: var(--entry); }
+  /* Type styles */
+  .t-entry { background: linear-gradient(180deg, #ecfdf5 0%, #fff 60%); border-color: var(--entry); }
+  .t-entry .nicon { background: var(--entry); }
+  .t-question { background: linear-gradient(180deg, #eef2ff 0%, #fff 70%); border-color: var(--question); }
+  .t-question .nicon { background: var(--question); }
+  .t-answer { width: 180px; padding: 12px; }
+  .t-answer .nicon { background: var(--answer); }
+  .t-action { background: linear-gradient(180deg, #fffbeb 0%, #fff 70%); border-color: var(--action); }
+  .t-action .nicon { background: var(--action); }
+  .t-wait { background: linear-gradient(180deg, #f5f3ff 0%, #fff 70%); border-color: var(--wait); }
+  .t-wait .nicon { background: var(--wait); }
+  .t-terminal { background: linear-gradient(180deg, #f8fafc 0%, #fff 70%); border-color: var(--terminal); border-radius: 24px; width: 180px; }
+  .t-terminal .nicon { background: var(--terminal); }
+  .t-jump { background: linear-gradient(135deg, #fdf2f8 0%, #fff 100%); border-color: var(--jump); }
+  .t-jump .nicon { background: var(--jump); }
+  .t-fallback { border-color: var(--fallback); border-style: dashed; background: #fef2f2; }
+  .t-fallback .nicon { background: var(--fallback); }
+  .t-rootcause { background: linear-gradient(180deg, #f0fdfa 0%, #fff 70%); border-color: var(--rootcause); }
+  .t-rootcause .nicon { background: var(--rootcause); }
+  .t-skip { background: #f1f5f9; border-color: var(--skip); width: 180px; }
+  .t-skip .nicon { background: var(--skip); }
+  .t-reassign { background: linear-gradient(180deg, #fff7ed 0%, #fff 70%); border-color: var(--reassign); }
+  .t-reassign .nicon { background: var(--reassign); }
 
-  .t-question   { border-color: var(--question); background: linear-gradient(180deg, #eff6ff 0%, #fff 60%); }
-  .t-question .type-tag   { background: var(--question); }
-  .t-question .stripe     { background: var(--question); }
-  .t-question .qtype { display: inline-block; font-size: 9.5px; padding: 2px 6px; border-radius: 3px; background: #dbeafe; color: #1e40af; font-weight: 600; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
-
-  /* Answer cards — small chip, gray border, matches drawio look */
-  .t-answer { width: 170px; padding: 10px 12px; border-color: #cbd5e1; background: #fff; border-radius: 8px; }
-  .t-answer .type-tag { background: var(--answer); }
-  .t-answer .stripe { background: var(--answer); }
-  .t-answer .label { font-weight: 500; font-size: 12px; }
-
-  .t-action     { border-color: var(--action); }
-  .t-action .type-tag     { background: var(--action); }
-  .t-action .stripe       { background: var(--action); }
-
-  .t-wait       { border-color: var(--wait); }
-  .t-wait .type-tag       { background: var(--wait); }
-  .t-wait .stripe         { background: var(--wait); }
-
-  .t-terminal   { border-color: var(--terminal); border-radius: 999px; padding-left: 20px; padding-right: 20px; width: 180px; background: linear-gradient(180deg, #f8fafc 0%, #fff 100%); }
-  .t-terminal .type-tag   { background: var(--terminal); }
-  .t-terminal .stripe     { display: none; }
-
-  .t-jump       { border-color: var(--jump); background: linear-gradient(135deg, #fdf2f8 0%, #fff 100%); }
-  .t-jump .type-tag       { background: var(--jump); }
-  .t-jump .stripe         { background: var(--jump); }
-
-  .t-fallback   { border-color: var(--fallback); border-style: dashed; background: #fef2f2; }
-  .t-fallback .type-tag   { background: var(--fallback); }
-  .t-fallback .stripe     { background: var(--fallback); }
-
-  .t-rootcause  { border-color: var(--rootcause); }
-  .t-rootcause .type-tag  { background: var(--rootcause); }
-  .t-rootcause .stripe    { background: var(--rootcause); }
-
-  /* Palette icon backgrounds */
-  .icon.t-entry{background:var(--entry)}
-  .icon.t-question{background:var(--question)}
-  .icon.t-answer{background:var(--answer)}
-  .icon.t-action{background:var(--action)}
-  .icon.t-wait{background:var(--wait)}
-  .icon.t-terminal{background:var(--terminal)}
-  .icon.t-jump{background:var(--jump)}
-  .icon.t-fallback{background:var(--fallback)}
-  .icon.t-rootcause{background:var(--rootcause)}
+  /* Palette icon colors */
+  .ico.t-entry{background:var(--entry)}.ico.t-question{background:var(--question)}
+  .ico.t-answer{background:var(--answer)}.ico.t-action{background:var(--action)}
+  .ico.t-wait{background:var(--wait)}.ico.t-terminal{background:var(--terminal)}
+  .ico.t-jump{background:var(--jump)}.ico.t-fallback{background:var(--fallback)}
+  .ico.t-rootcause{background:var(--rootcause)}.ico.t-skip{background:var(--skip)}
+  .ico.t-reassign{background:var(--reassign)}
 
   /* ============ INSPECTOR ============ */
-  #inspector { background: var(--panel); border-left: 1px solid var(--border); padding: 20px; overflow-y: auto; font-size: 13px; }
-  #inspector h2 { font-size: 14px; margin: 0 0 4px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-  #inspector h2 .pill { font-size: 9px; padding: 3px 8px; border-radius: 4px; color: #fff; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
-  #inspector .meta { font-size: 11px; color: var(--muted); margin-bottom: 18px; font-family: ui-monospace, SFMono-Regular, monospace; }
-  #inspector label { display: block; font-size: 10px; text-transform: uppercase; color: var(--muted); margin: 14px 0 5px; letter-spacing: 0.08em; font-weight: 700; }
-  #inspector input, #inspector textarea, #inspector select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; background: var(--panel-soft); transition: all 0.15s; }
-  #inspector input:focus, #inspector textarea:focus, #inspector select:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-  #inspector textarea { min-height: 60px; resize: vertical; }
-  #inspector .route-table { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-  #inspector .route-row { display: grid; grid-template-columns: 1fr 1fr 28px; gap: 4px; padding: 6px; border-bottom: 1px solid var(--border); background: #fff; align-items: center; }
-  #inspector .route-row:last-child { border-bottom: none; }
-  #inspector .route-row input, #inspector .route-row select { padding: 6px 8px; font-size: 12px; background: var(--panel-soft); border-color: var(--border); }
-  #inspector .route-row button { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 5px; cursor: pointer; font-size: 14px; padding: 4px 0; line-height: 1; }
-  #inspector .route-row button:hover { background: #fee2e2; }
-  #inspector .add-btn { background: var(--panel-soft); border: 1px dashed #94a3b8; padding: 7px; width: 100%; border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 500; transition: all 0.15s; }
-  #inspector .add-btn:hover { border-color: var(--accent); color: var(--accent); background: #fff; }
-  #inspector .gen-btn { width: 100%; padding: 9px; background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1px solid #93c5fd; color: #1e40af; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; margin-top: 10px; transition: all 0.15s; }
-  #inspector .gen-btn:hover { background: linear-gradient(135deg, #dbeafe, #bfdbfe); transform: translateY(-1px); }
-  #inspector .danger { background: #fff; border: 1px solid #fecaca; color: var(--fallback); padding: 9px 14px; border-radius: 6px; cursor: pointer; margin-top: 24px; width: 100%; font-weight: 600; font-size: 12px; transition: all 0.15s; }
-  #inspector .danger:hover { background: var(--fallback); color: #fff; }
-  #inspector .help { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+  #inspector { background: var(--panel); border-radius: 18px; margin-left: 12px; box-shadow: var(--shadow-md); overflow: hidden; display: flex; flex-direction: column; }
+  .insp-head { padding: 16px 18px; border-bottom: 1px solid var(--border-2); display: flex; align-items: center; gap: 10px; }
+  .insp-head .nicon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: 700; flex-shrink: 0; }
+  .insp-head .htitle { flex: 1; }
+  .insp-head .htitle .t { font-size: 14px; font-weight: 700; color: var(--text); }
+  .insp-head .htitle .s { font-size: 11px; color: var(--muted); font-family: ui-monospace, SFMono-Regular, monospace; }
+  .insp-body { flex: 1; overflow-y: auto; padding: 16px 18px; font-size: 13px; }
+  .insp-body label { display: block; font-size: 10px; text-transform: uppercase; color: var(--muted); margin: 14px 0 6px; letter-spacing: 0.08em; font-weight: 700; }
+  .insp-body label:first-child { margin-top: 0; }
+  .insp-body input, .insp-body textarea, .insp-body select { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; background: var(--panel-soft); transition: all 0.15s; }
+  .insp-body input:focus, .insp-body textarea:focus, .insp-body select:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .insp-body textarea { min-height: 64px; resize: vertical; }
+  .helper-box { background: var(--accent-soft); border: 1px solid #c7d2fe; border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; font-size: 12px; color: #3730a3; line-height: 1.5; display: flex; gap: 8px; }
+  .helper-box .h-ico { font-size: 14px; flex-shrink: 0; }
 
-  /* ============ ZOOM / LEGEND ============ */
-  .zoom-ctl { position: absolute; bottom: 16px; right: 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; display: flex; font-size: 12px; box-shadow: var(--shadow-md); overflow: hidden; }
-  .zoom-ctl button { border: none; background: var(--panel); padding: 8px 12px; cursor: pointer; font-weight: 600; color: var(--muted); transition: all 0.15s; }
+  .route-table { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #fff; }
+  .route-row { padding: 8px; border-bottom: 1px solid var(--border-2); display: grid; grid-template-columns: 18px 1fr; gap: 8px; align-items: start; }
+  .route-row:last-child { border-bottom: none; }
+  .route-row .opt-num { width: 18px; height: 18px; border-radius: 5px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 8px; }
+  .route-row .rfields { display: flex; flex-direction: column; gap: 4px; }
+  .route-row input, .route-row select { padding: 6px 8px; font-size: 12px; background: var(--panel-soft); border: 1px solid var(--border); border-radius: 6px; }
+  .route-row .helper-add { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .route-row .helper-chip { font-size: 10px; padding: 3px 8px; border-radius: 999px; background: var(--border-2); color: var(--muted); cursor: pointer; border: none; font-weight: 600; transition: all 0.15s; }
+  .route-row .helper-chip:hover { background: var(--accent-soft); color: var(--accent); }
+  .route-row .helper-chip.active { background: var(--accent); color: #fff; }
+  .route-row .del { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 5px; cursor: pointer; font-size: 13px; padding: 4px 8px; align-self: start; margin-top: 8px; line-height: 1; }
+  .route-row .del:hover { background: #fee2e2; }
+
+  .add-btn { background: var(--panel-soft); border: 1px dashed var(--muted-2); padding: 9px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; font-weight: 600; transition: all 0.15s; }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); background: #fff; }
+  .gen-btn { width: 100%; padding: 10px; background: linear-gradient(135deg, #eef2ff, #ede9fe); border: 1px solid #c7d2fe; color: var(--accent); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; margin-top: 10px; transition: all 0.15s; }
+  .gen-btn:hover { background: linear-gradient(135deg, #ede9fe, #ddd6fe); transform: translateY(-1px); }
+  .danger-btn { background: #fff; border: 1px solid #fecaca; color: var(--fallback); padding: 10px 14px; border-radius: 8px; cursor: pointer; margin-top: 24px; width: 100%; font-weight: 600; font-size: 12px; transition: all 0.15s; }
+  .danger-btn:hover { background: var(--fallback); color: #fff; }
+
+  /* ============ FLOATING TOOLBAR ============ */
+  .float-tools { position: absolute; top: 16px; right: 16px; background: var(--panel); border-radius: 12px; padding: 6px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 2px; z-index: 5; }
+  .float-tools button { width: 32px; height: 32px; border: none; background: transparent; border-radius: 8px; cursor: pointer; color: var(--muted); font-size: 14px; transition: all 0.15s; }
+  .float-tools button:hover { background: var(--panel-soft); color: var(--accent); }
+  .float-tools button.active { background: var(--accent-soft); color: var(--accent); }
+
+  .zoom-ctl { position: absolute; bottom: 16px; right: 16px; background: var(--panel); border-radius: 10px; display: flex; font-size: 12px; box-shadow: var(--shadow-md); overflow: hidden; z-index: 5; }
+  .zoom-ctl button { border: none; background: var(--panel); padding: 9px 14px; cursor: pointer; font-weight: 700; color: var(--muted); transition: all 0.15s; }
   .zoom-ctl button:hover { background: var(--panel-soft); color: var(--accent); }
-  .zoom-ctl span { padding: 8px 10px; border-left: 1px solid var(--border); border-right: 1px solid var(--border); min-width: 56px; text-align: center; font-weight: 600; color: var(--muted); }
-  .empty { color: var(--muted); font-size: 12.5px; padding: 32px 12px; text-align: center; line-height: 1.6; }
-  .empty .icon { font-size: 32px; opacity: 0.4; margin-bottom: 12px; }
-  .legend { position: absolute; bottom: 16px; left: 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 11.5px; color: var(--muted); box-shadow: var(--shadow-sm); max-width: 400px; line-height: 1.6; }
+  .zoom-ctl span { padding: 9px 10px; border-left: 1px solid var(--border-2); border-right: 1px solid var(--border-2); min-width: 54px; text-align: center; font-weight: 600; color: var(--muted); }
+
+  .legend { position: absolute; bottom: 16px; left: 16px; background: var(--panel); border-radius: 10px; padding: 10px 14px; font-size: 11.5px; color: var(--muted); box-shadow: var(--shadow-sm); max-width: 380px; line-height: 1.6; z-index: 5; }
   .legend b { color: var(--text); }
   .legend kbd { background: var(--panel-soft); border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; font-size: 10px; font-family: ui-monospace, monospace; color: var(--text); }
 
-  /* ============ MODAL ============ */
-  .modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; animation: fade-in 0.2s; }
-  .modal { background: var(--panel); border-radius: 14px; padding: 28px; width: 480px; max-width: 90vw; box-shadow: var(--shadow-lg); animation: pop-in 0.25s; }
+  .empty { color: var(--muted); font-size: 12.5px; padding: 32px 12px; text-align: center; line-height: 1.6; }
+  .empty .ico-big { font-size: 36px; opacity: 0.5; margin-bottom: 12px; }
+
+  /* ============ MODALS ============ */
+  .modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 100; animation: fade-in 0.2s; }
+  .modal { background: var(--panel); border-radius: 18px; padding: 28px; width: 560px; max-width: 92vw; box-shadow: var(--shadow-lg); animation: pop-in 0.25s; max-height: 86vh; overflow-y: auto; }
   .modal h2 { margin: 0 0 6px; font-size: 18px; font-weight: 700; }
   .modal p { color: var(--muted); margin: 0 0 18px; font-size: 13.5px; line-height: 1.5; }
-  .modal .choice { padding: 16px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; margin-bottom: 10px; transition: all 0.15s; }
-  .modal .choice:hover { border-color: var(--accent); background: var(--panel-soft); transform: translateY(-1px); }
-  .modal .choice h3 { margin: 0 0 4px; font-size: 14px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .modal .choice { padding: 18px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; margin-bottom: 10px; transition: all 0.15s; }
+  .modal .choice:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-1px); }
+  .modal .choice h3 { margin: 0 0 4px; font-size: 14.5px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
   .modal .choice p { margin: 0; font-size: 12.5px; }
-  .modal .choice .emoji { font-size: 18px; }
-  .modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
-  .modal input, .modal select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+  .modal .choice .em { font-size: 22px; }
+  .modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+  .modal input, .modal select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; }
   .modal input:focus, .modal select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-  .modal button { font-size: 13px; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; font-weight: 500; }
+  .modal button { font-size: 13px; padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; font-weight: 500; }
   .modal button.primary { background: var(--accent-grad); color: #fff; border: none; font-weight: 600; }
   .modal button.primary:hover { box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
   @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
   @keyframes pop-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
+  /* Template card grid */
+  .tpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .tpl-card { padding: 14px; border: 1.5px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.15s; background: var(--panel); position: relative; }
+  .tpl-card:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .tpl-card .tpl-emoji { font-size: 22px; margin-bottom: 8px; }
+  .tpl-card .tpl-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .tpl-card .tpl-meta { font-size: 11px; color: var(--muted); }
+  .tpl-card .tpl-del { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; border-radius: 50%; background: var(--border-2); border: none; color: var(--muted); font-size: 11px; cursor: pointer; opacity: 0; transition: opacity 0.15s; }
+  .tpl-card:hover .tpl-del { opacity: 1; }
+  .tpl-card .tpl-del:hover { background: var(--fallback); color: #fff; }
+  .tpl-card.builtin { background: linear-gradient(135deg, #fff 0%, #f0fdfa 100%); }
+
   /* edge label */
   .edge-label { fill: var(--text); font-size: 11px; font-weight: 600; }
-  .edge-label-bg { fill: #fff; stroke: #fff; stroke-width: 6; paint-order: stroke; }
+  .edge-label-bg { fill: #fff; stroke: #fff; stroke-width: 5; paint-order: stroke; }
 </style>
 </head>
 <body>
 <div id="app">
-  <div id="topbar">
-    <div class="logo">⚡ FlowConfig</div>
-    <span class="crumb">›</span>
-    <select id="tree-sel"></select>
-    <span class="crumb">›</span>
-    <select id="flow-sel"></select>
-    <span class="badge-mode" id="mode-badge">Design</span>
-    <span class="spacer"></span>
-    <button id="new-btn" class="ghost">＋ New flow</button>
-    <button id="mode-btn">▶ Simulate</button>
-    <button class="primary" id="save-btn">⬇ Export JSON</button>
+  <!-- Dark rail -->
+  <div id="rail">
+    <div class="logo">⚡</div>
+    <button class="rail-btn active" title="Flows">🌳</button>
+    <button class="rail-btn" id="rail-templates" title="Templates">📚</button>
+    <button class="rail-btn" title="Activity">📊</button>
+    <button class="rail-btn" title="Settings">⚙</button>
+    <div class="spacer"></div>
+    <button class="rail-btn" title="Help">?</button>
   </div>
 
-  <div id="palette">
-    <h3>Start / End</h3>
-    <div class="palette-item" draggable="true" data-type="entry"><span class="icon t-entry">▶</span>Entry</div>
-    <div class="palette-item" draggable="true" data-type="terminal"><span class="icon t-terminal">■</span>Terminal (Stop)</div>
-    <div class="palette-item" draggable="true" data-type="jump"><span class="icon t-jump">↗</span>Jump to Flow</div>
+  <!-- Left panel -->
+  <div id="panel">
+    <div class="panel-head">
+      <div class="switcher">
+        <div class="ico" id="tree-init">L</div>
+        <div class="lbl">
+          <div id="cur-tree-name">Low DO in Aeration tank</div>
+          <small id="cur-flow-name">Flow 3 · Uneven bubbling</small>
+        </div>
+        <span class="chev">▾</span>
+      </div>
+      <select id="tree-sel" style="display:none"></select>
+      <select id="flow-sel"></select>
+    </div>
+    <div class="panel-search">
+      <input id="palette-search" placeholder="Search node types…" />
+    </div>
+    <div class="panel-tabs">
+      <div class="panel-tab active" data-tab="core">CORE</div>
+      <div class="panel-tab" data-tab="helpers">HELPERS</div>
+      <div class="panel-tab" data-tab="control">CONTROL</div>
+    </div>
+    <div class="panel-body" id="palette-body"></div>
+  </div>
 
-    <h3>Decision</h3>
-    <div class="palette-item" draggable="true" data-type="question"><span class="icon t-question">?</span>Question</div>
-    <div class="palette-item" draggable="true" data-type="answer"><span class="icon t-answer">A</span>Answer card</div>
-    <div class="palette-item" draggable="true" data-type="rootcause"><span class="icon t-rootcause">⊕</span>Root-cause selector</div>
+  <!-- Center canvas area -->
+  <div id="canvas-area">
+    <div id="canvas-top">
+      <div class="crumb-pill">
+        <div class="av">MS</div>
+        <div class="info"><div class="name">Mihir Sethi</div><div class="role">Configuring flow</div></div>
+      </div>
+      <div class="canvas-top-spacer"></div>
+      <button class="top-btn" id="tpl-save">⭐ Save as template</button>
+      <button class="top-btn" id="tpl-library">📚 Templates</button>
+      <button class="top-btn" id="new-btn">＋ New flow</button>
+      <button class="top-btn" id="export-btn">⬇ Export</button>
+      <button class="top-btn primary" id="publish-btn">▶ Publish</button>
+      <div class="avatars">
+        <div class="av">M</div><div class="av">R</div><div class="av">A</div>
+      </div>
+    </div>
 
-    <h3>Action</h3>
-    <div class="palette-item" draggable="true" data-type="action"><span class="icon t-action">✓</span>Action / Task</div>
+    <div id="canvas-wrap">
+      <svg id="edges"></svg>
+      <div id="canvas"></div>
 
-    <h3>Control</h3>
-    <div class="palette-item" draggable="true" data-type="wait"><span class="icon t-wait">⏱</span>Wait</div>
-    <div class="palette-item" draggable="true" data-type="fallback"><span class="icon t-fallback">!</span>Fallback</div>
+      <div class="float-tools">
+        <button title="Select" class="active">↖</button>
+        <button title="Pan">✋</button>
+        <button id="auto-layout-btn" title="Auto-layout">⇆</button>
+        <button id="clear-btn" title="Clear flow">🗑</button>
+      </div>
 
-    <div class="palette-actions">
-      <button id="auto-layout">⇆ Auto-layout</button>
-      <button id="clear-flow" class="danger">🗑 Clear flow</button>
+      <div class="legend">
+        <b>Tip:</b> Questions show one port per option (right edge) — drag each to its destination.
+        Use the inspector to set routes via dropdown · <kbd>Scroll</kbd> zoom · <kbd>Drag</kbd> pan · <kbd>Del</kbd> remove
+      </div>
+      <div class="zoom-ctl">
+        <button id="zoom-out">−</button><span id="zoom-lbl">100%</span><button id="zoom-in">+</button><button id="zoom-fit">Fit</button>
+      </div>
     </div>
   </div>
 
-  <div id="canvas-wrap">
-    <svg id="edges"></svg>
-    <div id="canvas"></div>
-    <div class="legend">
-      <b>Tip:</b> Drag <b>right port → left port</b> to connect. For <b>Question</b> nodes, use the inspector's routing table — click <b>Generate answer cards</b> to auto-create branches. <kbd>Scroll</kbd> zoom · <kbd>Drag empty</kbd> pan · <kbd>Del</kbd> remove.
+  <!-- Inspector -->
+  <div id="inspector">
+    <div class="insp-head" id="insp-head" style="display:none">
+      <div class="nicon" id="insp-icon">?</div>
+      <div class="htitle"><div class="t" id="insp-title">—</div><div class="s" id="insp-sub">—</div></div>
     </div>
-    <div class="zoom-ctl">
-      <button id="zoom-out">−</button><span id="zoom-lbl">100%</span><button id="zoom-in">+</button><button id="zoom-fit">Fit</button>
+    <div class="insp-body" id="insp-body">
+      <div class="empty"><div class="ico-big">🎨</div>Select a node or connection to edit.<br/><br/>Or drag a node type from the palette onto the canvas.</div>
     </div>
   </div>
-
-  <div id="inspector"><div class="empty"><div class="icon">🎨</div>Select a node or connection to edit.<br/><br/>Or drag a node type from the palette onto the canvas.</div></div>
 </div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip"></div>
 
 <!-- Welcome modal -->
 <div class="modal-bg" id="welcome-modal" style="display:none">
@@ -270,23 +389,27 @@
     <h2>Welcome to FlowConfig</h2>
     <p>Design diagnostic flows on a canvas. Pick how you want to start:</p>
     <div class="choice" data-action="dummy">
-      <h3><span class="emoji">🧪</span> Load demo: "Low DO in Aeration Tank"</h3>
-      <p>A diagnostic tree with 6 flows. Flow 3 mirrors the drawio with answer-cards.</p>
+      <h3><span class="em">🧪</span> Load demo: "Low DO in Aeration Tank"</h3>
+      <p>Tree with 6 flows. Flow 3 is fully built and uses per-option branching.</p>
+    </div>
+    <div class="choice" data-action="template">
+      <h3><span class="em">📚</span> Start from a template</h3>
+      <p>Pick from built-in templates or your saved ones.</p>
     </div>
     <div class="choice" data-action="scratch">
-      <h3><span class="emoji">✨</span> Start from scratch</h3>
-      <p>Begin with a blank canvas. Name your tree and first flow.</p>
+      <h3><span class="em">✨</span> Start from scratch</h3>
+      <p>Blank canvas, single entry node. Name your tree and first flow.</p>
     </div>
   </div>
 </div>
 
-<!-- New-flow modal -->
+<!-- New flow modal -->
 <div class="modal-bg" id="new-modal" style="display:none">
   <div class="modal">
     <h2>New flow</h2>
-    <p>Add a flow to the current tree, or create a brand new tree.</p>
+    <p>Add a flow to the current tree, or spin up a brand new tree.</p>
     <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin-bottom:6px">Flow name</label>
-    <input id="new-flow-name" placeholder="e.g. Sensor calibration check" />
+    <input id="new-flow-name" placeholder="e.g. Sensor calibration" />
     <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin:14px 0 6px">Add to</label>
     <select id="new-flow-tree"></select>
     <div class="actions">
@@ -296,157 +419,172 @@
   </div>
 </div>
 
+<!-- Template library modal -->
+<div class="modal-bg" id="tpl-modal" style="display:none">
+  <div class="modal" style="width: 640px">
+    <h2>📚 Template library</h2>
+    <p>Pick a template to load. Saved templates are stored in your browser.</p>
+    <div class="tpl-grid" id="tpl-grid"></div>
+    <div class="actions">
+      <button id="tpl-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Save template modal -->
+<div class="modal-bg" id="tpl-save-modal" style="display:none">
+  <div class="modal">
+    <h2>⭐ Save as template</h2>
+    <p>Saves the <b>current tree</b> (all flows). You can reuse it from the Templates library.</p>
+    <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin-bottom:6px">Template name</label>
+    <input id="tpl-save-name" placeholder="e.g. Standard water-treatment diagnostic" />
+    <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin:14px 0 6px">Emoji / icon (optional)</label>
+    <input id="tpl-save-emoji" placeholder="🌊" maxlength="2" />
+    <div class="actions">
+      <button id="tpl-save-cancel">Cancel</button>
+      <button class="primary" id="tpl-save-confirm">Save template</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// =========================================================
+// Node-type metadata: visuals + helper text
+// =========================================================
+const NTYPES = {
+  entry:     { label: 'Entry',        icon: '▶', color: '#10b981', group: 'core',    help: 'The starting point of a flow. Every flow needs exactly one Entry node — it\'s what the operator sees first.' },
+  question:  { label: 'Question',     icon: '?', color: '#6366f1', group: 'core',    help: 'A decision step. Define options in the inspector — each option becomes its own outgoing branch with a port on the right edge of the node.' },
+  answer:    { label: 'Answer card',  icon: 'A', color: '#0ea5e9', group: 'core',    help: 'A tappable card representing one possible answer. Useful when the answer itself is a step the operator interacts with (matches drawio style).' },
+  action:    { label: 'Action',       icon: '✓', color: '#f59e0b', group: 'core',    help: 'A task the operator performs: upload a photo, call a supervisor, send a message, fill an RCA form, etc.' },
+  rootcause: { label: 'Root-cause',   icon: '⊕', color: '#14b8a6', group: 'core',    help: 'Like a question, but the options are diagnosed root causes. Each option can route to its own resolution path.' },
+  terminal:  { label: 'End',          icon: '■', color: '#475569', group: 'core',    help: 'Marks the end of the flow. Use multiple Ends for different resolution paths.' },
+  jump:      { label: 'Jump to flow', icon: '↗', color: '#ec4899', group: 'core',    help: 'Hands off to another flow in the same tree. Pick the target flow in the inspector.' },
+
+  skip:      { label: 'Skip step',    icon: '⏭', color: '#94a3b8', group: 'helpers', help: 'Lets the operator skip ahead without answering — typically routes to a "fallback / RCA" branch.' },
+  wait:      { label: 'Wait',         icon: '⏱', color: '#8b5cf6', group: 'helpers', help: 'Pause the flow — by time ("wait 1 hour") or by event ("wait for sensor reading").' },
+  reassign:  { label: 'Reassignment', icon: '↻', color: '#f97316', group: 'helpers', help: 'Hands the flow off to another operator role. Useful when the current operator isn\'t equipped to continue.' },
+  fallback:  { label: 'Fallback',     icon: '!', color: '#ef4444', group: 'control', help: 'Catch-all branch when none of the question\'s options apply.' }
+};
+
+// Question subtypes
+const QTYPES = [
+  { id: 'single',   label: 'Single-choice' },
+  { id: 'yesno',    label: 'Yes / No' },
+  { id: 'multi',    label: 'Multi-select' },
+  { id: 'numeric',  label: 'Numeric' },
+  { id: 'photo',    label: 'Photo upload' },
+  { id: 'freetext', label: 'Free text' }
+];
+
 // =========================================================
 // Data model
 // =========================================================
 const data = {
   trees: [{
-    id: 'tree-do',
-    name: 'Low DO in Aeration tank',
+    id: 'tree-do', name: 'Low DO in Aeration tank',
     flows: [
-      { id: 'f1', name: '1. Blower is OFF', nodes: [], edges: [] },
-      { id: 'f2', name: '2. Blower performance', nodes: [], edges: [] },
-      { id: 'f3', name: '3. Uneven bubbling / dead zones', nodes: [], edges: [] },
-      { id: 'f4', name: '4. DO sensor failure', nodes: [], edges: [] },
-      { id: 'f5', name: '5. Sludge bulking', nodes: [], edges: [] },
-      { id: 'f6', name: '6. Shock load / toxicity', nodes: [], edges: [] }
-    ]
-  }, {
-    id: 'tree-pump',
-    name: 'Leakage in Filter feed pump',
-    flows: [
-      { id: 'p1', name: '1. Excessive discharge pressure', nodes: [], edges: [] },
-      { id: 'p2', name: '2. Filter choking back-pressure', nodes: [], edges: [] },
-      { id: 'p3', name: '3. Mechanical seal failure', nodes: [], edges: [] },
-      { id: 'p4', name: '4. Gland packing wear', nodes: [], edges: [] },
-      { id: 'p5', name: '5. Bearing failure', nodes: [], edges: [] }
+      { id: 'f1', name: 'Flow 1 · Blower is OFF', nodes: [], edges: [] },
+      { id: 'f2', name: 'Flow 2 · Blower performance', nodes: [], edges: [] },
+      { id: 'f3', name: 'Flow 3 · Uneven bubbling', nodes: [], edges: [] },
+      { id: 'f4', name: 'Flow 4 · DO sensor failure', nodes: [], edges: [] },
+      { id: 'f5', name: 'Flow 5 · Sludge bulking', nodes: [], edges: [] },
+      { id: 'f6', name: 'Flow 6 · Shock load / toxicity', nodes: [], edges: [] }
     ]
   }]
 };
 
-// Question subtypes (mirrors reference prototype)
-const QTYPES = [
-  { id: 'single',     label: 'Single-choice' },
-  { id: 'yesno',      label: 'Yes / No' },
-  { id: 'multi',      label: 'Multi-select' },
-  { id: 'numeric',    label: 'Numeric input' },
-  { id: 'photo',      label: 'Photo upload' },
-  { id: 'freetext',   label: 'Free text' }
+// Built-in templates
+const BUILTIN_TEMPLATES = [
+  { id: 'tpl-do', name: 'Low DO Diagnostic', emoji: '🌊', desc: 'Aeration tank diagnostic (6 flows)', builder: () => buildLowDoTree() },
+  { id: 'tpl-pump', name: 'Pump Leakage', emoji: '💧', desc: 'Filter feed pump leakage (5 flows)', builder: () => buildPumpTree() },
+  { id: 'tpl-basic', name: 'Basic Triage', emoji: '🧭', desc: 'A simple 3-flow starter tree', builder: () => buildBasicTree() }
 ];
 
-// =========================================================
-// Clean demo flow — Flow 3, mirrors drawio answer-card pattern
-// =========================================================
-function buildDummyFlow3() {
-  const f = data.trees[0].flows[2];
-  // Layout columns (x): 60, 320, 580, 840, 1100, 1360
-  // Layout rows (y): grouped per question's answers
-  f.nodes = [
-    // === Column 0: entry ===
-    { id: 'entry',   type: 'entry',    x: 60,   y: 400, label: 'Low DO in Aeration tank', sub: 'Flow entry point' },
-
-    // === Column 1: Question 1 ===
-    { id: 'q1',      type: 'question', x: 320,  y: 400,
-      label: 'Step 1 — Is aeration even across the tank?',
-      qtype: 'single',
-      options: [
-        { id: 'q1a', text: 'Yes, bubbles seem normal on the surface',  route: 'q2' },
-        { id: 'q1b', text: 'Moderately, some bubbles on the surface',  route: 'q2' },
-        { id: 'q1c', text: 'No, there are no bubbles on the tank',     route: 'a_callsup' },
-        { id: 'q1d', text: 'Skip to the End',                           route: 'a_rca1' }
+function buildLowDoTree() {
+  const tree = { id: uid('tree_'), name: 'Low DO in Aeration tank', flows: [
+    { id: uid('f_'), name: 'Flow 1 · Blower is OFF', nodes: [{id:uid('n_'),type:'entry',x:80,y:120,label:'Blower OFF check'}], edges: [] },
+    { id: uid('f_'), name: 'Flow 2 · Blower performance', nodes: [{id:uid('n_'),type:'entry',x:80,y:120,label:'Blower performance'}], edges: [] },
+    buildFlow3Cleaned(),
+    { id: uid('f_'), name: 'Flow 4 · DO sensor failure', nodes: [{id:uid('n_'),type:'entry',x:80,y:120,label:'DO sensor failure'}], edges: [] },
+    { id: uid('f_'), name: 'Flow 5 · Sludge bulking', nodes: [{id:uid('n_'),type:'entry',x:80,y:120,label:'Sludge bulking'}], edges: [] },
+    { id: uid('f_'), name: 'Flow 6 · Shock load', nodes: [{id:uid('n_'),type:'entry',x:80,y:120,label:'Shock load'}], edges: [] }
+  ]};
+  return tree;
+}
+function buildPumpTree() {
+  const tree = { id: uid('tree_'), name: 'Leakage in Filter feed pump', flows: [] };
+  ['Discharge pressure','Filter choking','Mechanical seal','Gland packing','Bearing failure'].forEach((name,i) => {
+    tree.flows.push({ id: uid('f_'), name: `Flow ${i+1} · ${name}`, nodes: [{id:uid('n_'),type:'entry',x:80,y:120,label:name}], edges: [] });
+  });
+  return tree;
+}
+function buildBasicTree() {
+  const e = uid('n_'), q = uid('n_'), a1 = uid('n_'), a2 = uid('n_'), t = uid('n_');
+  return { id: uid('tree_'), name: 'Basic triage', flows: [{
+    id: uid('f_'), name: 'Flow 1 · Initial triage',
+    nodes: [
+      { id: e, type: 'entry', x: 80, y: 200, label: 'Issue reported' },
+      { id: q, type: 'question', x: 340, y: 200, label: 'Is the issue urgent?', qtype: 'yesno', options: [
+        { id: uid('opt_'), text: 'Yes', route: 'node:' + a1 },
+        { id: uid('opt_'), text: 'No',  route: 'node:' + a2 }
       ]},
+      { id: a1, type: 'action', x: 640, y: 100, label: 'Escalate to supervisor' },
+      { id: a2, type: 'action', x: 640, y: 320, label: 'Log and monitor' },
+      { id: t,  type: 'terminal', x: 920, y: 200, label: 'Done' }
+    ],
+    edges: [
+      { id: uid('e_'), from: e, to: q },
+      { id: uid('e_'), from: a1, to: t },
+      { id: uid('e_'), from: a2, to: t }
+    ]
+  }]};
+}
 
-    // === Column 2: answer cards for Q1 ===
-    { id: 'ans_q1a', type: 'answer', x: 580, y: 200, label: 'Yes, bubbles seem normal on the surface', linkedOption: 'q1a' },
-    { id: 'ans_q1b', type: 'answer', x: 580, y: 320, label: 'Moderately, some bubbles on the surface', linkedOption: 'q1b' },
-    { id: 'ans_q1c', type: 'answer', x: 580, y: 440, label: 'No, there are no bubbles on the tank',     linkedOption: 'q1c' },
-    { id: 'ans_q1d', type: 'answer', x: 580, y: 560, label: 'Skip to the End',                          linkedOption: 'q1d' },
+// Cleaner Flow 3 — uses per-option ports, no separate answer cards
+function buildFlow3Cleaned() {
+  const ids = {};
+  ['entry','q1','q2','a_callsup','a_imgcs','a_rca1','a_sendmsg','a_diff','jump_do','a_rca2','a_reassign','a_media','term1','term2','fb1']
+    .forEach(k => ids[k] = k);
 
-    // === Column 3 (top): Question 2 ===
-    { id: 'q2',      type: 'question', x: 840, y: 260,
-      label: 'Step 2 — Are dead zones created in the tank?',
-      qtype: 'multi',
-      options: [
-        { id: 'q2a', text: 'Sludge accumulation at the bottom of certain areas',     route: 'a_diff' },
-        { id: 'q2b', text: 'Dark or black-colored wastewater in localized area',      route: 'a_diff' },
-        { id: 'q2c', text: 'Uneven dissolved oxygen (DO) readings across the tank',  route: 'jump_do' },
-        { id: 'q2d', text: 'Reduced treatment performance despite normal blower',    route: 'jump_do' },
-        { id: 'q2e', text: 'Skip to the End',                                          route: 'a_rca2' },
-        { id: 'q2f', text: 'Reassignment',                                             route: 'a_reassign' }
-      ]},
-
-    // === Column 3 (bottom): Direct action for "No bubbles" path ===
-    { id: 'a_callsup', type: 'action', x: 840, y: 480, label: 'Call supervisor', sub: 'Diffusers appear choked' },
-    { id: 'a_rca1',    type: 'action', x: 840, y: 600, label: 'Upload image + RCA', sub: 'Root cause selector' },
-
-    // === Column 4: Q2 answer cards (compact, 6 cards) ===
-    { id: 'ans_q2a', type: 'answer', x: 1100, y: 60,  label: 'Sludge accumulation at the bottom',    linkedOption: 'q2a' },
-    { id: 'ans_q2b', type: 'answer', x: 1100, y: 150, label: 'Dark / black-colored water localized', linkedOption: 'q2b' },
-    { id: 'ans_q2c', type: 'answer', x: 1100, y: 240, label: 'Uneven DO readings across tank',        linkedOption: 'q2c' },
-    { id: 'ans_q2d', type: 'answer', x: 1100, y: 330, label: 'Reduced treatment performance',         linkedOption: 'q2d' },
-    { id: 'ans_q2e', type: 'answer', x: 1100, y: 420, label: 'Skip to the End',                       linkedOption: 'q2e' },
-    { id: 'ans_q2f', type: 'answer', x: 1100, y: 510, label: 'Reassignment',                          linkedOption: 'q2f' },
-
-    // === Column 4 (lower): downstream actions ===
-    { id: 'a_imgcs',   type: 'action', x: 1100, y: 600, label: 'Upload image', sub: 'Evidence of no bubbling' },
-    { id: 'a_sendmsg', type: 'action', x: 1100, y: 690, label: 'Send message to supervisor', sub: 'Optional' },
-
-    // === Column 5: final actions / terminals / jump ===
-    { id: 'a_diff',     type: 'action', x: 1360, y: 100, label: 'Diffusers choked — cleaning needed', sub: 'Call supervisor to plan' },
-    { id: 'jump_do',    type: 'jump',   x: 1360, y: 270, label: 'Next flow: DO sensor failure', target: 'f4' },
-    { id: 'a_rca2',     type: 'action', x: 1360, y: 420, label: 'Media upload + RCA', sub: 'Free-text root cause' },
-    { id: 'a_reassign', type: 'action', x: 1360, y: 510, label: 'Reassign to another operator' },
-    { id: 'a_media2',   type: 'action', x: 1360, y: 600, label: 'Media upload' },
-    { id: 'term1',      type: 'terminal', x: 1360, y: 690, label: 'Done' }
+  const nodes = [
+    { id: ids.entry, type: 'entry', x: 60, y: 360, label: 'Low DO in Aeration tank', sub: 'Flow entry' },
+    { id: ids.q1, type: 'question', x: 320, y: 320, label: 'Is aeration even across the tank?', qtype: 'single', options: [
+      { id: 'q1o1', text: 'Yes, bubbles normal',    route: 'node:' + ids.q2 },
+      { id: 'q1o2', text: 'Moderate bubbling',       route: 'node:' + ids.q2 },
+      { id: 'q1o3', text: 'No bubbles',              route: 'node:' + ids.a_callsup },
+      { id: 'q1o4', text: 'Skip to end',             route: 'node:' + ids.a_rca1 }
+    ]},
+    { id: ids.q2, type: 'question', x: 700, y: 80, label: 'Are dead zones created?', qtype: 'multi', options: [
+      { id: 'q2o1', text: 'Sludge accumulation',                  route: 'node:' + ids.a_diff },
+      { id: 'q2o2', text: 'Dark / black localized water',          route: 'node:' + ids.a_diff },
+      { id: 'q2o3', text: 'Uneven DO readings',                    route: 'node:' + ids.jump_do },
+      { id: 'q2o4', text: 'Reduced treatment performance',         route: 'node:' + ids.jump_do },
+      { id: 'q2o5', text: 'Skip',                                  route: 'node:' + ids.a_rca2 },
+      { id: 'q2o6', text: 'Reassignment',                          route: 'node:' + ids.a_reassign }
+    ]},
+    { id: ids.a_callsup, type: 'action', x: 700, y: 580, label: 'Call supervisor', sub: 'Diffusers appear choked' },
+    { id: ids.a_imgcs,   type: 'action', x: 980, y: 580, label: 'Upload image', sub: 'Evidence of no bubbling' },
+    { id: ids.a_rca1,    type: 'action', x: 700, y: 720, label: 'Upload image + RCA', sub: 'Root cause selector' },
+    { id: ids.a_sendmsg, type: 'action', x: 980, y: 720, label: 'Send message to supervisor' },
+    { id: ids.a_diff,    type: 'action', x: 1060, y: 60, label: 'Diffusers choked — plan cleaning' },
+    { id: ids.jump_do,   type: 'jump',   x: 1060, y: 180, label: 'Next flow', target: null, targetSlot: 'f4' },
+    { id: ids.a_rca2,    type: 'action', x: 1060, y: 300, label: 'Media upload + RCA' },
+    { id: ids.a_reassign,type: 'reassign', x: 1060, y: 420, label: 'Reassign to operator' },
+    { id: ids.a_media,   type: 'action', x: 1320, y: 420, label: 'Media upload' },
+    { id: ids.term1,     type: 'terminal', x: 1320, y: 580, label: 'Done' }
   ];
-
-  f.edges = [
-    // entry → Q1
-    { id: 'e1', from: 'entry', to: 'q1' },
-
-    // Q1 → answer cards
-    { id: 'e2', from: 'q1', to: 'ans_q1a' },
-    { id: 'e3', from: 'q1', to: 'ans_q1b' },
-    { id: 'e4', from: 'q1', to: 'ans_q1c' },
-    { id: 'e5', from: 'q1', to: 'ans_q1d' },
-
-    // Q1 answer cards → routes
-    { id: 'e6', from: 'ans_q1a', to: 'q2' },
-    { id: 'e7', from: 'ans_q1b', to: 'q2' },
-    { id: 'e8', from: 'ans_q1c', to: 'a_callsup' },
-    { id: 'e9', from: 'ans_q1d', to: 'a_rca1' },
-
-    // No-bubble path
-    { id: 'e10', from: 'a_callsup', to: 'a_imgcs' },
-    { id: 'e11', from: 'a_imgcs', to: 'term1' },
-
-    // Skip path
-    { id: 'e12', from: 'a_rca1', to: 'a_sendmsg' },
-    { id: 'e13', from: 'a_sendmsg', to: 'term1' },
-
-    // Q2 → answer cards
-    { id: 'e14', from: 'q2', to: 'ans_q2a' },
-    { id: 'e15', from: 'q2', to: 'ans_q2b' },
-    { id: 'e16', from: 'q2', to: 'ans_q2c' },
-    { id: 'e17', from: 'q2', to: 'ans_q2d' },
-    { id: 'e18', from: 'q2', to: 'ans_q2e' },
-    { id: 'e19', from: 'q2', to: 'ans_q2f' },
-
-    // Q2 answer cards → routes
-    { id: 'e20', from: 'ans_q2a', to: 'a_diff' },
-    { id: 'e21', from: 'ans_q2b', to: 'a_diff' },
-    { id: 'e22', from: 'ans_q2c', to: 'jump_do' },
-    { id: 'e23', from: 'ans_q2d', to: 'jump_do' },
-    { id: 'e24', from: 'ans_q2e', to: 'a_rca2' },
-    { id: 'e25', from: 'ans_q2f', to: 'a_reassign' },
-
-    // Tail
-    { id: 'e26', from: 'a_diff', to: 'jump_do' },
-    { id: 'e27', from: 'a_rca2', to: 'jump_do' },
-    { id: 'e28', from: 'a_reassign', to: 'a_media2' },
-    { id: 'e29', from: 'a_media2', to: 'jump_do' }
+  const edges = [
+    { id: uid('e_'), from: ids.entry, to: ids.q1 },
+    { id: uid('e_'), from: ids.a_callsup, to: ids.a_imgcs },
+    { id: uid('e_'), from: ids.a_imgcs, to: ids.term1 },
+    { id: uid('e_'), from: ids.a_rca1, to: ids.a_sendmsg },
+    { id: uid('e_'), from: ids.a_sendmsg, to: ids.term1 },
+    { id: uid('e_'), from: ids.a_diff, to: ids.jump_do },
+    { id: uid('e_'), from: ids.a_rca2, to: ids.jump_do },
+    { id: uid('e_'), from: ids.a_reassign, to: ids.a_media },
+    { id: uid('e_'), from: ids.a_media, to: ids.jump_do }
   ];
+  return { id: uid('f_'), name: 'Flow 3 · Uneven bubbling', nodes, edges };
 }
 
 // =========================================================
@@ -457,8 +595,10 @@ let curFlow = curTree.flows[2];
 let selection = null;
 let pan = { x: 0, y: 0 }, zoom = 1;
 let nextId = 1000;
-const uid = (p) => `${p}${nextId++}`;
-const STORAGE_KEY = 'flowconfig-v2';
+let activeTab = 'core';
+function uid(p) { return `${p}${++nextId}`; }
+const STORAGE_KEY = 'flowconfig-v3';
+const TEMPLATES_KEY = 'flowconfig-templates-v1';
 
 function persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (_) {} }
 function loadPersisted() {
@@ -466,33 +606,104 @@ function loadPersisted() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return false;
     const parsed = JSON.parse(raw);
-    if (!parsed.trees) return false;
+    if (!parsed.trees || !parsed.trees.length) return false;
     data.trees = parsed.trees;
-    curTree = data.trees[0];
-    curFlow = curTree.flows[0];
+    curTree = data.trees[0]; curFlow = curTree.flows[0];
     return true;
   } catch (_) { return false; }
 }
+function loadTemplates() {
+  try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || '[]'); } catch (_) { return []; }
+}
+function saveTemplates(list) { try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(list)); } catch (_) {} }
 
 // =========================================================
-// DOM
+// DOM refs
 // =========================================================
 const treeSel = document.getElementById('tree-sel');
 const flowSel = document.getElementById('flow-sel');
 const canvas = document.getElementById('canvas');
 const edgesSvg = document.getElementById('edges');
-const inspector = document.getElementById('inspector');
+const inspectorBody = document.getElementById('insp-body');
+const inspectorHead = document.getElementById('insp-head');
 const wrap = document.getElementById('canvas-wrap');
-
-function refreshTopbar() {
-  treeSel.innerHTML = data.trees.map(t => `<option value="${t.id}" ${t === curTree ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('');
-  flowSel.innerHTML = curTree.flows.map(f => `<option value="${f.id}" ${f === curFlow ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('');
-}
-treeSel.onchange = e => { curTree = data.trees.find(t => t.id === e.target.value); curFlow = curTree.flows[0]; selection = null; render(); fitToView(); };
-flowSel.onchange = e => { curFlow = curTree.flows.find(f => f.id === e.target.value); selection = null; render(); fitToView(); };
+const tooltip = document.getElementById('tooltip');
 
 // =========================================================
-// Render
+// Palette
+// =========================================================
+function renderPalette() {
+  const search = (document.getElementById('palette-search').value || '').toLowerCase();
+  const body = document.getElementById('palette-body');
+  const groups = {};
+  Object.entries(NTYPES).forEach(([id, m]) => {
+    if (m.group !== activeTab) return;
+    if (search && !m.label.toLowerCase().includes(search) && !id.includes(search)) return;
+    (groups[m.group] = groups[m.group] || []).push({ id, ...m });
+  });
+  const groupLabels = { core: 'Building blocks', helpers: 'Helper steps', control: 'Control flow' };
+  let html = '';
+  Object.entries(groups).forEach(([g, items]) => {
+    html += `<div class="pgroup"><div class="pgroup-head"><h3>${groupLabels[g]}</h3><span class="count">${items.length}</span></div><div class="pgroup-grid">`;
+    items.forEach(it => {
+      html += `<div class="pcard" draggable="true" data-type="${it.id}" data-help="${escapeHtml(it.help)}">
+        <button class="help-btn" data-help="${escapeHtml(it.help)}">?</button>
+        <div class="ico t-${it.id}">${it.icon}</div>
+        <div class="lbl">${it.label}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  if (!html) html = '<div class="empty" style="padding:20px">No matches.</div>';
+  body.innerHTML = html;
+  body.querySelectorAll('.pcard').forEach(c => {
+    c.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', c.dataset.type));
+    c.addEventListener('mouseenter', e => showTooltip(c.dataset.help, c));
+    c.addEventListener('mouseleave', hideTooltip);
+  });
+}
+document.querySelectorAll('.panel-tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.panel-tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active'); activeTab = t.dataset.tab; renderPalette();
+});
+document.getElementById('palette-search').oninput = renderPalette;
+
+function showTooltip(text, el) {
+  if (!text) return;
+  tooltip.textContent = text;
+  const r = el.getBoundingClientRect();
+  tooltip.style.left = (r.right + 10) + 'px';
+  tooltip.style.top = r.top + 'px';
+  tooltip.classList.add('show');
+}
+function hideTooltip() { tooltip.classList.remove('show'); }
+
+// =========================================================
+// Topbar dropdowns
+// =========================================================
+function refreshTopbar() {
+  document.getElementById('cur-tree-name').textContent = curTree.name;
+  document.getElementById('cur-flow-name').textContent = curFlow.name;
+  document.getElementById('tree-init').textContent = curTree.name.charAt(0).toUpperCase();
+  flowSel.innerHTML = curTree.flows.map(f => `<option value="${f.id}" ${f === curFlow ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('') +
+    `<option value="__new__">＋ New flow…</option>` +
+    data.trees.filter(t => t !== curTree).map(t => `<optgroup label="${escapeHtml(t.name)}">${t.flows.map(f => `<option value="cross:${t.id}:${f.id}">${escapeHtml(f.name)}</option>`).join('')}</optgroup>`).join('');
+}
+flowSel.onchange = e => {
+  const v = e.target.value;
+  if (v === '__new__') { showNewFlow(); return; }
+  if (v.startsWith('cross:')) {
+    const [, tId, fId] = v.split(':');
+    curTree = data.trees.find(t => t.id === tId);
+    curFlow = curTree.flows.find(f => f.id === fId);
+  } else {
+    curFlow = curTree.flows.find(f => f.id === v);
+  }
+  selection = null; render(); fitToView();
+};
+
+// =========================================================
+// Canvas render
 // =========================================================
 function applyTransform() {
   canvas.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
@@ -502,38 +713,104 @@ function applyTransform() {
 function render() {
   refreshTopbar();
   canvas.innerHTML = '';
-  for (const n of curFlow.nodes) canvas.appendChild(renderNode(n));
+  curFlow.nodes.forEach(n => canvas.appendChild(renderNode(n)));
   renderEdges();
   renderInspector();
   applyTransform();
   persist();
 }
 function renderNode(n) {
+  const m = NTYPES[n.type] || { label: n.type, icon: '?', color: '#888' };
   const el = document.createElement('div');
   el.className = `node t-${n.type}` + (selection && selection.kind === 'node' && selection.id === n.id ? ' selected' : '');
   el.style.left = n.x + 'px';
   el.style.top = n.y + 'px';
   el.dataset.id = n.id;
+
   let subText = n.sub || '';
-  if (n.type === 'jump' && n.target) {
-    const tgt = curTree.flows.find(f => f.id === n.target);
+  if (n.type === 'jump' && (n.target || n.targetSlot)) {
+    const tgtId = n.target || n.targetSlot;
+    const tgt = curTree.flows.find(f => f.id === tgtId);
     subText = '→ ' + (tgt ? tgt.name : '(unset)');
   }
   if (n.type === 'wait' && n.duration) subText = '⏱ ' + n.duration;
-  const qtypeChip = (n.type === 'question' && n.qtype) ? `<div class="qtype">${qtypeLabel(n.qtype)} · ${(n.options || []).length} options</div>` : '';
+  if (n.type === 'reassign' && n.assignTo) subText = '→ ' + n.assignTo;
+
+  const qtypeChip = (n.type === 'question' && n.qtype) ? `<div class="qtype">${qtypeLabel(n.qtype)}</div>` : '';
+
+  // Options list (for questions / rootcause)
+  let optionsHtml = '';
+  let perOptionPorts = '';
+  const hasOptions = (n.type === 'question' || n.type === 'rootcause') && n.options && n.options.length;
+  if (hasOptions) {
+    optionsHtml = `<div class="options-list">` + n.options.map((opt, i) => {
+      const routeLbl = routeLabel(opt.route);
+      return `<div class="opt-row" data-opt="${opt.id}">
+        <div class="opt-num">${i + 1}</div>
+        <div class="opt-text" title="${escapeHtml(opt.text)}">${escapeHtml(opt.text)}</div>
+        <div class="opt-route" title="${escapeHtml(routeLbl)}">${escapeHtml(routeLbl)}</div>
+      </div>`;
+    }).join('') + `</div>`;
+  }
+
+  const inPort = n.type !== 'entry' ? '<div class="port in" data-port="in"></div>' : '';
+  const outPortDefault = (n.type !== 'terminal' && n.type !== 'jump' && !hasOptions) ? '<div class="port out" data-port="out"></div>' : '';
+
   el.innerHTML = `
-    <div class="stripe"></div>
-    <div class="type-tag">${n.type}</div>
+    <div class="nhead">
+      <div class="nicon">${m.icon}</div>
+      <div>
+        <div class="ntype">${m.label}</div>
+        ${hasOptions ? `<div class="nbranch">${n.options.length} branch${n.options.length > 1 ? 'es' : ''}</div>` : ''}
+      </div>
+    </div>
     <div class="label">${escapeHtml(n.label || '(untitled)')}</div>
     ${subText ? `<div class="sub">${escapeHtml(subText)}</div>` : ''}
     ${qtypeChip}
-    ${n.type !== 'entry' ? '<div class="port in" data-port="in"></div>' : ''}
-    ${n.type !== 'terminal' && n.type !== 'jump' ? '<div class="port out" data-port="out"></div>' : ''}
+    ${optionsHtml}
+    ${inPort}${outPortDefault}
   `;
+
+  // Per-option ports (positioned next to each option row)
+  if (hasOptions) {
+    requestAnimationFrame(() => {
+      const rows = el.querySelectorAll('.opt-row');
+      rows.forEach((row, i) => {
+        const opt = n.options[i];
+        const port = document.createElement('div');
+        port.className = 'port out out-opt';
+        port.dataset.port = 'out';
+        port.dataset.option = opt.id;
+        const r = row.getBoundingClientRect();
+        const elr = el.getBoundingClientRect();
+        port.style.top = (r.top - elr.top + r.height / 2 - 6) + 'px';
+        port.style.right = '-7px';
+        el.appendChild(port);
+        attachPortHandler(port, n, opt.id);
+      });
+    });
+  }
+
   attachNodeHandlers(el, n);
   return el;
 }
+
 function qtypeLabel(id) { return (QTYPES.find(q => q.id === id) || { label: id }).label; }
+function routeLabel(route) {
+  if (!route) return 'no route';
+  if (route === 'end') return '→ End';
+  if (route.startsWith('node:')) {
+    const id = route.slice(5);
+    const n = curFlow.nodes.find(x => x.id === id);
+    return n ? '→ ' + (n.label || n.type) : '→ (deleted)';
+  }
+  if (route.startsWith('flow:')) {
+    const fid = route.slice(5);
+    const f = curTree.flows.find(x => x.id === fid);
+    return f ? '↗ ' + f.name : '↗ (deleted)';
+  }
+  return route;
+}
 
 function renderEdges() {
   edgesSvg.innerHTML = `
@@ -541,40 +818,63 @@ function renderEdges() {
       <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker>
       <marker id="arrow-sel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/></marker>
     </defs>`;
-  for (const e of curFlow.edges) {
+
+  // Build edge list including implicit per-option edges from questions
+  const allEdges = [...curFlow.edges];
+  curFlow.nodes.forEach(n => {
+    if ((n.type === 'question' || n.type === 'rootcause') && n.options) {
+      n.options.forEach(opt => {
+        if (opt.route && opt.route.startsWith('node:')) {
+          const targetId = opt.route.slice(5);
+          if (curFlow.nodes.find(x => x.id === targetId)) {
+            allEdges.push({ id: 'opt_' + opt.id, from: n.id, to: targetId, cond: opt.text, fromOption: opt.id, optionIndex: n.options.indexOf(opt) });
+          }
+        }
+      });
+    }
+  });
+
+  for (const e of allEdges) {
     const a = curFlow.nodes.find(n => n.id === e.from);
     const b = curFlow.nodes.find(n => n.id === e.to);
     if (!a || !b) continue;
     const aEl = canvas.querySelector(`[data-id="${a.id}"]`);
     const bEl = canvas.querySelector(`[data-id="${b.id}"]`);
     if (!aEl || !bEl) continue;
-    const ax = a.x + aEl.offsetWidth, ay = a.y + aEl.offsetHeight / 2;
+    let ax = a.x + aEl.offsetWidth, ay = a.y + aEl.offsetHeight / 2;
+    if (e.fromOption) {
+      // anchor at the option row
+      const row = aEl.querySelector(`.opt-row[data-opt="${e.fromOption}"]`);
+      if (row) {
+        const rr = row.getBoundingClientRect();
+        const elr = aEl.getBoundingClientRect();
+        ay = a.y + (rr.top - elr.top + rr.height / 2);
+      }
+    }
     const bx = b.x, by = b.y + bEl.offsetHeight / 2;
     const dx = Math.max(50, Math.abs(bx - ax) * 0.4);
     const isSel = selection && selection.kind === 'edge' && selection.id === e.id;
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', `M ${ax} ${ay} C ${ax + dx} ${ay}, ${bx - dx} ${by}, ${bx} ${by}`);
-    path.setAttribute('stroke', isSel ? '#6366f1' : '#94a3b8');
-    path.setAttribute('stroke-width', isSel ? '2.5' : '1.8');
+    path.setAttribute('stroke', isSel ? '#6366f1' : (e.fromOption ? optionColor(e.optionIndex) : '#94a3b8'));
+    path.setAttribute('stroke-width', isSel ? '2.6' : '1.8');
     path.setAttribute('fill', 'none');
     path.setAttribute('marker-end', isSel ? 'url(#arrow-sel)' : 'url(#arrow)');
     path.classList.add('edge');
     path.style.cursor = 'pointer';
-    path.addEventListener('click', ev => { ev.stopPropagation(); selection = { kind: 'edge', id: e.id }; render(); });
+    if (!e.fromOption) path.addEventListener('click', ev => { ev.stopPropagation(); selection = { kind: 'edge', id: e.id }; render(); });
     edgesSvg.appendChild(path);
     if (e.cond) {
       const mx = (ax + bx) / 2, my = (ay + by) / 2 - 6;
       const bg = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      bg.setAttribute('x', mx); bg.setAttribute('y', my);
-      bg.setAttribute('text-anchor', 'middle');
+      bg.setAttribute('x', mx); bg.setAttribute('y', my); bg.setAttribute('text-anchor', 'middle');
       bg.setAttribute('class', 'edge-label edge-label-bg');
-      bg.textContent = e.cond;
+      bg.textContent = truncate(e.cond, 30);
       edgesSvg.appendChild(bg);
       const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      t.setAttribute('x', mx); t.setAttribute('y', my);
-      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('x', mx); t.setAttribute('y', my); t.setAttribute('text-anchor', 'middle');
       t.setAttribute('class', 'edge-label');
-      t.textContent = e.cond;
+      t.textContent = truncate(e.cond, 30);
       edgesSvg.appendChild(t);
     }
   }
@@ -582,178 +882,195 @@ function renderEdges() {
   const h = Math.max(1600, ...curFlow.nodes.map(n => n.y + 300));
   edgesSvg.setAttribute('width', w); edgesSvg.setAttribute('height', h);
 }
+function optionColor(i) {
+  const colors = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#f97316', '#14b8a6'];
+  return colors[i % colors.length];
+}
 
 // =========================================================
 // Inspector
 // =========================================================
-const TYPE_COLORS = { entry: '#10b981', question: '#3b82f6', answer: '#0ea5e9', action: '#f59e0b', wait: '#8b5cf6', terminal: '#64748b', jump: '#ec4899', fallback: '#ef4444', rootcause: '#14b8a6' };
-
-function destinationOptions(excludeId) {
-  // Returns HTML <option> list of nodes in current flow + special targets
-  let html = `<option value="">— select destination —</option>`;
-  html += `<optgroup label="In this flow">`;
-  curFlow.nodes.filter(n => n.id !== excludeId).forEach(n => {
-    html += `<option value="node:${n.id}">${escapeHtml(typeLabel(n.type))} · ${escapeHtml(truncate(n.label, 40))}</option>`;
-  });
-  html += `</optgroup><optgroup label="Special">`;
-  html += `<option value="end">→ End diagnosis</option>`;
-  curTree.flows.filter(f => f !== curFlow).forEach(f => {
-    html += `<option value="flow:${f.id}">↗ Jump to flow: ${escapeHtml(f.name)}</option>`;
-  });
-  html += `</optgroup>`;
-  return html;
-}
-function typeLabel(t) { return ({ entry: 'Entry', question: 'Question', answer: 'Answer', action: 'Action', wait: 'Wait', terminal: 'Terminal', jump: 'Jump', fallback: 'Fallback', rootcause: 'Root-cause' })[t] || t; }
-function truncate(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; }
-
 function renderInspector() {
-  if (!selection) { inspector.innerHTML = '<div class="empty"><div class="icon">🎨</div>Select a node or connection to edit.<br/><br/>Or drag a node type from the palette onto the canvas.</div>'; return; }
+  if (!selection) {
+    inspectorHead.style.display = 'none';
+    inspectorBody.innerHTML = '<div class="empty"><div class="ico-big">🎨</div>Select a node or connection to edit.<br/><br/>Or drag a node type from the palette onto the canvas.</div>';
+    return;
+  }
   if (selection.kind === 'node') {
     const n = curFlow.nodes.find(x => x.id === selection.id);
     if (!n) { selection = null; return renderInspector(); }
-    let html = `<h2><span class="pill" style="background:${TYPE_COLORS[n.type]}">${typeLabel(n.type)}</span></h2><div class="meta">${n.id}</div>`;
+    const m = NTYPES[n.type];
+    inspectorHead.style.display = 'flex';
+    document.getElementById('insp-icon').textContent = m.icon;
+    document.getElementById('insp-icon').style.background = m.color;
+    document.getElementById('insp-title').textContent = m.label;
+    document.getElementById('insp-sub').textContent = n.id;
+
+    let html = `<div class="helper-box"><div class="h-ico">💡</div><div>${escapeHtml(m.help)}</div></div>`;
     html += `<label>Label</label><input id="i-label" value="${escapeHtml(n.label || '')}">`;
 
-    if (['action', 'entry', 'terminal', 'wait', 'fallback', 'answer', 'rootcause'].includes(n.type)) {
+    if (['action', 'entry', 'terminal', 'wait', 'fallback', 'answer', 'rootcause', 'skip', 'reassign'].includes(n.type)) {
       html += `<label>Description</label><textarea id="i-sub" placeholder="Optional notes…">${escapeHtml(n.sub || '')}</textarea>`;
     }
-
     if (n.type === 'question' || n.type === 'rootcause') {
-      // Question-type selector
       if (n.type === 'question') {
         html += `<label>Question type</label><select id="i-qtype">`;
-        QTYPES.forEach(q => { html += `<option value="${q.id}" ${n.qtype === q.id ? 'selected' : ''}>${q.label}</option>`; });
+        QTYPES.forEach(q => html += `<option value="${q.id}" ${n.qtype === q.id ? 'selected' : ''}>${q.label}</option>`);
         html += `</select>`;
       }
-      // Routing table
-      html += `<label>Options &amp; routes</label><div class="route-table" id="i-options">`;
+      html += `<label>Branches</label><div class="route-table" id="i-options">`;
       n.options = n.options || [];
       n.options.forEach((opt, i) => {
-        const dest = opt.route ? findRouteValue(opt.route) : '';
+        const destValue = opt.route || '';
         html += `<div class="route-row">
-          <input data-i="${i}" data-field="text" value="${escapeHtml(opt.text || '')}" placeholder="Option text">
-          <select data-i="${i}" data-field="route">${destinationOptions(n.id).replace(`value="${dest}"`, `value="${dest}" selected`)}</select>
-          <button data-del="${i}" title="Remove">×</button>
+          <div class="opt-num">${i + 1}</div>
+          <div class="rfields">
+            <input data-i="${i}" data-field="text" value="${escapeHtml(opt.text || '')}" placeholder="Option text">
+            <select data-i="${i}" data-field="route">${destinationOptions(n.id, destValue)}</select>
+            <div class="helper-add">
+              <button class="helper-chip" data-helper="skip" data-i="${i}">+ Skip</button>
+              <button class="helper-chip" data-helper="wait" data-i="${i}">+ Wait</button>
+              <button class="helper-chip" data-helper="reassign" data-i="${i}">+ Reassign</button>
+              <button class="del" data-del="${i}" title="Remove option">×</button>
+            </div>
+          </div>
         </div>`;
       });
       html += `</div>`;
-      html += `<button class="add-btn" id="i-add-opt">+ Add option</button>`;
-      html += `<button class="gen-btn" id="i-gen-cards">⚡ Generate / refresh answer cards</button>`;
-      html += `<div class="help">Creates an Answer-card node for each option and routes it to the chosen destination. Existing cards are preserved.</div>`;
+      html += `<button class="add-btn" id="i-add-opt">+ Add branch</button>`;
+      html += `<button class="gen-btn" id="i-gen-cards">⚡ Generate Answer cards (drawio style)</button>`;
     }
-
     if (n.type === 'jump') {
       html += `<label>Target flow (same tree)</label><select id="i-target">
-        <option value="">— select target —</option>
-        ${curTree.flows.filter(f => f !== curFlow).map(f => `<option value="${f.id}" ${n.target === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
+        <option value="">— select —</option>
+        ${curTree.flows.filter(f => f !== curFlow).map(f => `<option value="${f.id}" ${n.target === f.id || n.targetSlot === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
       </select>`;
     }
     if (n.type === 'wait') {
-      html += `<label>Duration</label><input id="i-dur" value="${escapeHtml(n.duration || '')}" placeholder="e.g. 1 hour, 30 min">`;
+      html += `<label>Duration</label><input id="i-dur" value="${escapeHtml(n.duration || '')}" placeholder="e.g. 1 hour">`;
     }
-    if (n.type === 'answer' && n.linkedOption) {
-      html += `<div class="help" style="margin-top:14px">🔗 Linked to question option <code style="background:var(--panel-soft);padding:1px 4px;border-radius:3px">${n.linkedOption}</code>. Editing the question regenerates this card.</div>`;
+    if (n.type === 'reassign') {
+      html += `<label>Assign to</label><input id="i-assign" value="${escapeHtml(n.assignTo || '')}" placeholder="e.g. Supervisor, Maintenance">`;
     }
-
-    html += `<button class="danger" id="i-delete">🗑 Delete node</button>`;
-    inspector.innerHTML = html;
-
-    document.getElementById('i-label').oninput = e => { n.label = e.target.value; render(); };
-    const sub = document.getElementById('i-sub'); if (sub) sub.oninput = e => { n.sub = e.target.value; render(); };
-    const qt = document.getElementById('i-qtype'); if (qt) qt.onchange = e => { n.qtype = e.target.value; render(); };
-    const tgt = document.getElementById('i-target'); if (tgt) tgt.onchange = e => { n.target = e.target.value; render(); };
-    const dur = document.getElementById('i-dur'); if (dur) dur.oninput = e => { n.duration = e.target.value; render(); };
-
-    if (n.type === 'question' || n.type === 'rootcause') {
-      document.querySelectorAll('#i-options input').forEach(inp => {
-        inp.oninput = e => { n.options[+e.target.dataset.i].text = e.target.value; persist(); };
-      });
-      document.querySelectorAll('#i-options select').forEach(sel => {
-        sel.onchange = e => { n.options[+e.target.dataset.i].route = parseRouteValue(e.target.value); persist(); };
-      });
-      document.querySelectorAll('#i-options button[data-del]').forEach(btn => {
-        btn.onclick = e => { n.options.splice(+e.target.dataset.del, 1); render(); };
-      });
-      document.getElementById('i-add-opt').onclick = () => {
-        n.options.push({ id: uid('opt_'), text: 'New option', route: '' });
-        render();
-      };
-      document.getElementById('i-gen-cards').onclick = () => generateAnswerCards(n);
-    }
-    document.getElementById('i-delete').onclick = () => deleteNode(n.id);
+    html += `<button class="danger-btn" id="i-delete">🗑 Delete node</button>`;
+    inspectorBody.innerHTML = html;
+    bindInspector(n);
   } else if (selection.kind === 'edge') {
     const e = curFlow.edges.find(x => x.id === selection.id);
     if (!e) { selection = null; return renderInspector(); }
     const a = curFlow.nodes.find(n => n.id === e.from), b = curFlow.nodes.find(n => n.id === e.to);
-    inspector.innerHTML = `
-      <h2>Connection</h2>
-      <div class="meta">${escapeHtml(a?.label || '?')} → ${escapeHtml(b?.label || '?')}</div>
-      <label>Condition (optional label)</label>
+    inspectorHead.style.display = 'flex';
+    document.getElementById('insp-icon').textContent = '→';
+    document.getElementById('insp-icon').style.background = '#94a3b8';
+    document.getElementById('insp-title').textContent = 'Connection';
+    document.getElementById('insp-sub').textContent = e.id;
+    inspectorBody.innerHTML = `
+      <div class="helper-box"><div class="h-ico">🔗</div><div>${escapeHtml(a?.label || '?')} → ${escapeHtml(b?.label || '?')}</div></div>
+      <label>Condition label</label>
       <input id="i-cond" value="${escapeHtml(e.cond || '')}" placeholder="e.g. answer = Yes, DO < 2 mg/L">
-      <button class="danger" id="i-delete">🗑 Delete connection</button>
+      <button class="danger-btn" id="i-delete">🗑 Delete connection</button>
     `;
     document.getElementById('i-cond').oninput = ev => { e.cond = ev.target.value; render(); };
     document.getElementById('i-delete').onclick = () => { curFlow.edges = curFlow.edges.filter(x => x.id !== e.id); selection = null; render(); };
   }
 }
+function bindInspector(n) {
+  document.getElementById('i-label').oninput = e => { n.label = e.target.value; render(); };
+  const sub = document.getElementById('i-sub'); if (sub) sub.oninput = e => { n.sub = e.target.value; render(); };
+  const qt = document.getElementById('i-qtype'); if (qt) qt.onchange = e => {
+    n.qtype = e.target.value;
+    if (n.qtype === 'yesno') n.options = [{ id: uid('opt_'), text: 'Yes', route: '' }, { id: uid('opt_'), text: 'No', route: '' }];
+    render();
+  };
+  const tgt = document.getElementById('i-target'); if (tgt) tgt.onchange = e => { n.target = e.target.value; n.targetSlot = e.target.value; render(); };
+  const dur = document.getElementById('i-dur'); if (dur) dur.oninput = e => { n.duration = e.target.value; render(); };
+  const asg = document.getElementById('i-assign'); if (asg) asg.oninput = e => { n.assignTo = e.target.value; render(); };
 
-function findRouteValue(route) {
-  // route can be: "node:<id>", "flow:<id>", "end", or an old plain node id
-  if (!route) return '';
-  if (route.startsWith('node:') || route.startsWith('flow:') || route === 'end') return route;
-  if (curFlow.nodes.find(n => n.id === route)) return 'node:' + route;
-  return '';
+  if (n.type === 'question' || n.type === 'rootcause') {
+    document.querySelectorAll('#i-options input').forEach(inp => {
+      inp.oninput = e => { n.options[+e.target.dataset.i].text = e.target.value; render(); };
+    });
+    document.querySelectorAll('#i-options select').forEach(sel => {
+      sel.onchange = e => { n.options[+e.target.dataset.i].route = e.target.value; render(); };
+    });
+    document.querySelectorAll('#i-options button.del').forEach(btn => {
+      btn.onclick = e => { n.options.splice(+e.target.dataset.del, 1); render(); };
+    });
+    document.querySelectorAll('#i-options button.helper-chip').forEach(btn => {
+      btn.onclick = e => insertHelperOnBranch(n, +e.target.dataset.i, e.target.dataset.helper);
+    });
+    document.getElementById('i-add-opt').onclick = () => { n.options.push({ id: uid('opt_'), text: 'New option', route: '' }); render(); };
+    document.getElementById('i-gen-cards').onclick = () => generateAnswerCards(n);
+  }
+  document.getElementById('i-delete').onclick = () => deleteNode(n.id);
 }
-function parseRouteValue(v) { return v || ''; }
 
-// =========================================================
-// Generate / refresh answer cards for a question
-// =========================================================
+function destinationOptions(excludeId, selected) {
+  let html = `<option value="" ${!selected ? 'selected' : ''}>— pick destination —</option>`;
+  html += `<optgroup label="Nodes in this flow">`;
+  curFlow.nodes.filter(n => n.id !== excludeId).forEach(n => {
+    const v = 'node:' + n.id;
+    html += `<option value="${v}" ${selected === v ? 'selected' : ''}>${typeLabel(n.type)} · ${escapeHtml(truncate(n.label, 36))}</option>`;
+  });
+  html += `</optgroup><optgroup label="Other flows in this tree">`;
+  curTree.flows.filter(f => f !== curFlow).forEach(f => {
+    const v = 'flow:' + f.id;
+    html += `<option value="${v}" ${selected === v ? 'selected' : ''}>↗ ${escapeHtml(f.name)}</option>`;
+  });
+  html += `</optgroup><optgroup label="Special">`;
+  html += `<option value="end" ${selected === 'end' ? 'selected' : ''}>→ End diagnosis</option>`;
+  html += `</optgroup>`;
+  return html;
+}
+function typeLabel(t) { return (NTYPES[t] || { label: t }).label; }
+function truncate(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; }
+
+// Insert a helper node on a specific branch — Skip / Wait / Reassign
+function insertHelperOnBranch(questionNode, optionIdx, helperType) {
+  const opt = questionNode.options[optionIdx];
+  const newNode = {
+    id: uid('n_'), type: helperType,
+    x: questionNode.x + 300, y: questionNode.y + optionIdx * 60,
+    label: NTYPES[helperType].label
+  };
+  // If branch already routes somewhere, chain: helper → previous target
+  const oldRoute = opt.route;
+  curFlow.nodes.push(newNode);
+  if (oldRoute && oldRoute.startsWith('node:')) {
+    curFlow.edges.push({ id: uid('e_'), from: newNode.id, to: oldRoute.slice(5) });
+  }
+  opt.route = 'node:' + newNode.id;
+  selection = { kind: 'node', id: newNode.id };
+  render();
+}
+
+// Generate dedicated answer cards (drawio style)
 function generateAnswerCards(qNode) {
   if (!qNode.options) return;
-  const baseX = qNode.x + 260;
-  let baseY = qNode.y - ((qNode.options.length - 1) * 90) / 2;
-  if (baseY < 40) baseY = 40;
-
+  const baseX = qNode.x + 280;
+  const baseY = qNode.y + 80;
   qNode.options.forEach((opt, i) => {
     let card = curFlow.nodes.find(n => n.type === 'answer' && n.linkedOption === opt.id);
     if (!card) {
-      card = { id: uid('ans_'), type: 'answer', x: baseX, y: baseY + i * 90, label: opt.text, linkedOption: opt.id };
+      card = { id: uid('ans_'), type: 'answer', x: baseX, y: baseY + i * 110, label: opt.text, linkedOption: opt.id };
       curFlow.nodes.push(card);
     } else {
-      card.label = opt.text; // keep position
+      card.label = opt.text;
     }
-    // Edge: question → answer card
+    // Edge q → card (explicit)
     if (!curFlow.edges.find(e => e.from === qNode.id && e.to === card.id)) {
       curFlow.edges.push({ id: uid('e_'), from: qNode.id, to: card.id });
     }
-    // Edge: answer card → routed destination
-    // First remove any old outgoing edges from this card
+    // Edge card → option route destination
     curFlow.edges = curFlow.edges.filter(e => e.from !== card.id);
-    if (opt.route) {
-      if (opt.route.startsWith('node:')) {
-        const targetId = opt.route.slice(5);
-        if (curFlow.nodes.find(n => n.id === targetId)) {
-          curFlow.edges.push({ id: uid('e_'), from: card.id, to: targetId });
-        }
-      } else if (opt.route.startsWith('flow:')) {
-        // Create or reuse a Jump node next to the card
-        const flowId = opt.route.slice(5);
-        let jump = curFlow.nodes.find(n => n.type === 'jump' && n.target === flowId);
-        if (!jump) {
-          jump = { id: uid('jmp_'), type: 'jump', x: card.x + 260, y: card.y, label: 'Next flow', target: flowId };
-          curFlow.nodes.push(jump);
-        }
-        curFlow.edges.push({ id: uid('e_'), from: card.id, to: jump.id });
-      } else if (opt.route === 'end') {
-        let term = curFlow.nodes.find(n => n.type === 'terminal' && n.id === 'auto_end');
-        if (!term) {
-          term = { id: 'auto_end', type: 'terminal', x: card.x + 260, y: card.y, label: 'End diagnosis' };
-          curFlow.nodes.push(term);
-        }
-        curFlow.edges.push({ id: uid('e_'), from: card.id, to: term.id });
+    if (opt.route && opt.route.startsWith('node:')) {
+      const tid = opt.route.slice(5);
+      if (curFlow.nodes.find(n => n.id === tid)) {
+        curFlow.edges.push({ id: uid('e_'), from: card.id, to: tid });
       }
     }
+    // Repoint the option's route to the answer card now
+    opt.route = 'node:' + card.id;
   });
   render();
 }
@@ -761,19 +1078,26 @@ function generateAnswerCards(qNode) {
 function deleteNode(id) {
   curFlow.nodes = curFlow.nodes.filter(x => x.id !== id);
   curFlow.edges = curFlow.edges.filter(e => e.from !== id && e.to !== id);
+  // Clean option routes that pointed here
+  curFlow.nodes.forEach(n => {
+    if (n.options) n.options.forEach(o => { if (o.route === 'node:' + id) o.route = ''; });
+  });
   selection = null; render();
 }
 
 // =========================================================
-// Node drag + ports
+// Drag node + ports
 // =========================================================
 function attachNodeHandlers(el, n) {
   el.addEventListener('mousedown', ev => {
     if (ev.target.classList.contains('port')) return;
+    if (ev.button !== 0) return;
     ev.stopPropagation();
     selection = { kind: 'node', id: n.id };
     const start = { x: ev.clientX, y: ev.clientY, nx: n.x, ny: n.y };
+    let dragged = false;
     const move = e => {
+      if (!dragged && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 3) dragged = true;
       n.x = start.nx + (e.clientX - start.x) / zoom;
       n.y = start.ny + (e.clientY - start.y) / zoom;
       el.style.left = n.x + 'px'; el.style.top = n.y + 'px';
@@ -784,40 +1108,56 @@ function attachNodeHandlers(el, n) {
     render();
   });
   el.querySelectorAll('.port').forEach(p => {
-    p.addEventListener('mousedown', ev => {
-      ev.stopPropagation();
-      if (p.dataset.port !== 'out') return;
-      const tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      tempPath.setAttribute('stroke', '#6366f1'); tempPath.setAttribute('stroke-width', '2.5'); tempPath.setAttribute('fill', 'none'); tempPath.setAttribute('stroke-dasharray', '6 4');
-      edgesSvg.appendChild(tempPath);
-      const ax = n.x + el.offsetWidth, ay = n.y + el.offsetHeight / 2;
-      let lastTarget = null;
-      const move = e => {
-        const r = wrap.getBoundingClientRect();
-        const mx = (e.clientX - r.left - pan.x) / zoom;
-        const my = (e.clientY - r.top - pan.y) / zoom;
-        const dx = Math.max(60, (mx - ax) * 0.5);
-        tempPath.setAttribute('d', `M ${ax} ${ay} C ${ax + dx} ${ay}, ${mx - dx} ${my}, ${mx} ${my}`);
-        const hover = document.elementFromPoint(e.clientX, e.clientY);
-        if (lastTarget && lastTarget !== hover) lastTarget.classList.remove('hot');
-        if (hover && hover.classList.contains('port') && hover.dataset.port === 'in') { hover.classList.add('hot'); lastTarget = hover; }
-        else lastTarget = null;
-      };
-      const up = e => {
-        document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
-        tempPath.remove();
-        if (lastTarget) lastTarget.classList.remove('hot');
-        const tgt = document.elementFromPoint(e.clientX, e.clientY);
-        if (tgt && tgt.classList.contains('port') && tgt.dataset.port === 'in') {
-          const tgtId = tgt.closest('.node').dataset.id;
-          if (tgtId !== n.id && !curFlow.edges.find(x => x.from === n.id && x.to === tgtId)) {
+    if (p.dataset.option) return; // handled by attachPortHandler
+    if (p.dataset.port === 'out') attachPortHandler(p, n, null);
+  });
+}
+function attachPortHandler(port, n, optionId) {
+  port.addEventListener('mousedown', ev => {
+    ev.stopPropagation();
+    const tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    tempPath.setAttribute('stroke', '#6366f1');
+    tempPath.setAttribute('stroke-width', '2.5');
+    tempPath.setAttribute('fill', 'none');
+    tempPath.setAttribute('stroke-dasharray', '6 4');
+    edgesSvg.appendChild(tempPath);
+    const el = canvas.querySelector(`[data-id="${n.id}"]`);
+    const portRect = port.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const ax = n.x + (portRect.left - elRect.left + portRect.width / 2);
+    const ay = n.y + (portRect.top - elRect.top + portRect.height / 2);
+    let lastTarget = null;
+    const move = e => {
+      const r = wrap.getBoundingClientRect();
+      const mx = (e.clientX - r.left - pan.x) / zoom;
+      const my = (e.clientY - r.top - pan.y) / zoom;
+      const dx = Math.max(60, (mx - ax) * 0.5);
+      tempPath.setAttribute('d', `M ${ax} ${ay} C ${ax + dx} ${ay}, ${mx - dx} ${my}, ${mx} ${my}`);
+      const hover = document.elementFromPoint(e.clientX, e.clientY);
+      if (lastTarget && lastTarget !== hover) lastTarget.classList.remove('hot');
+      if (hover && hover.classList.contains('port') && hover.dataset.port === 'in') { hover.classList.add('hot'); lastTarget = hover; }
+      else lastTarget = null;
+    };
+    const up = e => {
+      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
+      tempPath.remove();
+      if (lastTarget) lastTarget.classList.remove('hot');
+      const tgt = document.elementFromPoint(e.clientX, e.clientY);
+      if (tgt && tgt.classList.contains('port') && tgt.dataset.port === 'in') {
+        const tgtId = tgt.closest('.node').dataset.id;
+        if (tgtId !== n.id) {
+          if (optionId) {
+            // Set this option's route
+            const opt = n.options.find(o => o.id === optionId);
+            if (opt) opt.route = 'node:' + tgtId;
+          } else if (!curFlow.edges.find(x => x.from === n.id && x.to === tgtId)) {
             curFlow.edges.push({ id: uid('e_'), from: n.id, to: tgtId });
           }
         }
-        render();
-      };
-      document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
-    });
+      }
+      render();
+    };
+    document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
   });
 }
 
@@ -826,7 +1166,7 @@ function attachNodeHandlers(el, n) {
 // =========================================================
 wrap.addEventListener('mousedown', ev => {
   if (ev.target.tagName === 'path') return;
-  if (ev.target !== wrap && ev.target !== canvas && ev.target.tagName !== 'svg' && !ev.target.id) return;
+  if (ev.target.closest('.node') || ev.target.closest('.float-tools') || ev.target.closest('.zoom-ctl') || ev.target.closest('.legend')) return;
   selection = null; render();
   const start = { x: ev.clientX, y: ev.clientY, px: pan.x, py: pan.y };
   const move = e => { pan.x = start.px + (e.clientX - start.x); pan.y = start.py + (e.clientY - start.y); applyTransform(); };
@@ -845,12 +1185,12 @@ wrap.addEventListener('wheel', ev => {
 }, { passive: false });
 document.getElementById('zoom-in').onclick = () => { zoom = Math.min(2, zoom * 1.2); applyTransform(); };
 document.getElementById('zoom-out').onclick = () => { zoom = Math.max(0.2, zoom / 1.2); applyTransform(); };
-document.getElementById('zoom-fit').onclick = () => fitToView();
+document.getElementById('zoom-fit').onclick = fitToView;
 function fitToView() {
   if (!curFlow.nodes.length) { pan = { x: 40, y: 40 }; zoom = 1; applyTransform(); return; }
   const xs = curFlow.nodes.map(n => n.x), ys = curFlow.nodes.map(n => n.y);
   const minX = Math.min(...xs), maxX = Math.max(...xs.map(x => x + 220));
-  const minY = Math.min(...ys), maxY = Math.max(...ys.map(y => y + 120));
+  const minY = Math.min(...ys), maxY = Math.max(...ys.map(y => y + 200));
   const rect = wrap.getBoundingClientRect();
   const zx = (rect.width - 80) / (maxX - minX);
   const zy = (rect.height - 80) / (maxY - minY);
@@ -861,34 +1201,29 @@ function fitToView() {
 }
 
 // =========================================================
-// Palette
+// Canvas drop (from palette)
 // =========================================================
-document.querySelectorAll('.palette-item').forEach(item => {
-  item.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', item.dataset.type));
-});
 wrap.addEventListener('dragover', e => e.preventDefault());
 wrap.addEventListener('drop', e => {
   e.preventDefault();
   const type = e.dataTransfer.getData('text/plain');
-  if (!type) return;
+  if (!type || !NTYPES[type]) return;
   const r = wrap.getBoundingClientRect();
   const x = (e.clientX - r.left - pan.x) / zoom;
   const y = (e.clientY - r.top - pan.y) / zoom;
-  const node = { id: uid('n_'), type, x: x - 90, y: y - 30, label: defaultLabel(type) };
+  const node = { id: uid('n_'), type, x: x - 110, y: y - 30, label: defaultLabel(type) };
   if (type === 'question') { node.qtype = 'single'; node.options = [{ id: uid('opt_'), text: 'Yes', route: '' }, { id: uid('opt_'), text: 'No', route: '' }]; }
-  if (type === 'rootcause') { node.options = [{ id: uid('opt_'), text: 'Cause 1', route: '' }, { id: uid('opt_'), text: 'Cause 2', route: '' }, { id: uid('opt_'), text: 'Other (unmapped)', route: '' }]; }
+  if (type === 'rootcause') { node.options = [{ id: uid('opt_'), text: 'Cause A', route: '' }, { id: uid('opt_'), text: 'Cause B', route: '' }, { id: uid('opt_'), text: 'Other', route: '' }]; }
   curFlow.nodes.push(node);
   selection = { kind: 'node', id: node.id };
   render();
 });
-function defaultLabel(t) {
-  return ({ entry: 'Flow entry', question: 'New question', answer: 'Answer', action: 'New action', wait: 'Wait', terminal: 'End', jump: 'Jump to flow', fallback: 'Fallback', rootcause: 'Root-cause selector' })[t] || 'Node';
-}
+function defaultLabel(t) { return NTYPES[t] ? NTYPES[t].label : 'Node'; }
 
 // =========================================================
-// Palette actions
+// Tools
 // =========================================================
-document.getElementById('auto-layout').onclick = () => {
+document.getElementById('auto-layout-btn').onclick = () => {
   const entries = curFlow.nodes.filter(n => n.type === 'entry');
   if (!entries.length && curFlow.nodes.length) entries.push(curFlow.nodes[0]);
   const depth = {}; const queue = entries.map(n => ({ id: n.id, lvl: 0 }));
@@ -897,18 +1232,22 @@ document.getElementById('auto-layout').onclick = () => {
     const { id, lvl } = queue.shift();
     if (visited.has(id)) { depth[id] = Math.max(depth[id], lvl); continue; }
     visited.add(id); depth[id] = lvl;
-    curFlow.edges.filter(e => e.from === id).forEach(e => queue.push({ id: e.to, lvl: lvl + 1 }));
+    // collect outgoing: regular edges + option routes
+    const outs = curFlow.edges.filter(e => e.from === id).map(e => e.to);
+    const n = curFlow.nodes.find(x => x.id === id);
+    if (n && n.options) n.options.forEach(o => { if (o.route && o.route.startsWith('node:')) outs.push(o.route.slice(5)); });
+    outs.forEach(to => queue.push({ id: to, lvl: lvl + 1 }));
   }
   curFlow.nodes.forEach(n => { if (!(n.id in depth)) depth[n.id] = 0; });
   const byLevel = {};
   curFlow.nodes.forEach(n => { (byLevel[depth[n.id]] = byLevel[depth[n.id]] || []).push(n); });
-  const COL_W = 280, ROW_H = 110;
+  const COL_W = 300, ROW_H = 140;
   Object.entries(byLevel).forEach(([lvl, nodes]) => {
-    nodes.forEach((n, i) => { n.x = 60 + (+lvl) * COL_W; n.y = 80 + i * ROW_H; });
+    nodes.forEach((n, i) => { n.x = 60 + (+lvl) * COL_W; n.y = 60 + i * ROW_H; });
   });
   render(); fitToView();
 };
-document.getElementById('clear-flow').onclick = () => {
+document.getElementById('clear-btn').onclick = () => {
   if (!confirm('Clear all nodes and connections in this flow?')) return;
   curFlow.nodes = []; curFlow.edges = []; selection = null; render();
 };
@@ -916,44 +1255,129 @@ document.getElementById('clear-flow').onclick = () => {
 // =========================================================
 // Topbar buttons
 // =========================================================
-document.getElementById('save-btn').onclick = () => {
+document.getElementById('export-btn').onclick = () => {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'flows.json'; a.click();
-  URL.revokeObjectURL(url);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'flows.json'; a.click();
 };
-document.getElementById('mode-btn').onclick = () => alert('Simulate mode coming soon — will walk through the flow as an operator would.');
+document.getElementById('publish-btn').onclick = () => alert('Publish: would lock the current draft and make it the live version for operators.');
 
+// =========================================================
+// New flow modal
+// =========================================================
 const newModal = document.getElementById('new-modal');
-document.getElementById('new-btn').onclick = () => {
+function showNewFlow() {
   document.getElementById('new-flow-tree').innerHTML =
     data.trees.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('') +
-    `<option value="__new__">＋ New tree…</option>`;
+    `<option value="__newtree__">＋ New tree…</option>`;
   document.getElementById('new-flow-name').value = '';
   document.getElementById('new-flow-tree').value = curTree.id;
   newModal.style.display = 'flex';
-};
-document.getElementById('new-cancel').onclick = () => newModal.style.display = 'none';
+}
+document.getElementById('new-btn').onclick = showNewFlow;
+document.getElementById('new-cancel').onclick = () => { newModal.style.display = 'none'; refreshTopbar(); };
 document.getElementById('new-confirm').onclick = () => {
   const name = document.getElementById('new-flow-name').value.trim() || 'Untitled flow';
   let treeId = document.getElementById('new-flow-tree').value;
-  let targetTree;
-  if (treeId === '__new__') {
-    const tname = prompt('New tree name?', 'Untitled tree') || 'Untitled tree';
-    targetTree = { id: uid('tree_'), name: tname, flows: [] };
-    data.trees.push(targetTree);
+  let target;
+  if (treeId === '__newtree__') {
+    const tn = prompt('New tree name?', 'Untitled tree') || 'Untitled tree';
+    target = { id: uid('tree_'), name: tn, flows: [] };
+    data.trees.push(target);
   } else {
-    targetTree = data.trees.find(t => t.id === treeId);
+    target = data.trees.find(t => t.id === treeId);
   }
-  const flow = { id: uid('flow_'), name, nodes: [{ id: uid('n_'), type: 'entry', x: 60, y: 100, label: name }], edges: [] };
-  targetTree.flows.push(flow);
-  curTree = targetTree; curFlow = flow; selection = null;
-  newModal.style.display = 'none';
-  render(); fitToView();
+  const flow = { id: uid('f_'), name, nodes: [{ id: uid('n_'), type: 'entry', x: 80, y: 120, label: name }], edges: [] };
+  target.flows.push(flow);
+  curTree = target; curFlow = flow; selection = null;
+  newModal.style.display = 'none'; render(); fitToView();
 };
 
 // =========================================================
-// Welcome modal
+// Templates
+// =========================================================
+const tplModal = document.getElementById('tpl-modal');
+const tplSaveModal = document.getElementById('tpl-save-modal');
+function showTemplates() {
+  const grid = document.getElementById('tpl-grid');
+  let html = '';
+  BUILTIN_TEMPLATES.forEach(t => {
+    html += `<div class="tpl-card builtin" data-builtin="${t.id}">
+      <div class="tpl-emoji">${t.emoji}</div>
+      <div class="tpl-name">${escapeHtml(t.name)}</div>
+      <div class="tpl-meta">Built-in · ${escapeHtml(t.desc)}</div>
+    </div>`;
+  });
+  loadTemplates().forEach(t => {
+    html += `<div class="tpl-card" data-saved="${t.id}">
+      <button class="tpl-del" data-del="${t.id}">×</button>
+      <div class="tpl-emoji">${t.emoji || '⭐'}</div>
+      <div class="tpl-name">${escapeHtml(t.name)}</div>
+      <div class="tpl-meta">Saved · ${t.tree.flows.length} flow${t.tree.flows.length !== 1 ? 's' : ''}</div>
+    </div>`;
+  });
+  if (!html) html = '<div class="empty" style="grid-column:1/-1">No templates yet. Save one with "⭐ Save as template".</div>';
+  grid.innerHTML = html;
+  grid.querySelectorAll('.tpl-card').forEach(c => {
+    c.onclick = (e) => {
+      if (e.target.classList.contains('tpl-del')) return;
+      const bi = c.dataset.builtin;
+      if (bi) {
+        const tpl = BUILTIN_TEMPLATES.find(t => t.id === bi);
+        const newTree = tpl.builder();
+        data.trees.push(newTree);
+        curTree = newTree; curFlow = newTree.flows[0]; selection = null;
+      } else if (c.dataset.saved) {
+        const sv = loadTemplates().find(t => t.id === c.dataset.saved);
+        if (sv) {
+          // clone with new ids? — keep simple: load as-is, regenerate top-level tree id
+          const cloned = JSON.parse(JSON.stringify(sv.tree));
+          cloned.id = uid('tree_');
+          data.trees.push(cloned);
+          curTree = cloned; curFlow = cloned.flows[0]; selection = null;
+        }
+      }
+      tplModal.style.display = 'none';
+      render(); fitToView();
+    };
+  });
+  grid.querySelectorAll('.tpl-del').forEach(b => {
+    b.onclick = ev => {
+      ev.stopPropagation();
+      const id = ev.target.dataset.del;
+      if (!confirm('Delete this saved template?')) return;
+      saveTemplates(loadTemplates().filter(t => t.id !== id));
+      showTemplates();
+    };
+  });
+  tplModal.style.display = 'flex';
+}
+document.getElementById('tpl-library').onclick = showTemplates;
+document.getElementById('rail-templates').onclick = showTemplates;
+document.getElementById('tpl-close').onclick = () => tplModal.style.display = 'none';
+
+document.getElementById('tpl-save').onclick = () => {
+  document.getElementById('tpl-save-name').value = curTree.name;
+  document.getElementById('tpl-save-emoji').value = '⭐';
+  tplSaveModal.style.display = 'flex';
+};
+document.getElementById('tpl-save-cancel').onclick = () => tplSaveModal.style.display = 'none';
+document.getElementById('tpl-save-confirm').onclick = () => {
+  const name = document.getElementById('tpl-save-name').value.trim() || curTree.name;
+  const emoji = document.getElementById('tpl-save-emoji').value.trim() || '⭐';
+  const list = loadTemplates();
+  list.push({ id: uid('tpl_'), name, emoji, tree: JSON.parse(JSON.stringify(curTree)) });
+  saveTemplates(list);
+  tplSaveModal.style.display = 'none';
+  // toast
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(16,185,129,0.4);z-index:200;animation:pop-in 0.25s';
+  toast.textContent = '⭐ Template saved';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2200);
+};
+
+// =========================================================
+// Welcome
 // =========================================================
 function showWelcome() {
   const modal = document.getElementById('welcome-modal');
@@ -962,10 +1386,14 @@ function showWelcome() {
     c.onclick = () => {
       modal.style.display = 'none';
       if (c.dataset.action === 'dummy') {
-        buildDummyFlow3();
-        curFlow = data.trees[0].flows[2];
+        data.trees = [buildLowDoTree()];
+        curTree = data.trees[0]; curFlow = curTree.flows[2];
+      } else if (c.dataset.action === 'template') {
+        data.trees = [{ id: uid('tree_'), name: 'My tree', flows: [{ id: uid('f_'), name: 'Flow 1', nodes: [{ id: uid('n_'), type: 'entry', x: 100, y: 120, label: 'Flow entry' }], edges: [] }] }];
+        curTree = data.trees[0]; curFlow = curTree.flows[0];
+        setTimeout(showTemplates, 100);
       } else {
-        data.trees = [{ id: uid('tree_'), name: 'My first tree', flows: [{ id: uid('flow_'), name: 'My first flow', nodes: [{ id: uid('n_'), type: 'entry', x: 100, y: 100, label: 'Flow entry' }], edges: [] }] }];
+        data.trees = [{ id: uid('tree_'), name: 'My first tree', flows: [{ id: uid('f_'), name: 'Flow 1', nodes: [{ id: uid('n_'), type: 'entry', x: 120, y: 140, label: 'Flow entry' }], edges: [] }] }];
         curTree = data.trees[0]; curFlow = curTree.flows[0];
       }
       render(); fitToView();
@@ -990,7 +1418,8 @@ function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c
 // Init
 // =========================================================
 (function init() {
-  pan = { x: 40, y: 40 }; zoom = 0.65;
+  pan = { x: 40, y: 40 }; zoom = 0.7;
+  renderPalette();
   if (!loadPersisted()) {
     showWelcome();
     render();
