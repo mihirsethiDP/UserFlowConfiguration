@@ -6,9 +6,7 @@
 <title>FlowConfig — Diagnostic Flow Designer</title>
 <style>
   :root {
-    --bg-grad: linear-gradient(135deg, #e0f2fe 0%, #ddfbe9 100%);
-    --rail: #0f172a;
-    --rail-2: #1e293b;
+    --bg: #fafbfc;
     --panel: #ffffff;
     --panel-soft: #f8fafc;
     --border: #e5e7eb;
@@ -16,381 +14,317 @@
     --text: #0f172a;
     --muted: #64748b;
     --muted-2: #94a3b8;
-    --accent: #6366f1;
-    --accent-2: #8b5cf6;
+    --accent: #1e3a8a;
+    --accent-2: #6366f1;
     --accent-soft: #eef2ff;
-    --accent-grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --step-done: #10b981;
+    --step-active: #1e3a8a;
+    --step-future: #cbd5e1;
 
-    --entry: #10b981;
-    --question: #6366f1;
-    --answer: #0ea5e9;
-    --action: #f59e0b;
-    --action-soft: #fef3c7;
-    --wait: #8b5cf6;
-    --terminal: #475569;
-    --jump: #ec4899;
-    --fallback: #ef4444;
-    --rootcause: #14b8a6;
-    --skip: #94a3b8;
-    --reassign: #f97316;
+    /* Node type colors (header pills) */
+    --c-trigger: #fef3c7; --c-trigger-fg: #92400e;
+    --c-question: #fef3c7; --c-question-fg: #92400e;
+    --c-answer: #d1fae5; --c-answer-fg: #047857;
+    --c-action: #dbeafe; --c-action-fg: #1e40af;
+    --c-waiting: #fef3c7; --c-waiting-fg: #92400e;
+    --c-rootcause: #fce7f3; --c-rootcause-fg: #9d174d;
+    --c-observation: #e0e7ff; --c-observation-fg: #3730a3;
+    --c-sensor: #cffafe; --c-sensor-fg: #155e75;
+    --c-reassign: #ffedd5; --c-reassign-fg: #9a3412;
+    --c-jump: #fce7f3; --c-jump-fg: #9d174d;
+    --c-end: #f1f5f9; --c-end-fg: #475569;
 
-    --shadow-sm: 0 1px 2px rgba(15,23,42,0.06);
-    --shadow-md: 0 4px 14px rgba(15,23,42,0.08);
-    --shadow-lg: 0 18px 50px rgba(15,23,42,0.18);
-    --shadow-node: 0 2px 4px rgba(15,23,42,0.04), 0 4px 14px rgba(15,23,42,0.06);
-    --shadow-node-hover: 0 4px 8px rgba(15,23,42,0.06), 0 12px 32px rgba(99,102,241,0.18);
+    --shadow-sm: 0 1px 2px rgba(15,23,42,0.04);
+    --shadow-md: 0 4px 14px rgba(15,23,42,0.06);
+    --shadow-lg: 0 18px 50px rgba(15,23,42,0.16);
   }
   * { box-sizing: border-box; }
-  html, body { height: 100%; margin: 0; font-family: -apple-system, "Inter", "Segoe UI", Roboto, sans-serif; color: var(--text); background: var(--bg-grad); user-select: none; -webkit-font-smoothing: antialiased; overflow: hidden; }
+  html, body { height: 100%; margin: 0; font-family: -apple-system, "Inter", "Segoe UI", Roboto, sans-serif; color: var(--text); background: var(--bg); user-select: none; -webkit-font-smoothing: antialiased; overflow: hidden; }
 
-  #app { display: grid; grid-template-columns: 60px 280px 1fr 360px; grid-template-rows: 1fr; height: 100vh; gap: 0; padding: 14px; }
+  #app { display: grid; grid-template-rows: 64px 60px 1fr; height: 100vh; }
 
-  /* ============ DARK RAIL ============ */
-  #rail { background: var(--rail); border-radius: 18px; display: flex; flex-direction: column; align-items: center; padding: 16px 0; gap: 8px; box-shadow: var(--shadow-md); }
-  #rail .logo { width: 36px; height: 36px; border-radius: 10px; background: var(--accent-grad); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 800; margin-bottom: 8px; box-shadow: 0 4px 14px rgba(139,92,246,0.4); }
-  #rail .rail-btn { width: 38px; height: 38px; border-radius: 10px; border: none; background: transparent; color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.15s; }
-  #rail .rail-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
-  #rail .rail-btn.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,0.4); }
-  #rail .spacer { flex: 1; }
+  /* ======= STEPPER ======= */
+  #stepper { display: flex; align-items: center; justify-content: center; gap: 0; background: var(--panel); border-bottom: 1px solid var(--border-2); padding: 0 32px; }
+  .step { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 14px; font-weight: 500; }
+  .step .num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; background: var(--step-future); color: #fff; }
+  .step.done .num { background: var(--step-done); }
+  .step.done .lbl { color: var(--text); }
+  .step.active .num { background: var(--step-active); }
+  .step.active .lbl { color: var(--text); font-weight: 600; }
+  .step-line { width: 80px; height: 3px; background: var(--step-future); margin: 0 18px; border-radius: 2px; }
+  .step-line.done { background: var(--step-done); }
+  .step-line.half { background: linear-gradient(90deg, var(--step-done) 50%, var(--step-future) 50%); }
 
-  /* ============ LEFT PANEL ============ */
-  #panel { background: var(--panel); border-radius: 18px; margin-left: 12px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; overflow: hidden; }
-  .panel-head { padding: 14px 16px; border-bottom: 1px solid var(--border-2); }
-  .panel-head .switcher { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.15s; }
-  .panel-head .switcher:hover { border-color: var(--accent); background: var(--accent-soft); }
-  .panel-head .switcher .ico { width: 28px; height: 28px; border-radius: 7px; background: var(--accent-grad); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-  .panel-head .switcher .lbl { flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .panel-head .switcher .lbl small { display: block; font-weight: 500; color: var(--muted); font-size: 10.5px; margin-top: 1px; }
-  .panel-head .switcher .chev { color: var(--muted); font-size: 10px; }
-  .panel-head select { width: 100%; padding: 7px 30px 7px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; background: var(--panel) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>") no-repeat right 10px center; appearance: none; cursor: pointer; font-weight: 500; margin-top: 8px; color: var(--text); }
-  .panel-head select:hover { border-color: var(--accent); }
+  /* ======= HEADER ======= */
+  #header { display: flex; align-items: center; padding: 0 24px; background: var(--panel); border-bottom: 1px solid var(--border-2); gap: 16px; }
+  #header .avatar { width: 36px; height: 36px; border-radius: 10px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  #header .pname { font-weight: 600; font-size: 15px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  #header .pname:hover { color: var(--accent-2); }
+  #header .pname .chev { font-size: 10px; color: var(--muted); }
+  .header-spacer { flex: 1; }
+  .toggle-group { display: inline-flex; padding: 4px; background: var(--panel-soft); border-radius: 10px; border: 1px solid var(--border); }
+  .toggle-group button { padding: 6px 16px; border: none; background: transparent; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border-radius: 7px; transition: all 0.15s; }
+  .toggle-group button.active { background: var(--accent); color: #fff; }
+  .toggle-group button:hover:not(.active) { color: var(--text); }
+  .hbtn { padding: 9px 16px; border: 1px solid var(--border); border-radius: 9px; background: var(--panel); cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text); display: inline-flex; align-items: center; gap: 7px; transition: all 0.15s; }
+  .hbtn:hover { border-color: var(--accent-2); color: var(--accent-2); }
+  .hbtn.primary { background: var(--accent); color: #fff; border: none; }
+  .hbtn.primary:hover { background: #1e40af; color: #fff; }
+  .hbtn .ic { font-size: 14px; }
 
-  .panel-search { padding: 10px 14px; border-bottom: 1px solid var(--border-2); }
-  .panel-search input { width: 100%; padding: 8px 12px 8px 32px; border: 1px solid var(--border); border-radius: 8px; font-size: 12.5px; background: var(--panel-soft) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='m21 21-4.3-4.3'/></svg>") no-repeat 10px center; }
-  .panel-search input:focus { outline: none; border-color: var(--accent); background-color: #fff; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  /* ======= MAIN ======= */
+  #main { display: grid; grid-template-columns: auto 1fr; position: relative; overflow: hidden; }
+  #sidebar { background: var(--panel); border-right: 1px solid var(--border-2); width: 230px; padding: 18px 14px; overflow-y: auto; transition: width 0.2s; position: relative; }
+  #sidebar.collapsed { width: 50px; padding: 18px 6px; }
+  #sidebar.collapsed .sidebar-head .lbl, #sidebar.collapsed .step-item .lbl { display: none; }
+  #sidebar.collapsed .step-item { justify-content: center; }
+  .sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: 0 6px 14px; }
+  .sidebar-head .lbl { font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--muted); letter-spacing: 0.08em; }
+  .sidebar-head .collapse { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; color: var(--muted); font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .sidebar-head .collapse:hover { color: var(--accent-2); border-color: var(--accent-2); }
+  .step-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; cursor: grab; transition: all 0.15s; margin-bottom: 4px; position: relative; }
+  .step-item:hover { background: var(--panel-soft); }
+  .step-item:active { cursor: grabbing; }
+  .step-item .ic { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
+  .step-item .lbl { font-size: 13px; font-weight: 500; color: var(--text); }
+  .step-item .help-trigger { position: absolute; right: 8px; opacity: 0; transition: opacity 0.15s; width: 16px; height: 16px; border-radius: 50%; background: var(--border-2); color: var(--muted); font-size: 10px; font-weight: 700; border: none; cursor: help; display: flex; align-items: center; justify-content: center; }
+  .step-item:hover .help-trigger { opacity: 1; }
+  .step-item .help-trigger:hover { background: var(--accent-2); color: #fff; }
 
-  .panel-tabs { display: flex; padding: 0 14px; gap: 18px; border-bottom: 1px solid var(--border-2); }
-  .panel-tab { padding: 10px 0 11px; font-size: 11.5px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; letter-spacing: 0.02em; }
-  .panel-tab:hover { color: var(--text); }
-  .panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .step-item .ic.t-trigger { background: var(--c-trigger); color: var(--c-trigger-fg); }
+  .step-item .ic.t-question { background: var(--c-question); color: var(--c-question-fg); }
+  .step-item .ic.t-answer { background: var(--c-answer); color: var(--c-answer-fg); }
+  .step-item .ic.t-action { background: var(--c-action); color: var(--c-action-fg); }
+  .step-item .ic.t-waiting { background: var(--c-waiting); color: var(--c-waiting-fg); }
+  .step-item .ic.t-rootcause { background: var(--c-rootcause); color: var(--c-rootcause-fg); }
+  .step-item .ic.t-observation { background: var(--c-observation); color: var(--c-observation-fg); }
+  .step-item .ic.t-sensor { background: var(--c-sensor); color: var(--c-sensor-fg); }
+  .step-item .ic.t-reassign { background: var(--c-reassign); color: var(--c-reassign-fg); }
+  .step-item .ic.t-jump { background: var(--c-jump); color: var(--c-jump-fg); }
+  .step-item .ic.t-end { background: var(--c-end); color: var(--c-end-fg); }
 
-  .panel-body { flex: 1; overflow-y: auto; padding: 14px; }
-  .pgroup { margin-bottom: 16px; }
-  .pgroup-head { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 8px; }
-  .pgroup-head h3 { font-size: 11px; text-transform: uppercase; color: var(--muted); margin: 0; letter-spacing: 0.06em; font-weight: 700; }
-  .pgroup-head .count { font-size: 10px; color: var(--muted-2); background: var(--border-2); padding: 2px 6px; border-radius: 999px; }
-  .pgroup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .pcard {
-    padding: 12px 10px; border: 1px solid var(--border); border-radius: 12px;
-    background: var(--panel); cursor: grab; transition: all 0.15s;
-    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px;
-    position: relative;
-  }
-  .pcard:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); transform: translateY(-1px); background: linear-gradient(180deg, var(--accent-soft) 0%, #fff 100%); }
-  .pcard:active { cursor: grabbing; }
-  .pcard .ico { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; }
-  .pcard .lbl { font-size: 11px; font-weight: 600; line-height: 1.2; color: var(--text); }
-  .pcard .help-btn { position: absolute; top: 4px; right: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--border-2); border: none; color: var(--muted); font-size: 9px; font-weight: 700; cursor: help; opacity: 0; transition: opacity 0.15s; }
-  .pcard:hover .help-btn { opacity: 1; }
-  .pcard .help-btn:hover { background: var(--accent); color: #fff; }
-
-  /* tooltips */
-  .tooltip { position: fixed; background: var(--rail); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 11.5px; max-width: 240px; line-height: 1.4; box-shadow: var(--shadow-lg); z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
-  .tooltip.show { opacity: 1; }
-  .tooltip::before { content: ''; position: absolute; left: -4px; top: 14px; width: 8px; height: 8px; background: var(--rail); transform: rotate(45deg); }
-
-  /* ============ CANVAS ============ */
-  #canvas-area { margin-left: 12px; display: flex; flex-direction: column; }
-  #canvas-top { display: flex; align-items: center; gap: 10px; padding: 0 4px 12px; }
-  .crumb-pill { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; font-size: 12px; box-shadow: var(--shadow-sm); }
-  .crumb-pill .av { width: 24px; height: 24px; border-radius: 50%; background: var(--accent-grad); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
-  .crumb-pill .info { line-height: 1.2; }
-  .crumb-pill .info .name { font-weight: 600; color: var(--text); }
-  .crumb-pill .info .role { font-size: 10px; color: var(--muted); }
-  .canvas-top-spacer { flex: 1; }
-  .top-btn { padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); cursor: pointer; font-size: 12px; font-weight: 500; color: var(--text); display: inline-flex; align-items: center; gap: 6px; box-shadow: var(--shadow-sm); transition: all 0.15s; }
-  .top-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
-  .top-btn.primary { background: var(--accent-grad); color: #fff; border: none; box-shadow: 0 2px 8px rgba(99,102,241,0.4); }
-  .top-btn.primary:hover { box-shadow: 0 6px 18px rgba(99,102,241,0.5); color: #fff; }
-  .avatars { display: flex; }
-  .avatars .av { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff; margin-left: -6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 700; box-shadow: var(--shadow-sm); }
-  .avatars .av:nth-child(1) { background: linear-gradient(135deg, #f43f5e, #f59e0b); }
-  .avatars .av:nth-child(2) { background: linear-gradient(135deg, #10b981, #06b6d4); }
-  .avatars .av:nth-child(3) { background: linear-gradient(135deg, #6366f1, #ec4899); }
-
+  /* ======= CANVAS ======= */
   #canvas-wrap {
-    flex: 1;
     position: relative; overflow: hidden;
-    background: var(--panel);
-    border-radius: 18px;
-    box-shadow: var(--shadow-md);
-    background-image: radial-gradient(circle at 1px 1px, rgba(99,102,241,0.18) 1.2px, transparent 0);
-    background-size: 24px 24px;
+    background: var(--bg);
+    background-image: radial-gradient(circle at 1px 1px, #d1d5db 1px, transparent 0);
+    background-size: 20px 20px;
   }
   #canvas { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
   #edges { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; transform-origin: 0 0; }
   #edges path.edge { pointer-events: stroke; transition: stroke 0.15s; }
-  #edges path.edge:hover { stroke: var(--accent); }
+  #edges path.edge:hover { stroke: var(--accent-2); }
 
-  /* ============ NODES ============ */
+  /* ======= NODES ======= */
   .node {
-    position: absolute; width: 220px;
-    background: var(--panel); border: 1.5px solid var(--border);
-    border-radius: 14px; padding: 14px 14px 12px;
-    box-shadow: var(--shadow-node);
-    cursor: move; transition: all 0.15s;
+    position: absolute; width: 260px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+    cursor: move; transition: box-shadow 0.15s, border-color 0.15s;
   }
-  .node:hover { box-shadow: var(--shadow-node-hover); transform: translateY(-1px); }
-  .node.selected { box-shadow: 0 0 0 3px rgba(99,102,241,0.25), var(--shadow-node-hover); border-color: var(--accent) !important; }
+  .node:hover { box-shadow: var(--shadow-md); border-color: var(--muted-2); }
+  .node.selected { box-shadow: 0 0 0 3px rgba(99,102,241,0.2), var(--shadow-md); border-color: var(--accent-2) !important; }
+  .node .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; }
+  .node .label { font-size: 14px; font-weight: 600; line-height: 1.35; margin-top: 10px; color: var(--text); }
+  .node .sub { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
 
-  .node .nhead { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .node .nicon { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; flex-shrink: 0; }
-  .node .ntype { font-size: 9.5px; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.06em; }
-  .node .nbranch { font-size: 10px; color: var(--accent); font-weight: 600; }
-  .node .label { font-weight: 600; line-height: 1.35; color: var(--text); font-size: 13px; }
-  .node .sub { color: var(--muted); font-size: 11px; margin-top: 4px; line-height: 1.35; }
-  .node .qtype { display: inline-block; font-size: 9.5px; padding: 2px 7px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); font-weight: 600; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+  /* Type-specific badges */
+  .node.t-trigger { border-color: #fde68a; }
+  .node.t-trigger .badge { background: var(--c-trigger); color: var(--c-trigger-fg); }
+  .node.t-question .badge { background: var(--c-question); color: var(--c-question-fg); }
+  .node.t-answer .badge { background: var(--c-answer); color: var(--c-answer-fg); }
+  .node.t-action .badge { background: var(--c-action); color: var(--c-action-fg); }
+  .node.t-waiting .badge { background: var(--c-waiting); color: var(--c-waiting-fg); }
+  .node.t-rootcause .badge { background: var(--c-rootcause); color: var(--c-rootcause-fg); }
+  .node.t-observation .badge { background: var(--c-observation); color: var(--c-observation-fg); }
+  .node.t-sensor .badge { background: var(--c-sensor); color: var(--c-sensor-fg); }
+  .node.t-reassign .badge { background: var(--c-reassign); color: var(--c-reassign-fg); }
+  .node.t-jump .badge { background: var(--c-jump); color: var(--c-jump-fg); }
+  .node.t-end .badge { background: var(--c-end); color: var(--c-end-fg); }
+  .node.t-end { border-radius: 28px; padding-left: 22px; padding-right: 22px; width: 220px; text-align: center; }
 
-  /* Per-option rows (for branching questions) */
-  .node .options-list { margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; }
-  .node .opt-row { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: 6px; background: var(--panel-soft); position: relative; }
-  .node .opt-row:hover { background: var(--accent-soft); }
-  .node .opt-row .opt-num { width: 18px; height: 18px; border-radius: 5px; background: var(--accent); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .node .opt-row .opt-text { font-size: 11.5px; flex: 1; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .node .opt-row .opt-route { font-size: 9.5px; color: var(--muted); background: #fff; padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); }
+  /* Sensor threshold inline bar */
+  .node .thresholds { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 6px; }
+  .node .thr-row { display: flex; align-items: center; gap: 8px; font-size: 11.5px; }
+  .node .thr-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .node .thr-dot.safe { background: var(--green); }
+  .node .thr-dot.warn { background: var(--yellow); }
+  .node .thr-dot.crit { background: var(--red); }
+  .node .thr-row .lbl { flex: 1; color: var(--text); font-weight: 500; }
+  .node .thr-row .range { color: var(--muted); font-size: 10.5px; }
 
+  /* Node ports — 4 sides */
   .port {
-    position: absolute; width: 12px; height: 12px;
+    position: absolute; width: 14px; height: 14px;
     background: #fff; border: 2px solid var(--muted-2); border-radius: 50%;
-    cursor: crosshair; transition: all 0.15s; z-index: 2;
+    cursor: crosshair; transition: all 0.15s; z-index: 3;
   }
-  .port:hover, .port.hot { background: var(--accent); border-color: var(--accent); transform: scale(1.4); box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
-  .port.in { left: -7px; top: 24px; }
-  .port.out { right: -7px; top: 50%; transform: translateY(-50%); }
-  .port.out-opt { right: -7px; width: 10px; height: 10px; }
+  .port:hover, .port.hot { background: var(--accent-2); border-color: var(--accent-2); transform: scale(1.4); box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
+  .port.top    { top: -7px;    left: 50%; transform: translateX(-50%); }
+  .port.right  { right: -7px;  top: 50%;  transform: translateY(-50%); }
+  .port.bottom { bottom: -7px; left: 50%; transform: translateX(-50%); }
+  .port.left   { left: -7px;   top: 50%;  transform: translateY(-50%); }
+  .port.top:hover, .port.top.hot { transform: translateX(-50%) scale(1.4); }
+  .port.right:hover, .port.right.hot { transform: translateY(-50%) scale(1.4); }
+  .port.bottom:hover, .port.bottom.hot { transform: translateX(-50%) scale(1.4); }
+  .port.left:hover, .port.left.hot { transform: translateY(-50%) scale(1.4); }
 
-  /* Type styles */
-  .t-entry { background: linear-gradient(180deg, #ecfdf5 0%, #fff 60%); border-color: var(--entry); }
-  .t-entry .nicon { background: var(--entry); }
-  .t-question { background: linear-gradient(180deg, #eef2ff 0%, #fff 70%); border-color: var(--question); }
-  .t-question .nicon { background: var(--question); }
-  .t-answer { width: 180px; padding: 12px; }
-  .t-answer .nicon { background: var(--answer); }
-  .t-action { background: linear-gradient(180deg, #fffbeb 0%, #fff 70%); border-color: var(--action); }
-  .t-action .nicon { background: var(--action); }
-  .t-wait { background: linear-gradient(180deg, #f5f3ff 0%, #fff 70%); border-color: var(--wait); }
-  .t-wait .nicon { background: var(--wait); }
-  .t-terminal { background: linear-gradient(180deg, #f8fafc 0%, #fff 70%); border-color: var(--terminal); border-radius: 24px; width: 180px; }
-  .t-terminal .nicon { background: var(--terminal); }
-  .t-jump { background: linear-gradient(135deg, #fdf2f8 0%, #fff 100%); border-color: var(--jump); }
-  .t-jump .nicon { background: var(--jump); }
-  .t-fallback { border-color: var(--fallback); border-style: dashed; background: #fef2f2; }
-  .t-fallback .nicon { background: var(--fallback); }
-  .t-rootcause { background: linear-gradient(180deg, #f0fdfa 0%, #fff 70%); border-color: var(--rootcause); }
-  .t-rootcause .nicon { background: var(--rootcause); }
-  .t-skip { background: #f1f5f9; border-color: var(--skip); width: 180px; }
-  .t-skip .nicon { background: var(--skip); }
-  .t-reassign { background: linear-gradient(180deg, #fff7ed 0%, #fff 70%); border-color: var(--reassign); }
-  .t-reassign .nicon { background: var(--reassign); }
+  /* Floating zoom pill */
+  .zoom-pill { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; border-radius: 999px; padding: 6px 8px; display: flex; align-items: center; gap: 4px; font-size: 12.5px; box-shadow: var(--shadow-md); z-index: 5; }
+  .zoom-pill button { background: transparent; border: none; color: #fff; padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 12.5px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: background 0.15s; }
+  .zoom-pill button:hover { background: rgba(255,255,255,0.1); }
+  .zoom-pill .lvl { padding: 6px 10px; font-weight: 600; color: #fff; min-width: 50px; text-align: center; }
 
-  /* Palette icon colors */
-  .ico.t-entry{background:var(--entry)}.ico.t-question{background:var(--question)}
-  .ico.t-answer{background:var(--answer)}.ico.t-action{background:var(--action)}
-  .ico.t-wait{background:var(--wait)}.ico.t-terminal{background:var(--terminal)}
-  .ico.t-jump{background:var(--jump)}.ico.t-fallback{background:var(--fallback)}
-  .ico.t-rootcause{background:var(--rootcause)}.ico.t-skip{background:var(--skip)}
-  .ico.t-reassign{background:var(--reassign)}
-
-  /* ============ INSPECTOR ============ */
-  #inspector { background: var(--panel); border-radius: 18px; margin-left: 12px; box-shadow: var(--shadow-md); overflow: hidden; display: flex; flex-direction: column; }
-  .insp-head { padding: 16px 18px; border-bottom: 1px solid var(--border-2); display: flex; align-items: center; gap: 10px; }
-  .insp-head .nicon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: 700; flex-shrink: 0; }
+  /* ======= INSPECTOR (slide-in drawer) ======= */
+  #inspector { position: absolute; top: 0; right: 0; bottom: 0; width: 380px; background: var(--panel); border-left: 1px solid var(--border-2); box-shadow: var(--shadow-lg); transform: translateX(100%); transition: transform 0.25s ease; z-index: 10; display: flex; flex-direction: column; }
+  #inspector.open { transform: translateX(0); }
+  .insp-head { padding: 18px 20px; border-bottom: 1px solid var(--border-2); display: flex; align-items: center; gap: 10px; }
+  .insp-head .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; }
   .insp-head .htitle { flex: 1; }
-  .insp-head .htitle .t { font-size: 14px; font-weight: 700; color: var(--text); }
-  .insp-head .htitle .s { font-size: 11px; color: var(--muted); font-family: ui-monospace, SFMono-Regular, monospace; }
-  .insp-body { flex: 1; overflow-y: auto; padding: 16px 18px; font-size: 13px; }
-  .insp-body label { display: block; font-size: 10px; text-transform: uppercase; color: var(--muted); margin: 14px 0 6px; letter-spacing: 0.08em; font-weight: 700; }
+  .insp-head .t { font-size: 14px; font-weight: 700; }
+  .insp-head .s { font-size: 11px; color: var(--muted); font-family: ui-monospace, monospace; }
+  .insp-head .x { width: 30px; height: 30px; border-radius: 8px; background: var(--panel-soft); border: 1px solid var(--border); color: var(--muted); cursor: pointer; font-size: 16px; }
+  .insp-head .x:hover { background: var(--bg); color: var(--text); }
+  .insp-body { flex: 1; overflow-y: auto; padding: 18px 20px; font-size: 13px; }
+  .insp-body label { display: block; font-size: 10px; text-transform: uppercase; color: var(--muted); margin: 16px 0 6px; letter-spacing: 0.08em; font-weight: 700; }
   .insp-body label:first-child { margin-top: 0; }
-  .insp-body input, .insp-body textarea, .insp-body select { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; background: var(--panel-soft); transition: all 0.15s; }
-  .insp-body input:focus, .insp-body textarea:focus, .insp-body select:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .insp-body input, .insp-body textarea, .insp-body select { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; background: var(--panel); transition: all 0.15s; }
+  .insp-body input:focus, .insp-body textarea:focus, .insp-body select:focus { outline: none; border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
   .insp-body textarea { min-height: 64px; resize: vertical; }
-  .helper-box { background: var(--accent-soft); border: 1px solid #c7d2fe; border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; font-size: 12px; color: #3730a3; line-height: 1.5; display: flex; gap: 8px; }
-  .helper-box .h-ico { font-size: 14px; flex-shrink: 0; }
+  .helper-box { background: var(--accent-soft); border: 1px solid #c7d2fe; border-radius: 10px; padding: 11px 13px; margin-bottom: 16px; font-size: 12.5px; color: #3730a3; line-height: 1.5; display: flex; gap: 9px; }
+  .helper-box .ic { font-size: 14px; }
 
   .route-table { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #fff; }
-  .route-row { padding: 8px; border-bottom: 1px solid var(--border-2); display: grid; grid-template-columns: 18px 1fr; gap: 8px; align-items: start; }
+  .route-row { padding: 10px; border-bottom: 1px solid var(--border-2); display: grid; grid-template-columns: 22px 1fr 24px; gap: 8px; align-items: start; }
   .route-row:last-child { border-bottom: none; }
-  .route-row .opt-num { width: 18px; height: 18px; border-radius: 5px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 8px; }
+  .route-row .num { width: 22px; height: 22px; border-radius: 6px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; color: #fff; margin-top: 4px; }
+  .num.safe { background: var(--green); } .num.warn { background: var(--yellow); } .num.crit { background: var(--red); } .num.opt { background: var(--accent-2); }
   .route-row .rfields { display: flex; flex-direction: column; gap: 4px; }
-  .route-row input, .route-row select { padding: 6px 8px; font-size: 12px; background: var(--panel-soft); border: 1px solid var(--border); border-radius: 6px; }
-  .route-row .helper-add { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
-  .route-row .helper-chip { font-size: 10px; padding: 3px 8px; border-radius: 999px; background: var(--border-2); color: var(--muted); cursor: pointer; border: none; font-weight: 600; transition: all 0.15s; }
-  .route-row .helper-chip:hover { background: var(--accent-soft); color: var(--accent); }
-  .route-row .helper-chip.active { background: var(--accent); color: #fff; }
-  .route-row .del { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 5px; cursor: pointer; font-size: 13px; padding: 4px 8px; align-self: start; margin-top: 8px; line-height: 1; }
+  .route-row input, .route-row select { padding: 7px 9px; font-size: 12px; }
+  .route-row .del { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 6px; cursor: pointer; font-size: 13px; height: 28px; margin-top: 4px; }
   .route-row .del:hover { background: #fee2e2; }
+  .row-range { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
 
-  .add-btn { background: var(--panel-soft); border: 1px dashed var(--muted-2); padding: 9px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; font-weight: 600; transition: all 0.15s; }
-  .add-btn:hover { border-color: var(--accent); color: var(--accent); background: #fff; }
-  .gen-btn { width: 100%; padding: 10px; background: linear-gradient(135deg, #eef2ff, #ede9fe); border: 1px solid #c7d2fe; color: var(--accent); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; margin-top: 10px; transition: all 0.15s; }
-  .gen-btn:hover { background: linear-gradient(135deg, #ede9fe, #ddd6fe); transform: translateY(-1px); }
-  .danger-btn { background: #fff; border: 1px solid #fecaca; color: var(--fallback); padding: 10px 14px; border-radius: 8px; cursor: pointer; margin-top: 24px; width: 100%; font-weight: 600; font-size: 12px; transition: all 0.15s; }
-  .danger-btn:hover { background: var(--fallback); color: #fff; }
+  .add-btn { background: var(--panel-soft); border: 1px dashed var(--muted-2); padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; font-weight: 600; }
+  .add-btn:hover { border-color: var(--accent-2); color: var(--accent-2); background: #fff; }
+  .gen-btn { width: 100%; padding: 11px; background: var(--accent); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12.5px; margin-top: 10px; }
+  .gen-btn:hover { background: #1e40af; }
+  .danger-btn { background: #fff; border: 1px solid #fecaca; color: var(--red); padding: 10px 14px; border-radius: 8px; cursor: pointer; margin-top: 24px; width: 100%; font-weight: 600; font-size: 12.5px; }
+  .danger-btn:hover { background: var(--red); color: #fff; }
 
-  /* ============ FLOATING TOOLBAR ============ */
-  .float-tools { position: absolute; top: 16px; right: 16px; background: var(--panel); border-radius: 12px; padding: 6px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 2px; z-index: 5; }
-  .float-tools button { width: 32px; height: 32px; border: none; background: transparent; border-radius: 8px; cursor: pointer; color: var(--muted); font-size: 14px; transition: all 0.15s; }
-  .float-tools button:hover { background: var(--panel-soft); color: var(--accent); }
-  .float-tools button.active { background: var(--accent-soft); color: var(--accent); }
+  /* ======= TOOLTIP ======= */
+  .tooltip { position: fixed; background: #0f172a; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 11.5px; max-width: 240px; line-height: 1.5; box-shadow: var(--shadow-lg); z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+  .tooltip.show { opacity: 1; }
 
-  .zoom-ctl { position: absolute; bottom: 16px; right: 16px; background: var(--panel); border-radius: 10px; display: flex; font-size: 12px; box-shadow: var(--shadow-md); overflow: hidden; z-index: 5; }
-  .zoom-ctl button { border: none; background: var(--panel); padding: 9px 14px; cursor: pointer; font-weight: 700; color: var(--muted); transition: all 0.15s; }
-  .zoom-ctl button:hover { background: var(--panel-soft); color: var(--accent); }
-  .zoom-ctl span { padding: 9px 10px; border-left: 1px solid var(--border-2); border-right: 1px solid var(--border-2); min-width: 54px; text-align: center; font-weight: 600; color: var(--muted); }
-
-  .legend { position: absolute; bottom: 16px; left: 16px; background: var(--panel); border-radius: 10px; padding: 10px 14px; font-size: 11.5px; color: var(--muted); box-shadow: var(--shadow-sm); max-width: 380px; line-height: 1.6; z-index: 5; }
-  .legend b { color: var(--text); }
-  .legend kbd { background: var(--panel-soft); border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; font-size: 10px; font-family: ui-monospace, monospace; color: var(--text); }
-
-  .empty { color: var(--muted); font-size: 12.5px; padding: 32px 12px; text-align: center; line-height: 1.6; }
-  .empty .ico-big { font-size: 36px; opacity: 0.5; margin-bottom: 12px; }
-
-  /* ============ MODALS ============ */
-  .modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 100; animation: fade-in 0.2s; }
-  .modal { background: var(--panel); border-radius: 18px; padding: 28px; width: 560px; max-width: 92vw; box-shadow: var(--shadow-lg); animation: pop-in 0.25s; max-height: 86vh; overflow-y: auto; }
+  /* ======= MODALS ======= */
+  .modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; animation: fade 0.2s; }
+  .modal { background: var(--panel); border-radius: 16px; padding: 28px; width: 540px; max-width: 92vw; box-shadow: var(--shadow-lg); animation: pop 0.25s; max-height: 86vh; overflow-y: auto; }
   .modal h2 { margin: 0 0 6px; font-size: 18px; font-weight: 700; }
   .modal p { color: var(--muted); margin: 0 0 18px; font-size: 13.5px; line-height: 1.5; }
-  .modal .choice { padding: 18px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; margin-bottom: 10px; transition: all 0.15s; }
-  .modal .choice:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-1px); }
-  .modal .choice h3 { margin: 0 0 4px; font-size: 14.5px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .modal .choice { padding: 16px; border: 1.5px solid var(--border); border-radius: 12px; cursor: pointer; margin-bottom: 10px; transition: all 0.15s; }
+  .modal .choice:hover { border-color: var(--accent-2); background: var(--accent-soft); }
+  .modal .choice h3 { margin: 0 0 4px; font-size: 14px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
   .modal .choice p { margin: 0; font-size: 12.5px; }
-  .modal .choice .em { font-size: 22px; }
+  .modal .em { font-size: 22px; }
   .modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
-  .modal input, .modal select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; }
-  .modal input:focus, .modal select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .modal input, .modal select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; }
   .modal button { font-size: 13px; padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; font-weight: 500; }
-  .modal button.primary { background: var(--accent-grad); color: #fff; border: none; font-weight: 600; }
-  .modal button.primary:hover { box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
-  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes pop-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .modal button.primary { background: var(--accent); color: #fff; border: none; font-weight: 600; }
+  .modal button.primary:hover { background: #1e40af; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-  /* Template card grid */
-  .tpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-  .tpl-card { padding: 14px; border: 1.5px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.15s; background: var(--panel); position: relative; }
-  .tpl-card:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-2px); box-shadow: var(--shadow-md); }
-  .tpl-card .tpl-emoji { font-size: 22px; margin-bottom: 8px; }
-  .tpl-card .tpl-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
-  .tpl-card .tpl-meta { font-size: 11px; color: var(--muted); }
-  .tpl-card .tpl-del { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; border-radius: 50%; background: var(--border-2); border: none; color: var(--muted); font-size: 11px; cursor: pointer; opacity: 0; transition: opacity 0.15s; }
-  .tpl-card:hover .tpl-del { opacity: 1; }
-  .tpl-card .tpl-del:hover { background: var(--fallback); color: #fff; }
-  .tpl-card.builtin { background: linear-gradient(135deg, #fff 0%, #f0fdfa 100%); }
+  .tpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .tpl-card { padding: 16px; border: 1.5px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.15s; background: var(--panel); position: relative; }
+  .tpl-card:hover { border-color: var(--accent-2); background: var(--accent-soft); }
+  .tpl-card .em { font-size: 22px; margin-bottom: 8px; display: block; }
+  .tpl-card .nm { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .tpl-card .mt { font-size: 11px; color: var(--muted); }
+  .tpl-card .del { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--border-2); border: none; color: var(--muted); font-size: 12px; cursor: pointer; opacity: 0; transition: opacity 0.15s; }
+  .tpl-card:hover .del { opacity: 1; }
+  .tpl-card .del:hover { background: var(--red); color: #fff; }
 
-  /* edge label */
   .edge-label { fill: var(--text); font-size: 11px; font-weight: 600; }
   .edge-label-bg { fill: #fff; stroke: #fff; stroke-width: 5; paint-order: stroke; }
+
+  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; padding: 11px 20px; border-radius: 999px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); z-index: 200; animation: pop 0.2s; }
 </style>
 </head>
 <body>
 <div id="app">
-  <!-- Dark rail -->
-  <div id="rail">
-    <div class="logo">⚡</div>
-    <button class="rail-btn active" title="Flows">🌳</button>
-    <button class="rail-btn" id="rail-templates" title="Templates">📚</button>
-    <button class="rail-btn" title="Activity">📊</button>
-    <button class="rail-btn" title="Settings">⚙</button>
-    <div class="spacer"></div>
-    <button class="rail-btn" title="Help">?</button>
+  <!-- Stepper -->
+  <div id="stepper">
+    <div class="step done"><div class="num">✓</div><div class="lbl">Set up</div></div>
+    <div class="step-line done"></div>
+    <div class="step active"><div class="num">2</div><div class="lbl">Build the flow</div></div>
+    <div class="step-line"></div>
+    <div class="step"><div class="num">3</div><div class="lbl">Review</div></div>
   </div>
 
-  <!-- Left panel -->
-  <div id="panel">
-    <div class="panel-head">
-      <div class="switcher">
-        <div class="ico" id="tree-init">L</div>
-        <div class="lbl">
-          <div id="cur-tree-name">Low DO in Aeration tank</div>
-          <small id="cur-flow-name">Flow 3 · Uneven bubbling</small>
-        </div>
-        <span class="chev">▾</span>
-      </div>
-      <select id="tree-sel" style="display:none"></select>
-      <select id="flow-sel"></select>
+  <!-- Header -->
+  <div id="header">
+    <div class="avatar" id="proj-init">DP</div>
+    <div class="pname" id="proj-name">Low DO in Aeration Tank <span class="chev">▾</span></div>
+    <select id="flow-sel" style="border:1px solid var(--border);padding:7px 28px 7px 12px;border-radius:8px;background:var(--panel) url(&quot;data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>&quot;) no-repeat right 10px center;appearance:none;font-size:13px;color:var(--text);cursor:pointer;font-weight:500"></select>
+    <div class="header-spacer"></div>
+    <div class="toggle-group">
+      <button class="active">Canvas</button>
+      <button onclick="toast('Form view coming soon')">Form</button>
+      <button onclick="toast('Delta view coming soon')">Delta</button>
     </div>
-    <div class="panel-search">
-      <input id="palette-search" placeholder="Search node types…" />
-    </div>
-    <div class="panel-tabs">
-      <div class="panel-tab active" data-tab="core">CORE</div>
-      <div class="panel-tab" data-tab="helpers">HELPERS</div>
-      <div class="panel-tab" data-tab="control">CONTROL</div>
-    </div>
-    <div class="panel-body" id="palette-body"></div>
+    <div class="header-spacer"></div>
+    <button class="hbtn" id="btn-templates"><span class="ic">📚</span> Templates</button>
+    <button class="hbtn primary" id="btn-save-tpl"><span class="ic">💾</span> Save as template</button>
+    <button class="hbtn" id="btn-clear"><span class="ic">🗑</span> Clear canvas</button>
   </div>
 
-  <!-- Center canvas area -->
-  <div id="canvas-area">
-    <div id="canvas-top">
-      <div class="crumb-pill">
-        <div class="av">MS</div>
-        <div class="info"><div class="name">Mihir Sethi</div><div class="role">Configuring flow</div></div>
+  <!-- Main: sidebar + canvas -->
+  <div id="main">
+    <div id="sidebar">
+      <div class="sidebar-head">
+        <div class="lbl">ADD STEP</div>
+        <button class="collapse" id="btn-collapse" title="Collapse">«</button>
       </div>
-      <div class="canvas-top-spacer"></div>
-      <button class="top-btn" id="tpl-save">⭐ Save as template</button>
-      <button class="top-btn" id="tpl-library">📚 Templates</button>
-      <button class="top-btn" id="new-btn">＋ New flow</button>
-      <button class="top-btn" id="export-btn">⬇ Export</button>
-      <button class="top-btn primary" id="publish-btn">▶ Publish</button>
-      <div class="avatars">
-        <div class="av">M</div><div class="av">R</div><div class="av">A</div>
-      </div>
+      <div id="palette-list"></div>
     </div>
 
     <div id="canvas-wrap">
       <svg id="edges"></svg>
       <div id="canvas"></div>
 
-      <div class="float-tools">
-        <button title="Select" class="active">↖</button>
-        <button title="Pan">✋</button>
-        <button id="auto-layout-btn" title="Auto-layout">⇆</button>
-        <button id="clear-btn" title="Clear flow">🗑</button>
-      </div>
-
-      <div class="legend">
-        <b>Tip:</b> Questions show one port per option (right edge) — drag each to its destination.
-        Use the inspector to set routes via dropdown · <kbd>Scroll</kbd> zoom · <kbd>Drag</kbd> pan · <kbd>Del</kbd> remove
-      </div>
-      <div class="zoom-ctl">
-        <button id="zoom-out">−</button><span id="zoom-lbl">100%</span><button id="zoom-in">+</button><button id="zoom-fit">Fit</button>
+      <div class="zoom-pill">
+        <button id="zoom-out">− Zoom out</button>
+        <span class="lvl" id="zoom-lvl">100%</span>
+        <button id="zoom-in">+ Zoom in</button>
       </div>
     </div>
-  </div>
 
-  <!-- Inspector -->
-  <div id="inspector">
-    <div class="insp-head" id="insp-head" style="display:none">
-      <div class="nicon" id="insp-icon">?</div>
-      <div class="htitle"><div class="t" id="insp-title">—</div><div class="s" id="insp-sub">—</div></div>
-    </div>
-    <div class="insp-body" id="insp-body">
-      <div class="empty"><div class="ico-big">🎨</div>Select a node or connection to edit.<br/><br/>Or drag a node type from the palette onto the canvas.</div>
+    <!-- Inspector drawer -->
+    <div id="inspector">
+      <div class="insp-head">
+        <div class="badge" id="insp-badge">—</div>
+        <div class="htitle"><div class="t" id="insp-title">—</div><div class="s" id="insp-sub">—</div></div>
+        <button class="x" id="insp-close">×</button>
+      </div>
+      <div class="insp-body" id="insp-body"></div>
     </div>
   </div>
 </div>
 
-<!-- Tooltip -->
 <div class="tooltip" id="tooltip"></div>
 
-<!-- Welcome modal -->
+<!-- Welcome -->
 <div class="modal-bg" id="welcome-modal" style="display:none">
   <div class="modal">
     <h2>Welcome to FlowConfig</h2>
     <p>Design diagnostic flows on a canvas. Pick how you want to start:</p>
     <div class="choice" data-action="dummy">
       <h3><span class="em">🧪</span> Load demo: "Low DO in Aeration Tank"</h3>
-      <p>Tree with 6 flows. Flow 3 is fully built and uses per-option branching.</p>
+      <p>Tree with 6 flows. Flow 3 is fully built.</p>
     </div>
     <div class="choice" data-action="template">
       <h3><span class="em">📚</span> Start from a template</h3>
@@ -398,206 +332,75 @@
     </div>
     <div class="choice" data-action="scratch">
       <h3><span class="em">✨</span> Start from scratch</h3>
-      <p>Blank canvas, single entry node. Name your tree and first flow.</p>
+      <p>Blank canvas with a single Trigger node.</p>
     </div>
   </div>
 </div>
 
-<!-- New flow modal -->
-<div class="modal-bg" id="new-modal" style="display:none">
-  <div class="modal">
-    <h2>New flow</h2>
-    <p>Add a flow to the current tree, or spin up a brand new tree.</p>
-    <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin-bottom:6px">Flow name</label>
-    <input id="new-flow-name" placeholder="e.g. Sensor calibration" />
-    <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin:14px 0 6px">Add to</label>
-    <select id="new-flow-tree"></select>
-    <div class="actions">
-      <button id="new-cancel">Cancel</button>
-      <button class="primary" id="new-confirm">Create flow</button>
-    </div>
-  </div>
-</div>
-
-<!-- Template library modal -->
+<!-- Template library -->
 <div class="modal-bg" id="tpl-modal" style="display:none">
   <div class="modal" style="width: 640px">
     <h2>📚 Template library</h2>
-    <p>Pick a template to load. Saved templates are stored in your browser.</p>
+    <p>Pick a template to load.</p>
     <div class="tpl-grid" id="tpl-grid"></div>
-    <div class="actions">
-      <button id="tpl-close">Close</button>
-    </div>
+    <div class="actions"><button id="tpl-close">Close</button></div>
   </div>
 </div>
 
-<!-- Save template modal -->
+<!-- Save template -->
 <div class="modal-bg" id="tpl-save-modal" style="display:none">
   <div class="modal">
-    <h2>⭐ Save as template</h2>
-    <p>Saves the <b>current tree</b> (all flows). You can reuse it from the Templates library.</p>
+    <h2>💾 Save as template</h2>
+    <p>Saves the <b>current tree</b> (all flows) for reuse.</p>
     <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin-bottom:6px">Template name</label>
-    <input id="tpl-save-name" placeholder="e.g. Standard water-treatment diagnostic" />
-    <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin:14px 0 6px">Emoji / icon (optional)</label>
-    <input id="tpl-save-emoji" placeholder="🌊" maxlength="2" />
-    <div class="actions">
-      <button id="tpl-save-cancel">Cancel</button>
-      <button class="primary" id="tpl-save-confirm">Save template</button>
-    </div>
+    <input id="tpl-save-name" placeholder="e.g. Standard wastewater diagnostic" />
+    <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin:14px 0 6px">Emoji</label>
+    <input id="tpl-save-emoji" placeholder="⭐" maxlength="2" />
+    <div class="actions"><button id="tpl-save-cancel">Cancel</button><button class="primary" id="tpl-save-confirm">Save</button></div>
   </div>
 </div>
 
 <script>
-// =========================================================
-// Node-type metadata: visuals + helper text
-// =========================================================
+// ============================================================
+// Node-type metadata
+// ============================================================
 const NTYPES = {
-  entry:     { label: 'Entry',        icon: '▶', color: '#10b981', group: 'core',    help: 'The starting point of a flow. Every flow needs exactly one Entry node — it\'s what the operator sees first.' },
-  question:  { label: 'Question',     icon: '?', color: '#6366f1', group: 'core',    help: 'A decision step. Define options in the inspector — each option becomes its own outgoing branch with a port on the right edge of the node.' },
-  answer:    { label: 'Answer card',  icon: 'A', color: '#0ea5e9', group: 'core',    help: 'A tappable card representing one possible answer. Useful when the answer itself is a step the operator interacts with (matches drawio style).' },
-  action:    { label: 'Action',       icon: '✓', color: '#f59e0b', group: 'core',    help: 'A task the operator performs: upload a photo, call a supervisor, send a message, fill an RCA form, etc.' },
-  rootcause: { label: 'Root-cause',   icon: '⊕', color: '#14b8a6', group: 'core',    help: 'Like a question, but the options are diagnosed root causes. Each option can route to its own resolution path.' },
-  terminal:  { label: 'End',          icon: '■', color: '#475569', group: 'core',    help: 'Marks the end of the flow. Use multiple Ends for different resolution paths.' },
-  jump:      { label: 'Jump to flow', icon: '↗', color: '#ec4899', group: 'core',    help: 'Hands off to another flow in the same tree. Pick the target flow in the inspector.' },
-
-  skip:      { label: 'Skip step',    icon: '⏭', color: '#94a3b8', group: 'helpers', help: 'Lets the operator skip ahead without answering — typically routes to a "fallback / RCA" branch.' },
-  wait:      { label: 'Wait',         icon: '⏱', color: '#8b5cf6', group: 'helpers', help: 'Pause the flow — by time ("wait 1 hour") or by event ("wait for sensor reading").' },
-  reassign:  { label: 'Reassignment', icon: '↻', color: '#f97316', group: 'helpers', help: 'Hands the flow off to another operator role. Useful when the current operator isn\'t equipped to continue.' },
-  fallback:  { label: 'Fallback',     icon: '!', color: '#ef4444', group: 'control', help: 'Catch-all branch when none of the question\'s options apply.' }
+  trigger:     { label: 'Issue / Trigger', icon: '⚠', help: 'The entry point of a flow. The issue or event that kicks off the diagnostic.' },
+  question:    { label: 'Question',        icon: '?', help: 'A decision step. Define options in the inspector — each option becomes a downstream Answer card with its own route.' },
+  answer:      { label: 'Answer',          icon: '💬', help: 'A tappable answer card. Has an Action selector — pick what happens when this answer is chosen.' },
+  waiting:     { label: 'Waiting',         icon: '⏱', help: 'Pause the flow for a duration or until an event occurs.' },
+  rootcause:   { label: 'Root cause',      icon: '🌱', help: 'Pick from a list of diagnosed root causes. Each cause routes to its own resolution path.' },
+  action:      { label: 'Action',          icon: '✓', help: 'A task the operator performs. Has an Action selector — Photo upload, Send message, Call supervisor, Form input, RCA, etc.' },
+  observation: { label: 'Observation',     icon: '👁', help: 'Operator records what they observe. Use for visual/manual checks that don\'t need branching.' },
+  sensor:      { label: 'Sensor reading',  icon: '📡', help: 'Read a sensor value and branch by threshold band — Safe / Warning / Critical. Each band routes to a different flow.' },
+  reassign:    { label: 'Reassignment',    icon: '↻', help: 'Hand the flow to a different role / user. Has a User selector.' },
+  jump:        { label: 'Jump to flow',    icon: '↗', help: 'Hand off to another flow in the same tree.' },
+  end:         { label: 'End',             icon: '■', help: 'Marks the end of the flow. Use multiple ends for different resolutions.' }
 };
 
-// Question subtypes
-const QTYPES = [
-  { id: 'single',   label: 'Single-choice' },
-  { id: 'yesno',    label: 'Yes / No' },
-  { id: 'multi',    label: 'Multi-select' },
-  { id: 'numeric',  label: 'Numeric' },
-  { id: 'photo',    label: 'Photo upload' },
-  { id: 'freetext', label: 'Free text' }
+const QTYPES = [{id:'single',label:'Single-choice'},{id:'yesno',label:'Yes / No'},{id:'multi',label:'Multi-select'},{id:'numeric',label:'Numeric'},{id:'photo',label:'Photo upload'},{id:'freetext',label:'Free text'}];
+
+// Action selector — types of actions an Action or Answer node can perform
+const ACTION_TYPES = [
+  { id: 'photo',      label: 'Photo upload' },
+  { id: 'message',    label: 'Send message' },
+  { id: 'call',       label: 'Call supervisor' },
+  { id: 'form',       label: 'Form input' },
+  { id: 'rca',        label: 'Root-cause selector' },
+  { id: 'photo_rca',  label: 'Photo + RCA' },
+  { id: 'escalate',   label: 'Escalate' },
+  { id: 'custom',     label: 'Custom' }
 ];
 
-// =========================================================
-// Data model
-// =========================================================
-const data = {
-  trees: [{
-    id: 'tree-do', name: 'Low DO in Aeration tank',
-    flows: [
-      { id: 'f1', name: 'Flow 1 · Blower is OFF', nodes: [], edges: [] },
-      { id: 'f2', name: 'Flow 2 · Blower performance', nodes: [], edges: [] },
-      { id: 'f3', name: 'Flow 3 · Uneven bubbling', nodes: [], edges: [] },
-      { id: 'f4', name: 'Flow 4 · DO sensor failure', nodes: [], edges: [] },
-      { id: 'f5', name: 'Flow 5 · Sludge bulking', nodes: [], edges: [] },
-      { id: 'f6', name: 'Flow 6 · Shock load / toxicity', nodes: [], edges: [] }
-    ]
-  }]
-};
+const ROLES = ['Supervisor','Maintenance','Process Engineer','Lab Technician','Field Operator','Custom'];
 
-// Built-in templates
-const BUILTIN_TEMPLATES = [
-  { id: 'tpl-do', name: 'Low DO Diagnostic', emoji: '🌊', desc: 'Aeration tank diagnostic (6 flows)', builder: () => buildLowDoTree() },
-  { id: 'tpl-pump', name: 'Pump Leakage', emoji: '💧', desc: 'Filter feed pump leakage (5 flows)', builder: () => buildPumpTree() },
-  { id: 'tpl-basic', name: 'Basic Triage', emoji: '🧭', desc: 'A simple 3-flow starter tree', builder: () => buildBasicTree() }
-];
-
-function buildLowDoTree() {
-  const tree = { id: uid('tree_'), name: 'Low DO in Aeration tank', flows: [
-    { id: uid('f_'), name: 'Flow 1 · Blower is OFF', nodes: [{id:uid('n_'),type:'entry',x:80,y:120,label:'Blower OFF check'}], edges: [] },
-    { id: uid('f_'), name: 'Flow 2 · Blower performance', nodes: [{id:uid('n_'),type:'entry',x:80,y:120,label:'Blower performance'}], edges: [] },
-    buildFlow3Cleaned(),
-    { id: uid('f_'), name: 'Flow 4 · DO sensor failure', nodes: [{id:uid('n_'),type:'entry',x:80,y:120,label:'DO sensor failure'}], edges: [] },
-    { id: uid('f_'), name: 'Flow 5 · Sludge bulking', nodes: [{id:uid('n_'),type:'entry',x:80,y:120,label:'Sludge bulking'}], edges: [] },
-    { id: uid('f_'), name: 'Flow 6 · Shock load', nodes: [{id:uid('n_'),type:'entry',x:80,y:120,label:'Shock load'}], edges: [] }
-  ]};
-  return tree;
-}
-function buildPumpTree() {
-  const tree = { id: uid('tree_'), name: 'Leakage in Filter feed pump', flows: [] };
-  ['Discharge pressure','Filter choking','Mechanical seal','Gland packing','Bearing failure'].forEach((name,i) => {
-    tree.flows.push({ id: uid('f_'), name: `Flow ${i+1} · ${name}`, nodes: [{id:uid('n_'),type:'entry',x:80,y:120,label:name}], edges: [] });
-  });
-  return tree;
-}
-function buildBasicTree() {
-  const e = uid('n_'), q = uid('n_'), a1 = uid('n_'), a2 = uid('n_'), t = uid('n_');
-  return { id: uid('tree_'), name: 'Basic triage', flows: [{
-    id: uid('f_'), name: 'Flow 1 · Initial triage',
-    nodes: [
-      { id: e, type: 'entry', x: 80, y: 200, label: 'Issue reported' },
-      { id: q, type: 'question', x: 340, y: 200, label: 'Is the issue urgent?', qtype: 'yesno', options: [
-        { id: uid('opt_'), text: 'Yes', route: 'node:' + a1 },
-        { id: uid('opt_'), text: 'No',  route: 'node:' + a2 }
-      ]},
-      { id: a1, type: 'action', x: 640, y: 100, label: 'Escalate to supervisor' },
-      { id: a2, type: 'action', x: 640, y: 320, label: 'Log and monitor' },
-      { id: t,  type: 'terminal', x: 920, y: 200, label: 'Done' }
-    ],
-    edges: [
-      { id: uid('e_'), from: e, to: q },
-      { id: uid('e_'), from: a1, to: t },
-      { id: uid('e_'), from: a2, to: t }
-    ]
-  }]};
-}
-
-// Cleaner Flow 3 — uses per-option ports, no separate answer cards
-function buildFlow3Cleaned() {
-  const ids = {};
-  ['entry','q1','q2','a_callsup','a_imgcs','a_rca1','a_sendmsg','a_diff','jump_do','a_rca2','a_reassign','a_media','term1','term2','fb1']
-    .forEach(k => ids[k] = k);
-
-  const nodes = [
-    { id: ids.entry, type: 'entry', x: 60, y: 360, label: 'Low DO in Aeration tank', sub: 'Flow entry' },
-    { id: ids.q1, type: 'question', x: 320, y: 320, label: 'Is aeration even across the tank?', qtype: 'single', options: [
-      { id: 'q1o1', text: 'Yes, bubbles normal',    route: 'node:' + ids.q2 },
-      { id: 'q1o2', text: 'Moderate bubbling',       route: 'node:' + ids.q2 },
-      { id: 'q1o3', text: 'No bubbles',              route: 'node:' + ids.a_callsup },
-      { id: 'q1o4', text: 'Skip to end',             route: 'node:' + ids.a_rca1 }
-    ]},
-    { id: ids.q2, type: 'question', x: 700, y: 80, label: 'Are dead zones created?', qtype: 'multi', options: [
-      { id: 'q2o1', text: 'Sludge accumulation',                  route: 'node:' + ids.a_diff },
-      { id: 'q2o2', text: 'Dark / black localized water',          route: 'node:' + ids.a_diff },
-      { id: 'q2o3', text: 'Uneven DO readings',                    route: 'node:' + ids.jump_do },
-      { id: 'q2o4', text: 'Reduced treatment performance',         route: 'node:' + ids.jump_do },
-      { id: 'q2o5', text: 'Skip',                                  route: 'node:' + ids.a_rca2 },
-      { id: 'q2o6', text: 'Reassignment',                          route: 'node:' + ids.a_reassign }
-    ]},
-    { id: ids.a_callsup, type: 'action', x: 700, y: 580, label: 'Call supervisor', sub: 'Diffusers appear choked' },
-    { id: ids.a_imgcs,   type: 'action', x: 980, y: 580, label: 'Upload image', sub: 'Evidence of no bubbling' },
-    { id: ids.a_rca1,    type: 'action', x: 700, y: 720, label: 'Upload image + RCA', sub: 'Root cause selector' },
-    { id: ids.a_sendmsg, type: 'action', x: 980, y: 720, label: 'Send message to supervisor' },
-    { id: ids.a_diff,    type: 'action', x: 1060, y: 60, label: 'Diffusers choked — plan cleaning' },
-    { id: ids.jump_do,   type: 'jump',   x: 1060, y: 180, label: 'Next flow', target: null, targetSlot: 'f4' },
-    { id: ids.a_rca2,    type: 'action', x: 1060, y: 300, label: 'Media upload + RCA' },
-    { id: ids.a_reassign,type: 'reassign', x: 1060, y: 420, label: 'Reassign to operator' },
-    { id: ids.a_media,   type: 'action', x: 1320, y: 420, label: 'Media upload' },
-    { id: ids.term1,     type: 'terminal', x: 1320, y: 580, label: 'Done' }
-  ];
-  const edges = [
-    { id: uid('e_'), from: ids.entry, to: ids.q1 },
-    { id: uid('e_'), from: ids.a_callsup, to: ids.a_imgcs },
-    { id: uid('e_'), from: ids.a_imgcs, to: ids.term1 },
-    { id: uid('e_'), from: ids.a_rca1, to: ids.a_sendmsg },
-    { id: uid('e_'), from: ids.a_sendmsg, to: ids.term1 },
-    { id: uid('e_'), from: ids.a_diff, to: ids.jump_do },
-    { id: uid('e_'), from: ids.a_rca2, to: ids.jump_do },
-    { id: uid('e_'), from: ids.a_reassign, to: ids.a_media },
-    { id: uid('e_'), from: ids.a_media, to: ids.jump_do }
-  ];
-  return { id: uid('f_'), name: 'Flow 3 · Uneven bubbling', nodes, edges };
-}
-
-// =========================================================
-// State
-// =========================================================
-let curTree = data.trees[0];
-let curFlow = curTree.flows[2];
-let selection = null;
-let pan = { x: 0, y: 0 }, zoom = 1;
+// ============================================================
+// Data + templates
+// ============================================================
+const data = { trees: [] };
 let nextId = 1000;
-let activeTab = 'core';
 function uid(p) { return `${p}${++nextId}`; }
-const STORAGE_KEY = 'flowconfig-v3';
+const STORAGE_KEY = 'flowconfig-v4';
 const TEMPLATES_KEY = 'flowconfig-templates-v1';
 
 function persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (_) {} }
@@ -605,211 +408,262 @@ function loadPersisted() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return false;
-    const parsed = JSON.parse(raw);
-    if (!parsed.trees || !parsed.trees.length) return false;
-    data.trees = parsed.trees;
+    const p = JSON.parse(raw);
+    if (!p.trees || !p.trees.length) return false;
+    data.trees = p.trees;
     curTree = data.trees[0]; curFlow = curTree.flows[0];
     return true;
   } catch (_) { return false; }
 }
-function loadTemplates() {
-  try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || '[]'); } catch (_) { return []; }
-}
-function saveTemplates(list) { try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(list)); } catch (_) {} }
+function loadTemplates() { try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || '[]'); } catch (_) { return []; } }
+function saveTemplates(l) { try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(l)); } catch (_) {} }
 
-// =========================================================
-// DOM refs
-// =========================================================
-const treeSel = document.getElementById('tree-sel');
-const flowSel = document.getElementById('flow-sel');
+function buildLowDoTree() {
+  const tree = { id: uid('tree_'), name: 'Low DO in Aeration Tank', flows: [] };
+  ['Blower OFF check','Blower performance','Uneven bubbling / dead zones','DO sensor failure','Sludge bulking','Shock load / toxicity'].forEach((nm, i) => {
+    if (i === 2) tree.flows.push(buildFlow3());
+    else tree.flows.push({ id: uid('f_'), name: `Flow ${i+1} · ${nm}`, nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: nm }], edges: [] });
+  });
+  return tree;
+}
+function buildPumpTree() {
+  const tree = { id: uid('tree_'), name: 'Pump leakage', flows: [] };
+  ['Discharge pressure','Filter choking','Mechanical seal','Gland packing','Bearing failure'].forEach((nm, i) => {
+    tree.flows.push({ id: uid('f_'), name: `Flow ${i+1} · ${nm}`, nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: nm }], edges: [] });
+  });
+  return tree;
+}
+function buildBasicTree() {
+  const t = uid('n_'), q = uid('n_'), a1 = uid('n_'), a2 = uid('n_'), e = uid('n_');
+  return { id: uid('tree_'), name: 'Basic triage', flows: [{
+    id: uid('f_'), name: 'Flow 1 · Triage',
+    nodes: [
+      { id: t, type: 'trigger', x: 80, y: 200, label: 'Issue reported' },
+      { id: q, type: 'question', x: 400, y: 200, label: 'Is the issue urgent?', qtype: 'yesno', options: [
+        { id: uid('opt_'), text: 'Yes', route: 'node:' + a1 },
+        { id: uid('opt_'), text: 'No',  route: 'node:' + a2 }
+      ]},
+      { id: a1, type: 'action', x: 740, y: 100, label: 'Escalate', actionType: 'escalate' },
+      { id: a2, type: 'action', x: 740, y: 320, label: 'Log & monitor', actionType: 'form' },
+      { id: e,  type: 'end', x: 1060, y: 200, label: 'Done' }
+    ],
+    edges: [
+      { id: uid('e_'), from: t, to: q },
+      { id: uid('e_'), from: a1, to: e },
+      { id: uid('e_'), from: a2, to: e }
+    ]
+  }]};
+}
+
+// Clean Flow 3 with the new model
+function buildFlow3() {
+  const ids = {};
+  ['t','q1','q2','a_call','a_skip','a_diff','jmp','a_rca','a_reasn','end1','sens'].forEach(k => ids[k] = uid('n_'));
+  const nodes = [
+    { id: ids.t,      type: 'trigger',  x: 80,   y: 320, label: 'Low DO in Aeration tank' },
+    { id: ids.q1,     type: 'question', x: 420,  y: 320, label: 'Is aeration even across the tank?', qtype: 'single', options: [
+      { id: uid('opt_'), text: 'Yes — bubbles normal', route: 'node:' + ids.q2 },
+      { id: uid('opt_'), text: 'Moderate bubbling',     route: 'node:' + ids.q2 },
+      { id: uid('opt_'), text: 'No bubbles',             route: 'node:' + ids.a_call },
+      { id: uid('opt_'), text: 'Skip to end',            route: 'node:' + ids.a_skip }
+    ]},
+    { id: ids.q2,     type: 'question', x: 800,  y: 120, label: 'Are dead zones created?', qtype: 'multi', options: [
+      { id: uid('opt_'), text: 'Sludge accumulation',        route: 'node:' + ids.a_diff },
+      { id: uid('opt_'), text: 'Dark / black water',          route: 'node:' + ids.a_diff },
+      { id: uid('opt_'), text: 'Uneven DO readings',          route: 'node:' + ids.sens },
+      { id: uid('opt_'), text: 'Reduced treatment',           route: 'node:' + ids.sens },
+      { id: uid('opt_'), text: 'Skip to end',                  route: 'node:' + ids.a_rca },
+      { id: uid('opt_'), text: 'Reassignment',                 route: 'node:' + ids.a_reasn }
+    ]},
+    { id: ids.a_call, type: 'action',   x: 800,  y: 540, label: 'Call supervisor', sub: 'Diffusers appear choked', actionType: 'call' },
+    { id: ids.a_skip, type: 'action',   x: 800,  y: 700, label: 'Photo + RCA', actionType: 'photo_rca' },
+    { id: ids.a_diff, type: 'action',   x: 1140, y: 100, label: 'Diffusers choked — plan cleaning', actionType: 'message' },
+    { id: ids.sens,   type: 'sensor',   x: 1140, y: 240, label: 'Verify DO sensor reading', sensorName: 'DO sensor', unit: 'mg/L', thresholds: [
+      { id: 'safe', label: 'Safe',     min: 2,   max: null, route: '' },
+      { id: 'warn', label: 'Warning',  min: 1,   max: 2,    route: 'flow:' + (window.__f4 || '') },
+      { id: 'crit', label: 'Critical', min: null,max: 1,    route: 'flow:' + (window.__f4 || '') }
+    ]},
+    { id: ids.jmp,    type: 'jump',     x: 1480, y: 220, label: 'Next flow', targetFlow: null },
+    { id: ids.a_rca,  type: 'action',   x: 1140, y: 380, label: 'Media upload + RCA', actionType: 'photo_rca' },
+    { id: ids.a_reasn,type: 'reassign', x: 1140, y: 520, label: 'Reassign to Supervisor', role: 'Supervisor' },
+    { id: ids.end1,   type: 'end',      x: 1480, y: 700, label: 'Done' }
+  ];
+  const edges = [
+    { id: uid('e_'), from: ids.t, to: ids.q1 },
+    { id: uid('e_'), from: ids.a_call, to: ids.end1 },
+    { id: uid('e_'), from: ids.a_skip, to: ids.end1 },
+    { id: uid('e_'), from: ids.a_diff, to: ids.jmp },
+    { id: uid('e_'), from: ids.sens, to: ids.jmp },
+    { id: uid('e_'), from: ids.a_rca, to: ids.jmp },
+    { id: uid('e_'), from: ids.a_reasn, to: ids.end1 }
+  ];
+  return { id: uid('f_'), name: 'Flow 3 · Uneven bubbling', nodes, edges };
+}
+
+const BUILTIN_TEMPLATES = [
+  { id: 't1', name: 'Low DO Diagnostic',  emoji: '🌊', desc: '6 flows · aeration tank',     builder: buildLowDoTree },
+  { id: 't2', name: 'Pump Leakage',       emoji: '💧', desc: '5 flows · filter feed pump',  builder: buildPumpTree },
+  { id: 't3', name: 'Basic Triage',       emoji: '🧭', desc: '1 flow · starter',             builder: buildBasicTree }
+];
+
+// ============================================================
+// State
+// ============================================================
+let curTree, curFlow;
+let selection = null;
+let pan = { x: 0, y: 0 }, zoom = 1;
+
+// DOM
 const canvas = document.getElementById('canvas');
 const edgesSvg = document.getElementById('edges');
-const inspectorBody = document.getElementById('insp-body');
-const inspectorHead = document.getElementById('insp-head');
 const wrap = document.getElementById('canvas-wrap');
 const tooltip = document.getElementById('tooltip');
+const inspector = document.getElementById('inspector');
+const flowSel = document.getElementById('flow-sel');
 
-// =========================================================
+// ============================================================
 // Palette
-// =========================================================
+// ============================================================
+const PALETTE_ORDER = ['trigger','question','answer','waiting','rootcause','action','observation','sensor','reassign','jump','end'];
 function renderPalette() {
-  const search = (document.getElementById('palette-search').value || '').toLowerCase();
-  const body = document.getElementById('palette-body');
-  const groups = {};
-  Object.entries(NTYPES).forEach(([id, m]) => {
-    if (m.group !== activeTab) return;
-    if (search && !m.label.toLowerCase().includes(search) && !id.includes(search)) return;
-    (groups[m.group] = groups[m.group] || []).push({ id, ...m });
-  });
-  const groupLabels = { core: 'Building blocks', helpers: 'Helper steps', control: 'Control flow' };
-  let html = '';
-  Object.entries(groups).forEach(([g, items]) => {
-    html += `<div class="pgroup"><div class="pgroup-head"><h3>${groupLabels[g]}</h3><span class="count">${items.length}</span></div><div class="pgroup-grid">`;
-    items.forEach(it => {
-      html += `<div class="pcard" draggable="true" data-type="${it.id}" data-help="${escapeHtml(it.help)}">
-        <button class="help-btn" data-help="${escapeHtml(it.help)}">?</button>
-        <div class="ico t-${it.id}">${it.icon}</div>
-        <div class="lbl">${it.label}</div>
-      </div>`;
-    });
-    html += `</div></div>`;
-  });
-  if (!html) html = '<div class="empty" style="padding:20px">No matches.</div>';
-  body.innerHTML = html;
-  body.querySelectorAll('.pcard').forEach(c => {
-    c.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', c.dataset.type));
-    c.addEventListener('mouseenter', e => showTooltip(c.dataset.help, c));
-    c.addEventListener('mouseleave', hideTooltip);
+  const list = document.getElementById('palette-list');
+  list.innerHTML = PALETTE_ORDER.map(t => {
+    const m = NTYPES[t];
+    return `<div class="step-item" draggable="true" data-type="${t}">
+      <div class="ic t-${t}">${m.icon}</div>
+      <div class="lbl">${m.label}</div>
+      <button class="help-trigger" data-help="${escapeHtml(m.help)}">?</button>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.step-item').forEach(it => {
+    it.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', it.dataset.type));
+    it.querySelector('.help-trigger').addEventListener('mouseenter', e => showTooltip(e.target.dataset.help, e.target));
+    it.querySelector('.help-trigger').addEventListener('mouseleave', hideTooltip);
   });
 }
-document.querySelectorAll('.panel-tab').forEach(t => t.onclick = () => {
-  document.querySelectorAll('.panel-tab').forEach(x => x.classList.remove('active'));
-  t.classList.add('active'); activeTab = t.dataset.tab; renderPalette();
-});
-document.getElementById('palette-search').oninput = renderPalette;
-
-function showTooltip(text, el) {
-  if (!text) return;
-  tooltip.textContent = text;
+function showTooltip(t, el) {
+  if (!t) return;
+  tooltip.textContent = t;
   const r = el.getBoundingClientRect();
-  tooltip.style.left = (r.right + 10) + 'px';
+  tooltip.style.left = (r.right + 8) + 'px';
   tooltip.style.top = r.top + 'px';
   tooltip.classList.add('show');
 }
 function hideTooltip() { tooltip.classList.remove('show'); }
 
-// =========================================================
-// Topbar dropdowns
-// =========================================================
-function refreshTopbar() {
-  document.getElementById('cur-tree-name').textContent = curTree.name;
-  document.getElementById('cur-flow-name').textContent = curFlow.name;
-  document.getElementById('tree-init').textContent = curTree.name.charAt(0).toUpperCase();
-  flowSel.innerHTML = curTree.flows.map(f => `<option value="${f.id}" ${f === curFlow ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('') +
-    `<option value="__new__">＋ New flow…</option>` +
-    data.trees.filter(t => t !== curTree).map(t => `<optgroup label="${escapeHtml(t.name)}">${t.flows.map(f => `<option value="cross:${t.id}:${f.id}">${escapeHtml(f.name)}</option>`).join('')}</optgroup>`).join('');
-}
-flowSel.onchange = e => {
-  const v = e.target.value;
-  if (v === '__new__') { showNewFlow(); return; }
-  if (v.startsWith('cross:')) {
-    const [, tId, fId] = v.split(':');
-    curTree = data.trees.find(t => t.id === tId);
-    curFlow = curTree.flows.find(f => f.id === fId);
-  } else {
-    curFlow = curTree.flows.find(f => f.id === v);
-  }
-  selection = null; render(); fitToView();
+document.getElementById('btn-collapse').onclick = () => {
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
+  document.getElementById('btn-collapse').textContent = sb.classList.contains('collapsed') ? '»' : '«';
 };
 
-// =========================================================
-// Canvas render
-// =========================================================
+// ============================================================
+// Header
+// ============================================================
+function refreshHeader() {
+  document.getElementById('proj-init').textContent = curTree.name.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  document.getElementById('proj-name').firstChild.textContent = curTree.name + ' ';
+  flowSel.innerHTML = curTree.flows.map(f => `<option value="${f.id}" ${f === curFlow ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('') + `<option value="__new__">＋ New flow…</option>`;
+}
+flowSel.onchange = e => {
+  if (e.target.value === '__new__') {
+    const nm = prompt('Flow name?', 'New flow');
+    if (!nm) { refreshHeader(); return; }
+    const f = { id: uid('f_'), name: nm, nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: nm }], edges: [] };
+    curTree.flows.push(f); curFlow = f; selection = null; closeInspector(); render(); fitView(); return;
+  }
+  curFlow = curTree.flows.find(f => f.id === e.target.value);
+  selection = null; closeInspector(); render(); fitView();
+};
+
+// ============================================================
+// Render
+// ============================================================
 function applyTransform() {
   canvas.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
   edgesSvg.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
-  document.getElementById('zoom-lbl').textContent = Math.round(zoom * 100) + '%';
+  document.getElementById('zoom-lvl').textContent = Math.round(zoom * 100) + '%';
 }
 function render() {
-  refreshTopbar();
+  refreshHeader();
   canvas.innerHTML = '';
   curFlow.nodes.forEach(n => canvas.appendChild(renderNode(n)));
   renderEdges();
-  renderInspector();
+  if (selection) renderInspector();
   applyTransform();
   persist();
 }
 function renderNode(n) {
-  const m = NTYPES[n.type] || { label: n.type, icon: '?', color: '#888' };
+  const m = NTYPES[n.type] || NTYPES.action;
   const el = document.createElement('div');
   el.className = `node t-${n.type}` + (selection && selection.kind === 'node' && selection.id === n.id ? ' selected' : '');
   el.style.left = n.x + 'px';
   el.style.top = n.y + 'px';
   el.dataset.id = n.id;
 
-  let subText = n.sub || '';
-  if (n.type === 'jump' && (n.target || n.targetSlot)) {
-    const tgtId = n.target || n.targetSlot;
-    const tgt = curTree.flows.find(f => f.id === tgtId);
-    subText = '→ ' + (tgt ? tgt.name : '(unset)');
+  let sub = n.sub || '';
+  if (n.type === 'jump' && n.targetFlow) {
+    const tg = curTree.flows.find(f => f.id === n.targetFlow);
+    sub = '→ ' + (tg ? tg.name : '(unset)');
   }
-  if (n.type === 'wait' && n.duration) subText = '⏱ ' + n.duration;
-  if (n.type === 'reassign' && n.assignTo) subText = '→ ' + n.assignTo;
+  if (n.type === 'waiting' && n.duration) sub = '⏱ ' + n.duration;
+  if (n.type === 'reassign' && n.role) sub = '👤 ' + n.role + (n.userName ? ' · ' + n.userName : '');
+  if ((n.type === 'action' || n.type === 'answer') && n.actionType) {
+    const at = ACTION_TYPES.find(a => a.id === n.actionType);
+    if (at) sub = '⚙ ' + at.label;
+  }
+  if (n.type === 'question' && n.options) sub = `${n.options.length} option${n.options.length === 1 ? '' : 's'} · ${qtypeLbl(n.qtype)}`;
+  if (n.type === 'sensor') sub = (n.sensorName || 'Sensor') + (n.unit ? ' · ' + n.unit : '');
 
-  const qtypeChip = (n.type === 'question' && n.qtype) ? `<div class="qtype">${qtypeLabel(n.qtype)}</div>` : '';
-
-  // Options list (for questions / rootcause)
-  let optionsHtml = '';
-  let perOptionPorts = '';
-  const hasOptions = (n.type === 'question' || n.type === 'rootcause') && n.options && n.options.length;
-  if (hasOptions) {
-    optionsHtml = `<div class="options-list">` + n.options.map((opt, i) => {
-      const routeLbl = routeLabel(opt.route);
-      return `<div class="opt-row" data-opt="${opt.id}">
-        <div class="opt-num">${i + 1}</div>
-        <div class="opt-text" title="${escapeHtml(opt.text)}">${escapeHtml(opt.text)}</div>
-        <div class="opt-route" title="${escapeHtml(routeLbl)}">${escapeHtml(routeLbl)}</div>
-      </div>`;
+  let thresholdsHtml = '';
+  if (n.type === 'sensor' && n.thresholds) {
+    thresholdsHtml = `<div class="thresholds">` + n.thresholds.map(t => {
+      const range = t.min != null && t.max != null ? `${t.min}–${t.max}` : t.min != null ? `≥ ${t.min}` : t.max != null ? `< ${t.max}` : 'any';
+      const c = t.id === 'safe' ? 'safe' : t.id === 'warn' ? 'warn' : 'crit';
+      return `<div class="thr-row"><div class="thr-dot ${c}"></div><div class="lbl">${escapeHtml(t.label)}</div><div class="range">${range} ${n.unit || ''}</div></div>`;
     }).join('') + `</div>`;
   }
 
-  const inPort = n.type !== 'entry' ? '<div class="port in" data-port="in"></div>' : '';
-  const outPortDefault = (n.type !== 'terminal' && n.type !== 'jump' && !hasOptions) ? '<div class="port out" data-port="out"></div>' : '';
-
   el.innerHTML = `
-    <div class="nhead">
-      <div class="nicon">${m.icon}</div>
-      <div>
-        <div class="ntype">${m.label}</div>
-        ${hasOptions ? `<div class="nbranch">${n.options.length} branch${n.options.length > 1 ? 'es' : ''}</div>` : ''}
-      </div>
-    </div>
+    <div class="badge">${m.icon} ${m.label}</div>
     <div class="label">${escapeHtml(n.label || '(untitled)')}</div>
-    ${subText ? `<div class="sub">${escapeHtml(subText)}</div>` : ''}
-    ${qtypeChip}
-    ${optionsHtml}
-    ${inPort}${outPortDefault}
+    ${sub ? `<div class="sub">${escapeHtml(sub)}</div>` : ''}
+    ${thresholdsHtml}
+    <div class="port top" data-port="top"></div>
+    <div class="port right" data-port="right"></div>
+    <div class="port bottom" data-port="bottom"></div>
+    <div class="port left" data-port="left"></div>
   `;
 
-  // Per-option ports (positioned next to each option row)
-  if (hasOptions) {
-    requestAnimationFrame(() => {
-      const rows = el.querySelectorAll('.opt-row');
-      rows.forEach((row, i) => {
-        const opt = n.options[i];
-        const port = document.createElement('div');
-        port.className = 'port out out-opt';
-        port.dataset.port = 'out';
-        port.dataset.option = opt.id;
-        const r = row.getBoundingClientRect();
-        const elr = el.getBoundingClientRect();
-        port.style.top = (r.top - elr.top + r.height / 2 - 6) + 'px';
-        port.style.right = '-7px';
-        el.appendChild(port);
-        attachPortHandler(port, n, opt.id);
-      });
-    });
-  }
-
   attachNodeHandlers(el, n);
+  el.querySelectorAll('.port').forEach(p => attachPortHandler(p, n));
   return el;
 }
+function qtypeLbl(id) { return (QTYPES.find(q => q.id === id) || { label: 'Single' }).label; }
 
-function qtypeLabel(id) { return (QTYPES.find(q => q.id === id) || { label: id }).label; }
-function routeLabel(route) {
-  if (!route) return 'no route';
-  if (route === 'end') return '→ End';
-  if (route.startsWith('node:')) {
-    const id = route.slice(5);
-    const n = curFlow.nodes.find(x => x.id === id);
-    return n ? '→ ' + (n.label || n.type) : '→ (deleted)';
+// Smart edge routing — pick the best port pair (closest sides)
+function pickPorts(a, b, aEl, bEl) {
+  const ax = a.x + aEl.offsetWidth / 2, ay = a.y + aEl.offsetHeight / 2;
+  const bx = b.x + bEl.offsetWidth / 2, by = b.y + bEl.offsetHeight / 2;
+  const dx = bx - ax, dy = by - ay;
+  let fromSide, toSide;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    fromSide = dx > 0 ? 'right' : 'left';
+    toSide   = dx > 0 ? 'left' : 'right';
+  } else {
+    fromSide = dy > 0 ? 'bottom' : 'top';
+    toSide   = dy > 0 ? 'top' : 'bottom';
   }
-  if (route.startsWith('flow:')) {
-    const fid = route.slice(5);
-    const f = curTree.flows.find(x => x.id === fid);
-    return f ? '↗ ' + f.name : '↗ (deleted)';
+  return { fromSide, toSide };
+}
+function portCoords(n, el, side) {
+  const w = el.offsetWidth, h = el.offsetHeight;
+  switch (side) {
+    case 'right':  return { x: n.x + w,     y: n.y + h / 2 };
+    case 'left':   return { x: n.x,         y: n.y + h / 2 };
+    case 'top':    return { x: n.x + w / 2, y: n.y };
+    case 'bottom': return { x: n.x + w / 2, y: n.y + h };
   }
-  return route;
 }
 
 function renderEdges() {
@@ -817,357 +671,378 @@ function renderEdges() {
     <defs>
       <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker>
       <marker id="arrow-sel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/></marker>
+      <marker id="arrow-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#10b981"/></marker>
+      <marker id="arrow-y" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/></marker>
+      <marker id="arrow-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/></marker>
     </defs>`;
 
-  // Build edge list including implicit per-option edges from questions
-  const allEdges = [...curFlow.edges];
+  // Collect: regular edges + implicit option/threshold routes
+  const all = [...curFlow.edges];
   curFlow.nodes.forEach(n => {
     if ((n.type === 'question' || n.type === 'rootcause') && n.options) {
-      n.options.forEach(opt => {
-        if (opt.route && opt.route.startsWith('node:')) {
-          const targetId = opt.route.slice(5);
-          if (curFlow.nodes.find(x => x.id === targetId)) {
-            allEdges.push({ id: 'opt_' + opt.id, from: n.id, to: targetId, cond: opt.text, fromOption: opt.id, optionIndex: n.options.indexOf(opt) });
+      n.options.forEach((o, i) => {
+        if (o.route && o.route.startsWith('node:')) {
+          const tid = o.route.slice(5);
+          if (curFlow.nodes.find(x => x.id === tid)) {
+            all.push({ id: 'opt_' + o.id, from: n.id, to: tid, cond: o.text, implicit: true });
+          }
+        }
+      });
+    }
+    if (n.type === 'sensor' && n.thresholds) {
+      n.thresholds.forEach(t => {
+        if (t.route && t.route.startsWith('node:')) {
+          const tid = t.route.slice(5);
+          if (curFlow.nodes.find(x => x.id === tid)) {
+            all.push({ id: 'thr_' + n.id + '_' + t.id, from: n.id, to: tid, cond: t.label, implicit: true, marker: t.id });
           }
         }
       });
     }
   });
 
-  for (const e of allEdges) {
+  for (const e of all) {
     const a = curFlow.nodes.find(n => n.id === e.from);
     const b = curFlow.nodes.find(n => n.id === e.to);
     if (!a || !b) continue;
     const aEl = canvas.querySelector(`[data-id="${a.id}"]`);
     const bEl = canvas.querySelector(`[data-id="${b.id}"]`);
     if (!aEl || !bEl) continue;
-    let ax = a.x + aEl.offsetWidth, ay = a.y + aEl.offsetHeight / 2;
-    if (e.fromOption) {
-      // anchor at the option row
-      const row = aEl.querySelector(`.opt-row[data-opt="${e.fromOption}"]`);
-      if (row) {
-        const rr = row.getBoundingClientRect();
-        const elr = aEl.getBoundingClientRect();
-        ay = a.y + (rr.top - elr.top + rr.height / 2);
-      }
-    }
-    const bx = b.x, by = b.y + bEl.offsetHeight / 2;
-    const dx = Math.max(50, Math.abs(bx - ax) * 0.4);
+    const { fromSide, toSide } = pickPorts(a, b, aEl, bEl);
+    const A = portCoords(a, aEl, fromSide), B = portCoords(b, bEl, toSide);
     const isSel = selection && selection.kind === 'edge' && selection.id === e.id;
+    let stroke = '#94a3b8', marker = 'arrow';
+    if (isSel) { stroke = '#6366f1'; marker = 'arrow-sel'; }
+    else if (e.marker === 'safe') { stroke = '#10b981'; marker = 'arrow-g'; }
+    else if (e.marker === 'warn') { stroke = '#f59e0b'; marker = 'arrow-y'; }
+    else if (e.marker === 'crit') { stroke = '#ef4444'; marker = 'arrow-r'; }
+
+    // bezier with horizontal or vertical preference
+    let d;
+    if (fromSide === 'right' || fromSide === 'left') {
+      const dx = Math.max(60, Math.abs(B.x - A.x) * 0.5) * (fromSide === 'right' ? 1 : -1);
+      d = `M ${A.x} ${A.y} C ${A.x + dx} ${A.y}, ${B.x - dx} ${B.y}, ${B.x} ${B.y}`;
+    } else {
+      const dy = Math.max(50, Math.abs(B.y - A.y) * 0.5) * (fromSide === 'bottom' ? 1 : -1);
+      d = `M ${A.x} ${A.y} C ${A.x} ${A.y + dy}, ${B.x} ${B.y - dy}, ${B.x} ${B.y}`;
+    }
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', `M ${ax} ${ay} C ${ax + dx} ${ay}, ${bx - dx} ${by}, ${bx} ${by}`);
-    path.setAttribute('stroke', isSel ? '#6366f1' : (e.fromOption ? optionColor(e.optionIndex) : '#94a3b8'));
-    path.setAttribute('stroke-width', isSel ? '2.6' : '1.8');
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', stroke);
+    path.setAttribute('stroke-width', isSel ? '2.4' : '1.6');
     path.setAttribute('fill', 'none');
-    path.setAttribute('marker-end', isSel ? 'url(#arrow-sel)' : 'url(#arrow)');
+    path.setAttribute('marker-end', `url(#${marker})`);
     path.classList.add('edge');
     path.style.cursor = 'pointer';
-    if (!e.fromOption) path.addEventListener('click', ev => { ev.stopPropagation(); selection = { kind: 'edge', id: e.id }; render(); });
+    if (!e.implicit) path.addEventListener('click', ev => { ev.stopPropagation(); selection = { kind: 'edge', id: e.id }; openInspector(); render(); });
     edgesSvg.appendChild(path);
+
     if (e.cond) {
-      const mx = (ax + bx) / 2, my = (ay + by) / 2 - 6;
+      const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2 - 4;
       const bg = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       bg.setAttribute('x', mx); bg.setAttribute('y', my); bg.setAttribute('text-anchor', 'middle');
       bg.setAttribute('class', 'edge-label edge-label-bg');
-      bg.textContent = truncate(e.cond, 30);
+      bg.textContent = truncate(e.cond, 28);
       edgesSvg.appendChild(bg);
-      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      t.setAttribute('x', mx); t.setAttribute('y', my); t.setAttribute('text-anchor', 'middle');
-      t.setAttribute('class', 'edge-label');
-      t.textContent = truncate(e.cond, 30);
-      edgesSvg.appendChild(t);
+      const tx = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tx.setAttribute('x', mx); tx.setAttribute('y', my); tx.setAttribute('text-anchor', 'middle');
+      tx.setAttribute('class', 'edge-label');
+      tx.textContent = truncate(e.cond, 28);
+      edgesSvg.appendChild(tx);
     }
   }
   const w = Math.max(2800, ...curFlow.nodes.map(n => n.x + 400));
-  const h = Math.max(1600, ...curFlow.nodes.map(n => n.y + 300));
+  const h = Math.max(1800, ...curFlow.nodes.map(n => n.y + 400));
   edgesSvg.setAttribute('width', w); edgesSvg.setAttribute('height', h);
 }
-function optionColor(i) {
-  const colors = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#f97316', '#14b8a6'];
-  return colors[i % colors.length];
-}
 
-// =========================================================
+// ============================================================
 // Inspector
-// =========================================================
+// ============================================================
+function openInspector() { inspector.classList.add('open'); renderInspector(); }
+function closeInspector() { inspector.classList.remove('open'); selection = null; render(); }
+document.getElementById('insp-close').onclick = closeInspector;
+
 function renderInspector() {
-  if (!selection) {
-    inspectorHead.style.display = 'none';
-    inspectorBody.innerHTML = '<div class="empty"><div class="ico-big">🎨</div>Select a node or connection to edit.<br/><br/>Or drag a node type from the palette onto the canvas.</div>';
-    return;
-  }
+  if (!selection) { closeInspector(); return; }
   if (selection.kind === 'node') {
     const n = curFlow.nodes.find(x => x.id === selection.id);
-    if (!n) { selection = null; return renderInspector(); }
+    if (!n) { closeInspector(); return; }
     const m = NTYPES[n.type];
-    inspectorHead.style.display = 'flex';
-    document.getElementById('insp-icon').textContent = m.icon;
-    document.getElementById('insp-icon').style.background = m.color;
-    document.getElementById('insp-title').textContent = m.label;
+    document.getElementById('insp-badge').textContent = m.icon + ' ' + m.label;
+    document.getElementById('insp-badge').style.cssText = `background:var(--c-${badgeKey(n.type)});color:var(--c-${badgeKey(n.type)}-fg)`;
+    document.getElementById('insp-title').textContent = n.label || m.label;
     document.getElementById('insp-sub').textContent = n.id;
 
-    let html = `<div class="helper-box"><div class="h-ico">💡</div><div>${escapeHtml(m.help)}</div></div>`;
-    html += `<label>Label</label><input id="i-label" value="${escapeHtml(n.label || '')}">`;
+    let h = `<div class="helper-box"><div class="ic">💡</div><div>${escapeHtml(m.help)}</div></div>`;
+    h += `<label>Label</label><input id="i-label" value="${escapeHtml(n.label || '')}">`;
 
-    if (['action', 'entry', 'terminal', 'wait', 'fallback', 'answer', 'rootcause', 'skip', 'reassign'].includes(n.type)) {
-      html += `<label>Description</label><textarea id="i-sub" placeholder="Optional notes…">${escapeHtml(n.sub || '')}</textarea>`;
+    if (['trigger','action','answer','observation','reassign','waiting','end'].includes(n.type)) {
+      h += `<label>Description (optional)</label><textarea id="i-sub" placeholder="Notes shown to operator…">${escapeHtml(n.sub || '')}</textarea>`;
+    }
+    if (n.type === 'action' || n.type === 'answer') {
+      h += `<label>Action type</label><select id="i-actype">`;
+      h += `<option value="">— pick action —</option>`;
+      ACTION_TYPES.forEach(a => h += `<option value="${a.id}" ${n.actionType === a.id ? 'selected' : ''}>${a.label}</option>`);
+      h += `</select>`;
+      if (n.actionType === 'custom') h += `<label>Custom action name</label><input id="i-custact" value="${escapeHtml(n.customAction || '')}" placeholder="e.g. Reset breaker">`;
+    }
+    if (n.type === 'reassign') {
+      h += `<label>Assign to role</label><select id="i-role">`;
+      h += `<option value="">— pick role —</option>`;
+      ROLES.forEach(r => h += `<option value="${r}" ${n.role === r ? 'selected' : ''}>${r}</option>`);
+      h += `</select>`;
+      h += `<label>User / name (optional)</label><input id="i-user" value="${escapeHtml(n.userName || '')}" placeholder="e.g. R. Sharma">`;
+    }
+    if (n.type === 'waiting') {
+      h += `<label>Wait for</label><input id="i-dur" value="${escapeHtml(n.duration || '')}" placeholder="e.g. 1 hour, until DO > 2">`;
     }
     if (n.type === 'question' || n.type === 'rootcause') {
       if (n.type === 'question') {
-        html += `<label>Question type</label><select id="i-qtype">`;
-        QTYPES.forEach(q => html += `<option value="${q.id}" ${n.qtype === q.id ? 'selected' : ''}>${q.label}</option>`);
-        html += `</select>`;
+        h += `<label>Question type</label><select id="i-qtype">`;
+        QTYPES.forEach(q => h += `<option value="${q.id}" ${n.qtype === q.id ? 'selected' : ''}>${q.label}</option>`);
+        h += `</select>`;
       }
-      html += `<label>Branches</label><div class="route-table" id="i-options">`;
+      h += `<label>Branches</label><div class="route-table" id="i-opts">`;
       n.options = n.options || [];
-      n.options.forEach((opt, i) => {
-        const destValue = opt.route || '';
-        html += `<div class="route-row">
-          <div class="opt-num">${i + 1}</div>
+      n.options.forEach((o, i) => {
+        h += `<div class="route-row">
+          <div class="num opt">${i+1}</div>
           <div class="rfields">
-            <input data-i="${i}" data-field="text" value="${escapeHtml(opt.text || '')}" placeholder="Option text">
-            <select data-i="${i}" data-field="route">${destinationOptions(n.id, destValue)}</select>
-            <div class="helper-add">
-              <button class="helper-chip" data-helper="skip" data-i="${i}">+ Skip</button>
-              <button class="helper-chip" data-helper="wait" data-i="${i}">+ Wait</button>
-              <button class="helper-chip" data-helper="reassign" data-i="${i}">+ Reassign</button>
-              <button class="del" data-del="${i}" title="Remove option">×</button>
-            </div>
+            <input data-i="${i}" data-f="text" value="${escapeHtml(o.text || '')}" placeholder="Option text">
+            <select data-i="${i}" data-f="route">${destOpts(n.id, o.route)}</select>
           </div>
+          <button class="del" data-del="${i}">×</button>
         </div>`;
       });
-      html += `</div>`;
-      html += `<button class="add-btn" id="i-add-opt">+ Add branch</button>`;
-      html += `<button class="gen-btn" id="i-gen-cards">⚡ Generate Answer cards (drawio style)</button>`;
+      h += `</div><button class="add-btn" id="i-add">+ Add branch</button>`;
+      h += `<button class="gen-btn" id="i-gen">⚡ Generate Answer cards downstream</button>`;
+    }
+    if (n.type === 'sensor') {
+      h += `<label>Sensor name</label><input id="i-sname" value="${escapeHtml(n.sensorName || '')}" placeholder="e.g. DO sensor">`;
+      h += `<label>Unit</label><input id="i-unit" value="${escapeHtml(n.unit || '')}" placeholder="mg/L, bar, °C">`;
+      h += `<label>Threshold bands</label><div class="route-table">`;
+      n.thresholds = n.thresholds || [{id:'safe',label:'Safe',min:null,max:null,route:''},{id:'warn',label:'Warning',min:null,max:null,route:''},{id:'crit',label:'Critical',min:null,max:null,route:''}];
+      n.thresholds.forEach((t, i) => {
+        const c = t.id === 'safe' ? 'safe' : t.id === 'warn' ? 'warn' : 'crit';
+        h += `<div class="route-row">
+          <div class="num ${c}">${t.id === 'safe' ? 'S' : t.id === 'warn' ? 'W' : 'C'}</div>
+          <div class="rfields">
+            <input data-thr="${i}" data-f="label" value="${escapeHtml(t.label)}" placeholder="Band name">
+            <div class="row-range">
+              <input data-thr="${i}" data-f="min" value="${t.min == null ? '' : t.min}" placeholder="Min">
+              <input data-thr="${i}" data-f="max" value="${t.max == null ? '' : t.max}" placeholder="Max">
+            </div>
+            <select data-thr="${i}" data-f="route">${destOpts(n.id, t.route)}</select>
+          </div>
+          <span></span>
+        </div>`;
+      });
+      h += `</div>`;
+      h += `<div class="helper-box" style="background:#fef3c7;border-color:#fde68a;color:#92400e;margin-top:14px"><div class="ic">⚠</div><div>Each threshold routes to its own destination. Edges are auto-drawn and color-coded (🟢 safe, 🟡 warning, 🔴 critical).</div></div>`;
     }
     if (n.type === 'jump') {
-      html += `<label>Target flow (same tree)</label><select id="i-target">
+      h += `<label>Target flow</label><select id="i-tflow">
         <option value="">— select —</option>
-        ${curTree.flows.filter(f => f !== curFlow).map(f => `<option value="${f.id}" ${n.target === f.id || n.targetSlot === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
+        ${curTree.flows.filter(f => f !== curFlow).map(f => `<option value="${f.id}" ${n.targetFlow === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('')}
       </select>`;
     }
-    if (n.type === 'wait') {
-      html += `<label>Duration</label><input id="i-dur" value="${escapeHtml(n.duration || '')}" placeholder="e.g. 1 hour">`;
-    }
-    if (n.type === 'reassign') {
-      html += `<label>Assign to</label><input id="i-assign" value="${escapeHtml(n.assignTo || '')}" placeholder="e.g. Supervisor, Maintenance">`;
-    }
-    html += `<button class="danger-btn" id="i-delete">🗑 Delete node</button>`;
-    inspectorBody.innerHTML = html;
+
+    h += `<button class="danger-btn" id="i-del">Delete node</button>`;
+    document.getElementById('insp-body').innerHTML = h;
     bindInspector(n);
   } else if (selection.kind === 'edge') {
     const e = curFlow.edges.find(x => x.id === selection.id);
-    if (!e) { selection = null; return renderInspector(); }
+    if (!e) { closeInspector(); return; }
     const a = curFlow.nodes.find(n => n.id === e.from), b = curFlow.nodes.find(n => n.id === e.to);
-    inspectorHead.style.display = 'flex';
-    document.getElementById('insp-icon').textContent = '→';
-    document.getElementById('insp-icon').style.background = '#94a3b8';
+    document.getElementById('insp-badge').textContent = '→ Connection';
+    document.getElementById('insp-badge').style.cssText = 'background:var(--panel-soft);color:var(--muted)';
     document.getElementById('insp-title').textContent = 'Connection';
     document.getElementById('insp-sub').textContent = e.id;
-    inspectorBody.innerHTML = `
-      <div class="helper-box"><div class="h-ico">🔗</div><div>${escapeHtml(a?.label || '?')} → ${escapeHtml(b?.label || '?')}</div></div>
+    document.getElementById('insp-body').innerHTML = `
+      <div class="helper-box"><div class="ic">🔗</div><div>${escapeHtml(a?.label || '?')} → ${escapeHtml(b?.label || '?')}</div></div>
       <label>Condition label</label>
-      <input id="i-cond" value="${escapeHtml(e.cond || '')}" placeholder="e.g. answer = Yes, DO < 2 mg/L">
-      <button class="danger-btn" id="i-delete">🗑 Delete connection</button>
+      <input id="i-cond" value="${escapeHtml(e.cond || '')}" placeholder="e.g. answer = Yes">
+      <button class="danger-btn" id="i-del">Delete connection</button>
     `;
     document.getElementById('i-cond').oninput = ev => { e.cond = ev.target.value; render(); };
-    document.getElementById('i-delete').onclick = () => { curFlow.edges = curFlow.edges.filter(x => x.id !== e.id); selection = null; render(); };
+    document.getElementById('i-del').onclick = () => { curFlow.edges = curFlow.edges.filter(x => x.id !== e.id); closeInspector(); };
   }
 }
+function badgeKey(t) { return ({trigger:'trigger',question:'question',answer:'answer',action:'action',waiting:'waiting',rootcause:'rootcause',observation:'observation',sensor:'sensor',reassign:'reassign',jump:'jump',end:'end'})[t] || 'end'; }
+
 function bindInspector(n) {
-  document.getElementById('i-label').oninput = e => { n.label = e.target.value; render(); };
-  const sub = document.getElementById('i-sub'); if (sub) sub.oninput = e => { n.sub = e.target.value; render(); };
-  const qt = document.getElementById('i-qtype'); if (qt) qt.onchange = e => {
+  const $ = id => document.getElementById(id);
+  if ($('i-label')) $('i-label').oninput = e => { n.label = e.target.value; render(); };
+  if ($('i-sub')) $('i-sub').oninput = e => { n.sub = e.target.value; render(); };
+  if ($('i-actype')) $('i-actype').onchange = e => { n.actionType = e.target.value; render(); };
+  if ($('i-custact')) $('i-custact').oninput = e => { n.customAction = e.target.value; render(); };
+  if ($('i-role')) $('i-role').onchange = e => { n.role = e.target.value; render(); };
+  if ($('i-user')) $('i-user').oninput = e => { n.userName = e.target.value; render(); };
+  if ($('i-dur')) $('i-dur').oninput = e => { n.duration = e.target.value; render(); };
+  if ($('i-tflow')) $('i-tflow').onchange = e => { n.targetFlow = e.target.value; render(); };
+  if ($('i-qtype')) $('i-qtype').onchange = e => {
     n.qtype = e.target.value;
     if (n.qtype === 'yesno') n.options = [{ id: uid('opt_'), text: 'Yes', route: '' }, { id: uid('opt_'), text: 'No', route: '' }];
     render();
   };
-  const tgt = document.getElementById('i-target'); if (tgt) tgt.onchange = e => { n.target = e.target.value; n.targetSlot = e.target.value; render(); };
-  const dur = document.getElementById('i-dur'); if (dur) dur.oninput = e => { n.duration = e.target.value; render(); };
-  const asg = document.getElementById('i-assign'); if (asg) asg.oninput = e => { n.assignTo = e.target.value; render(); };
+  if ($('i-sname')) $('i-sname').oninput = e => { n.sensorName = e.target.value; render(); };
+  if ($('i-unit')) $('i-unit').oninput = e => { n.unit = e.target.value; render(); };
 
-  if (n.type === 'question' || n.type === 'rootcause') {
-    document.querySelectorAll('#i-options input').forEach(inp => {
-      inp.oninput = e => { n.options[+e.target.dataset.i].text = e.target.value; render(); };
-    });
-    document.querySelectorAll('#i-options select').forEach(sel => {
-      sel.onchange = e => { n.options[+e.target.dataset.i].route = e.target.value; render(); };
-    });
-    document.querySelectorAll('#i-options button.del').forEach(btn => {
-      btn.onclick = e => { n.options.splice(+e.target.dataset.del, 1); render(); };
-    });
-    document.querySelectorAll('#i-options button.helper-chip').forEach(btn => {
-      btn.onclick = e => insertHelperOnBranch(n, +e.target.dataset.i, e.target.dataset.helper);
-    });
-    document.getElementById('i-add-opt').onclick = () => { n.options.push({ id: uid('opt_'), text: 'New option', route: '' }); render(); };
-    document.getElementById('i-gen-cards').onclick = () => generateAnswerCards(n);
-  }
-  document.getElementById('i-delete').onclick = () => deleteNode(n.id);
+  document.querySelectorAll('#i-opts input').forEach(inp => inp.oninput = e => { n.options[+e.target.dataset.i].text = e.target.value; render(); });
+  document.querySelectorAll('#i-opts select').forEach(sel => sel.onchange = e => { n.options[+e.target.dataset.i].route = e.target.value; render(); });
+  document.querySelectorAll('#i-opts .del').forEach(b => b.onclick = e => { n.options.splice(+e.target.dataset.del, 1); render(); });
+  if ($('i-add')) $('i-add').onclick = () => { n.options.push({ id: uid('opt_'), text: 'New option', route: '' }); render(); };
+  if ($('i-gen')) $('i-gen').onclick = () => genAnswerCards(n);
+
+  document.querySelectorAll('[data-thr]').forEach(inp => {
+    inp.oninput = inp.onchange = e => {
+      const t = n.thresholds[+e.target.dataset.thr];
+      const f = e.target.dataset.f;
+      if (f === 'min' || f === 'max') t[f] = e.target.value === '' ? null : +e.target.value;
+      else t[f] = e.target.value;
+      render();
+    };
+  });
+
+  $('i-del').onclick = () => deleteNode(n.id);
 }
 
-function destinationOptions(excludeId, selected) {
-  let html = `<option value="" ${!selected ? 'selected' : ''}>— pick destination —</option>`;
-  html += `<optgroup label="Nodes in this flow">`;
+function destOpts(excludeId, selected) {
+  let h = `<option value="" ${!selected ? 'selected' : ''}>— pick destination —</option>`;
+  h += `<optgroup label="Nodes in this flow">`;
   curFlow.nodes.filter(n => n.id !== excludeId).forEach(n => {
     const v = 'node:' + n.id;
-    html += `<option value="${v}" ${selected === v ? 'selected' : ''}>${typeLabel(n.type)} · ${escapeHtml(truncate(n.label, 36))}</option>`;
+    h += `<option value="${v}" ${selected === v ? 'selected' : ''}>${typeLabel(n.type)} · ${escapeHtml(truncate(n.label, 32))}</option>`;
   });
-  html += `</optgroup><optgroup label="Other flows in this tree">`;
+  h += `</optgroup><optgroup label="Other flows in this tree">`;
   curTree.flows.filter(f => f !== curFlow).forEach(f => {
     const v = 'flow:' + f.id;
-    html += `<option value="${v}" ${selected === v ? 'selected' : ''}>↗ ${escapeHtml(f.name)}</option>`;
+    h += `<option value="${v}" ${selected === v ? 'selected' : ''}>↗ ${escapeHtml(f.name)}</option>`;
   });
-  html += `</optgroup><optgroup label="Special">`;
-  html += `<option value="end" ${selected === 'end' ? 'selected' : ''}>→ End diagnosis</option>`;
-  html += `</optgroup>`;
-  return html;
+  h += `</optgroup><optgroup label="Special">`;
+  h += `<option value="end" ${selected === 'end' ? 'selected' : ''}>→ End diagnosis</option>`;
+  h += `</optgroup>`;
+  return h;
 }
 function typeLabel(t) { return (NTYPES[t] || { label: t }).label; }
 function truncate(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; }
 
-// Insert a helper node on a specific branch — Skip / Wait / Reassign
-function insertHelperOnBranch(questionNode, optionIdx, helperType) {
-  const opt = questionNode.options[optionIdx];
-  const newNode = {
-    id: uid('n_'), type: helperType,
-    x: questionNode.x + 300, y: questionNode.y + optionIdx * 60,
-    label: NTYPES[helperType].label
-  };
-  // If branch already routes somewhere, chain: helper → previous target
-  const oldRoute = opt.route;
-  curFlow.nodes.push(newNode);
-  if (oldRoute && oldRoute.startsWith('node:')) {
-    curFlow.edges.push({ id: uid('e_'), from: newNode.id, to: oldRoute.slice(5) });
-  }
-  opt.route = 'node:' + newNode.id;
-  selection = { kind: 'node', id: newNode.id };
-  render();
-}
-
-// Generate dedicated answer cards (drawio style)
-function generateAnswerCards(qNode) {
+function genAnswerCards(qNode) {
   if (!qNode.options) return;
-  const baseX = qNode.x + 280;
-  const baseY = qNode.y + 80;
+  const baseX = qNode.x + 320;
+  const baseY = qNode.y - ((qNode.options.length - 1) * 70) / 2;
   qNode.options.forEach((opt, i) => {
-    let card = curFlow.nodes.find(n => n.type === 'answer' && n.linkedOption === opt.id);
+    let card = curFlow.nodes.find(c => c.type === 'answer' && c.linkedOption === opt.id);
     if (!card) {
-      card = { id: uid('ans_'), type: 'answer', x: baseX, y: baseY + i * 110, label: opt.text, linkedOption: opt.id };
+      card = { id: uid('ans_'), type: 'answer', x: baseX, y: Math.max(40, baseY + i * 130), label: opt.text, linkedOption: opt.id, actionType: '' };
       curFlow.nodes.push(card);
-    } else {
-      card.label = opt.text;
-    }
-    // Edge q → card (explicit)
-    if (!curFlow.edges.find(e => e.from === qNode.id && e.to === card.id)) {
+    } else card.label = opt.text;
+    if (!curFlow.edges.find(e => e.from === qNode.id && e.to === card.id))
       curFlow.edges.push({ id: uid('e_'), from: qNode.id, to: card.id });
-    }
-    // Edge card → option route destination
     curFlow.edges = curFlow.edges.filter(e => e.from !== card.id);
     if (opt.route && opt.route.startsWith('node:')) {
-      const tid = opt.route.slice(5);
-      if (curFlow.nodes.find(n => n.id === tid)) {
-        curFlow.edges.push({ id: uid('e_'), from: card.id, to: tid });
-      }
+      curFlow.edges.push({ id: uid('e_'), from: card.id, to: opt.route.slice(5) });
     }
-    // Repoint the option's route to the answer card now
     opt.route = 'node:' + card.id;
   });
   render();
+  toast('Generated ' + qNode.options.length + ' answer cards');
 }
 
 function deleteNode(id) {
   curFlow.nodes = curFlow.nodes.filter(x => x.id !== id);
   curFlow.edges = curFlow.edges.filter(e => e.from !== id && e.to !== id);
-  // Clean option routes that pointed here
   curFlow.nodes.forEach(n => {
     if (n.options) n.options.forEach(o => { if (o.route === 'node:' + id) o.route = ''; });
+    if (n.thresholds) n.thresholds.forEach(t => { if (t.route === 'node:' + id) t.route = ''; });
   });
-  selection = null; render();
+  closeInspector();
 }
 
-// =========================================================
-// Drag node + ports
-// =========================================================
+// ============================================================
+// Drag node + ports — bug fixes here
+// ============================================================
 function attachNodeHandlers(el, n) {
   el.addEventListener('mousedown', ev => {
     if (ev.target.classList.contains('port')) return;
     if (ev.button !== 0) return;
     ev.stopPropagation();
+    const wasSelected = selection && selection.kind === 'node' && selection.id === n.id;
     selection = { kind: 'node', id: n.id };
     const start = { x: ev.clientX, y: ev.clientY, nx: n.x, ny: n.y };
     let dragged = false;
     const move = e => {
-      if (!dragged && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 3) dragged = true;
-      n.x = start.nx + (e.clientX - start.x) / zoom;
-      n.y = start.ny + (e.clientY - start.y) / zoom;
+      const ddx = (e.clientX - start.x) / zoom, ddy = (e.clientY - start.y) / zoom;
+      if (!dragged && Math.hypot(ddx, ddy) > 3) dragged = true;
+      n.x = start.nx + ddx; n.y = start.ny + ddy;
       el.style.left = n.x + 'px'; el.style.top = n.y + 'px';
       renderEdges();
     };
-    const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); render(); };
-    document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
-    render();
-  });
-  el.querySelectorAll('.port').forEach(p => {
-    if (p.dataset.option) return; // handled by attachPortHandler
-    if (p.dataset.port === 'out') attachPortHandler(p, n, null);
+    const up = () => {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+      if (!dragged && !wasSelected) openInspector();
+      else if (dragged) persist();
+      render();
+    };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+    if (!wasSelected) render();
   });
 }
-function attachPortHandler(port, n, optionId) {
+
+function attachPortHandler(port, n) {
   port.addEventListener('mousedown', ev => {
     ev.stopPropagation();
+    const side = port.dataset.port;
+    const el = canvas.querySelector(`[data-id="${n.id}"]`);
+    const A = portCoords(n, el, side);
     const tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     tempPath.setAttribute('stroke', '#6366f1');
-    tempPath.setAttribute('stroke-width', '2.5');
+    tempPath.setAttribute('stroke-width', '2.4');
     tempPath.setAttribute('fill', 'none');
     tempPath.setAttribute('stroke-dasharray', '6 4');
     edgesSvg.appendChild(tempPath);
-    const el = canvas.querySelector(`[data-id="${n.id}"]`);
-    const portRect = port.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    const ax = n.x + (portRect.left - elRect.left + portRect.width / 2);
-    const ay = n.y + (portRect.top - elRect.top + portRect.height / 2);
     let lastTarget = null;
     const move = e => {
       const r = wrap.getBoundingClientRect();
       const mx = (e.clientX - r.left - pan.x) / zoom;
       const my = (e.clientY - r.top - pan.y) / zoom;
-      const dx = Math.max(60, (mx - ax) * 0.5);
-      tempPath.setAttribute('d', `M ${ax} ${ay} C ${ax + dx} ${ay}, ${mx - dx} ${my}, ${mx} ${my}`);
+      const dx = Math.max(50, Math.abs(mx - A.x) * 0.5);
+      tempPath.setAttribute('d', `M ${A.x} ${A.y} C ${A.x + dx} ${A.y}, ${mx - dx} ${my}, ${mx} ${my}`);
       const hover = document.elementFromPoint(e.clientX, e.clientY);
       if (lastTarget && lastTarget !== hover) lastTarget.classList.remove('hot');
-      if (hover && hover.classList.contains('port') && hover.dataset.port === 'in') { hover.classList.add('hot'); lastTarget = hover; }
+      if (hover && hover.classList.contains('port')) { hover.classList.add('hot'); lastTarget = hover; }
       else lastTarget = null;
     };
     const up = e => {
-      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
       tempPath.remove();
       if (lastTarget) lastTarget.classList.remove('hot');
       const tgt = document.elementFromPoint(e.clientX, e.clientY);
-      if (tgt && tgt.classList.contains('port') && tgt.dataset.port === 'in') {
-        const tgtId = tgt.closest('.node').dataset.id;
-        if (tgtId !== n.id) {
-          if (optionId) {
-            // Set this option's route
-            const opt = n.options.find(o => o.id === optionId);
-            if (opt) opt.route = 'node:' + tgtId;
-          } else if (!curFlow.edges.find(x => x.from === n.id && x.to === tgtId)) {
-            curFlow.edges.push({ id: uid('e_'), from: n.id, to: tgtId });
-          }
+      if (tgt && tgt.classList.contains('port')) {
+        const tNodeEl = tgt.closest('.node');
+        const tid = tNodeEl.dataset.id;
+        if (tid !== n.id && !curFlow.edges.find(x => x.from === n.id && x.to === tid)) {
+          curFlow.edges.push({ id: uid('e_'), from: n.id, to: tid });
         }
       }
       render();
     };
-    document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
   });
 }
 
-// =========================================================
+// ============================================================
 // Pan / zoom
-// =========================================================
+// ============================================================
 wrap.addEventListener('mousedown', ev => {
   if (ev.target.tagName === 'path') return;
-  if (ev.target.closest('.node') || ev.target.closest('.float-tools') || ev.target.closest('.zoom-ctl') || ev.target.closest('.legend')) return;
-  selection = null; render();
+  if (ev.target.closest('.node') || ev.target.closest('.zoom-pill')) return;
+  if (selection) closeInspector();
   const start = { x: ev.clientX, y: ev.clientY, px: pan.x, py: pan.y };
   const move = e => { pan.x = start.px + (e.clientX - start.x); pan.y = start.py + (e.clientY - start.y); applyTransform(); };
   const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); };
@@ -1183,13 +1058,12 @@ wrap.addEventListener('wheel', ev => {
   pan.y = my - (my - pan.y) * (nz / zoom);
   zoom = nz; applyTransform();
 }, { passive: false });
-document.getElementById('zoom-in').onclick = () => { zoom = Math.min(2, zoom * 1.2); applyTransform(); };
-document.getElementById('zoom-out').onclick = () => { zoom = Math.max(0.2, zoom / 1.2); applyTransform(); };
-document.getElementById('zoom-fit').onclick = fitToView;
-function fitToView() {
+document.getElementById('zoom-in').onclick = () => { zoom = Math.min(2, zoom * 1.15); applyTransform(); };
+document.getElementById('zoom-out').onclick = () => { zoom = Math.max(0.2, zoom / 1.15); applyTransform(); };
+function fitView() {
   if (!curFlow.nodes.length) { pan = { x: 40, y: 40 }; zoom = 1; applyTransform(); return; }
   const xs = curFlow.nodes.map(n => n.x), ys = curFlow.nodes.map(n => n.y);
-  const minX = Math.min(...xs), maxX = Math.max(...xs.map(x => x + 220));
+  const minX = Math.min(...xs), maxX = Math.max(...xs.map(x => x + 280));
   const minY = Math.min(...ys), maxY = Math.max(...ys.map(y => y + 200));
   const rect = wrap.getBoundingClientRect();
   const zx = (rect.width - 80) / (maxX - minX);
@@ -1200,9 +1074,9 @@ function fitToView() {
   applyTransform();
 }
 
-// =========================================================
-// Canvas drop (from palette)
-// =========================================================
+// ============================================================
+// Drop from palette
+// ============================================================
 wrap.addEventListener('dragover', e => e.preventDefault());
 wrap.addEventListener('drop', e => {
   e.preventDefault();
@@ -1211,221 +1085,143 @@ wrap.addEventListener('drop', e => {
   const r = wrap.getBoundingClientRect();
   const x = (e.clientX - r.left - pan.x) / zoom;
   const y = (e.clientY - r.top - pan.y) / zoom;
-  const node = { id: uid('n_'), type, x: x - 110, y: y - 30, label: defaultLabel(type) };
-  if (type === 'question') { node.qtype = 'single'; node.options = [{ id: uid('opt_'), text: 'Yes', route: '' }, { id: uid('opt_'), text: 'No', route: '' }]; }
-  if (type === 'rootcause') { node.options = [{ id: uid('opt_'), text: 'Cause A', route: '' }, { id: uid('opt_'), text: 'Cause B', route: '' }, { id: uid('opt_'), text: 'Other', route: '' }]; }
+  const node = { id: uid('n_'), type, x: x - 130, y: y - 40, label: NTYPES[type].label };
+  if (type === 'question') { node.qtype = 'single'; node.options = [{id:uid('opt_'),text:'Yes',route:''},{id:uid('opt_'),text:'No',route:''}]; }
+  if (type === 'rootcause') node.options = [{id:uid('opt_'),text:'Cause A',route:''},{id:uid('opt_'),text:'Cause B',route:''},{id:uid('opt_'),text:'Other',route:''}];
+  if (type === 'sensor') {
+    node.sensorName = ''; node.unit = '';
+    node.thresholds = [
+      { id:'safe', label:'Safe',     min:null, max:null, route:'' },
+      { id:'warn', label:'Warning',  min:null, max:null, route:'' },
+      { id:'crit', label:'Critical', min:null, max:null, route:'' }
+    ];
+  }
   curFlow.nodes.push(node);
   selection = { kind: 'node', id: node.id };
+  openInspector();
   render();
 });
-function defaultLabel(t) { return NTYPES[t] ? NTYPES[t].label : 'Node'; }
 
-// =========================================================
-// Tools
-// =========================================================
-document.getElementById('auto-layout-btn').onclick = () => {
-  const entries = curFlow.nodes.filter(n => n.type === 'entry');
-  if (!entries.length && curFlow.nodes.length) entries.push(curFlow.nodes[0]);
-  const depth = {}; const queue = entries.map(n => ({ id: n.id, lvl: 0 }));
-  const visited = new Set();
-  while (queue.length) {
-    const { id, lvl } = queue.shift();
-    if (visited.has(id)) { depth[id] = Math.max(depth[id], lvl); continue; }
-    visited.add(id); depth[id] = lvl;
-    // collect outgoing: regular edges + option routes
-    const outs = curFlow.edges.filter(e => e.from === id).map(e => e.to);
-    const n = curFlow.nodes.find(x => x.id === id);
-    if (n && n.options) n.options.forEach(o => { if (o.route && o.route.startsWith('node:')) outs.push(o.route.slice(5)); });
-    outs.forEach(to => queue.push({ id: to, lvl: lvl + 1 }));
-  }
-  curFlow.nodes.forEach(n => { if (!(n.id in depth)) depth[n.id] = 0; });
-  const byLevel = {};
-  curFlow.nodes.forEach(n => { (byLevel[depth[n.id]] = byLevel[depth[n.id]] || []).push(n); });
-  const COL_W = 300, ROW_H = 140;
-  Object.entries(byLevel).forEach(([lvl, nodes]) => {
-    nodes.forEach((n, i) => { n.x = 60 + (+lvl) * COL_W; n.y = 60 + i * ROW_H; });
-  });
-  render(); fitToView();
-};
-document.getElementById('clear-btn').onclick = () => {
+// ============================================================
+// Header buttons
+// ============================================================
+document.getElementById('btn-clear').onclick = () => {
   if (!confirm('Clear all nodes and connections in this flow?')) return;
-  curFlow.nodes = []; curFlow.edges = []; selection = null; render();
+  curFlow.nodes = []; curFlow.edges = []; closeInspector();
 };
-
-// =========================================================
-// Topbar buttons
-// =========================================================
-document.getElementById('export-btn').onclick = () => {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'flows.json'; a.click();
-};
-document.getElementById('publish-btn').onclick = () => alert('Publish: would lock the current draft and make it the live version for operators.');
-
-// =========================================================
-// New flow modal
-// =========================================================
-const newModal = document.getElementById('new-modal');
-function showNewFlow() {
-  document.getElementById('new-flow-tree').innerHTML =
-    data.trees.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('') +
-    `<option value="__newtree__">＋ New tree…</option>`;
-  document.getElementById('new-flow-name').value = '';
-  document.getElementById('new-flow-tree').value = curTree.id;
-  newModal.style.display = 'flex';
-}
-document.getElementById('new-btn').onclick = showNewFlow;
-document.getElementById('new-cancel').onclick = () => { newModal.style.display = 'none'; refreshTopbar(); };
-document.getElementById('new-confirm').onclick = () => {
-  const name = document.getElementById('new-flow-name').value.trim() || 'Untitled flow';
-  let treeId = document.getElementById('new-flow-tree').value;
-  let target;
-  if (treeId === '__newtree__') {
-    const tn = prompt('New tree name?', 'Untitled tree') || 'Untitled tree';
-    target = { id: uid('tree_'), name: tn, flows: [] };
-    data.trees.push(target);
-  } else {
-    target = data.trees.find(t => t.id === treeId);
-  }
-  const flow = { id: uid('f_'), name, nodes: [{ id: uid('n_'), type: 'entry', x: 80, y: 120, label: name }], edges: [] };
-  target.flows.push(flow);
-  curTree = target; curFlow = flow; selection = null;
-  newModal.style.display = 'none'; render(); fitToView();
-};
-
-// =========================================================
-// Templates
-// =========================================================
-const tplModal = document.getElementById('tpl-modal');
-const tplSaveModal = document.getElementById('tpl-save-modal');
-function showTemplates() {
-  const grid = document.getElementById('tpl-grid');
-  let html = '';
-  BUILTIN_TEMPLATES.forEach(t => {
-    html += `<div class="tpl-card builtin" data-builtin="${t.id}">
-      <div class="tpl-emoji">${t.emoji}</div>
-      <div class="tpl-name">${escapeHtml(t.name)}</div>
-      <div class="tpl-meta">Built-in · ${escapeHtml(t.desc)}</div>
-    </div>`;
-  });
-  loadTemplates().forEach(t => {
-    html += `<div class="tpl-card" data-saved="${t.id}">
-      <button class="tpl-del" data-del="${t.id}">×</button>
-      <div class="tpl-emoji">${t.emoji || '⭐'}</div>
-      <div class="tpl-name">${escapeHtml(t.name)}</div>
-      <div class="tpl-meta">Saved · ${t.tree.flows.length} flow${t.tree.flows.length !== 1 ? 's' : ''}</div>
-    </div>`;
-  });
-  if (!html) html = '<div class="empty" style="grid-column:1/-1">No templates yet. Save one with "⭐ Save as template".</div>';
-  grid.innerHTML = html;
-  grid.querySelectorAll('.tpl-card').forEach(c => {
-    c.onclick = (e) => {
-      if (e.target.classList.contains('tpl-del')) return;
-      const bi = c.dataset.builtin;
-      if (bi) {
-        const tpl = BUILTIN_TEMPLATES.find(t => t.id === bi);
-        const newTree = tpl.builder();
-        data.trees.push(newTree);
-        curTree = newTree; curFlow = newTree.flows[0]; selection = null;
-      } else if (c.dataset.saved) {
-        const sv = loadTemplates().find(t => t.id === c.dataset.saved);
-        if (sv) {
-          // clone with new ids? — keep simple: load as-is, regenerate top-level tree id
-          const cloned = JSON.parse(JSON.stringify(sv.tree));
-          cloned.id = uid('tree_');
-          data.trees.push(cloned);
-          curTree = cloned; curFlow = cloned.flows[0]; selection = null;
-        }
-      }
-      tplModal.style.display = 'none';
-      render(); fitToView();
-    };
-  });
-  grid.querySelectorAll('.tpl-del').forEach(b => {
-    b.onclick = ev => {
-      ev.stopPropagation();
-      const id = ev.target.dataset.del;
-      if (!confirm('Delete this saved template?')) return;
-      saveTemplates(loadTemplates().filter(t => t.id !== id));
-      showTemplates();
-    };
-  });
-  tplModal.style.display = 'flex';
-}
-document.getElementById('tpl-library').onclick = showTemplates;
-document.getElementById('rail-templates').onclick = showTemplates;
-document.getElementById('tpl-close').onclick = () => tplModal.style.display = 'none';
-
-document.getElementById('tpl-save').onclick = () => {
+document.getElementById('btn-templates').onclick = showTemplates;
+document.getElementById('btn-save-tpl').onclick = () => {
   document.getElementById('tpl-save-name').value = curTree.name;
   document.getElementById('tpl-save-emoji').value = '⭐';
-  tplSaveModal.style.display = 'flex';
+  document.getElementById('tpl-save-modal').style.display = 'flex';
 };
-document.getElementById('tpl-save-cancel').onclick = () => tplSaveModal.style.display = 'none';
+document.getElementById('tpl-save-cancel').onclick = () => document.getElementById('tpl-save-modal').style.display = 'none';
 document.getElementById('tpl-save-confirm').onclick = () => {
   const name = document.getElementById('tpl-save-name').value.trim() || curTree.name;
-  const emoji = document.getElementById('tpl-save-emoji').value.trim() || '⭐';
+  const em = document.getElementById('tpl-save-emoji').value.trim() || '⭐';
   const list = loadTemplates();
-  list.push({ id: uid('tpl_'), name, emoji, tree: JSON.parse(JSON.stringify(curTree)) });
+  list.push({ id: uid('tpl_'), name, emoji: em, tree: JSON.parse(JSON.stringify(curTree)) });
   saveTemplates(list);
-  tplSaveModal.style.display = 'none';
-  // toast
-  const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(16,185,129,0.4);z-index:200;animation:pop-in 0.25s';
-  toast.textContent = '⭐ Template saved';
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 2200);
+  document.getElementById('tpl-save-modal').style.display = 'none';
+  toast('Template saved');
 };
 
-// =========================================================
+function showTemplates() {
+  const grid = document.getElementById('tpl-grid');
+  let h = '';
+  BUILTIN_TEMPLATES.forEach(t => h += `<div class="tpl-card" data-builtin="${t.id}"><span class="em">${t.emoji}</span><div class="nm">${escapeHtml(t.name)}</div><div class="mt">Built-in · ${escapeHtml(t.desc)}</div></div>`);
+  loadTemplates().forEach(t => h += `<div class="tpl-card" data-saved="${t.id}"><button class="del" data-del="${t.id}">×</button><span class="em">${t.emoji || '⭐'}</span><div class="nm">${escapeHtml(t.name)}</div><div class="mt">Saved · ${t.tree.flows.length} flow${t.tree.flows.length !== 1 ? 's' : ''}</div></div>`);
+  if (!h) h = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:20px">No templates yet.</div>';
+  grid.innerHTML = h;
+  grid.querySelectorAll('.tpl-card').forEach(c => {
+    c.onclick = ev => {
+      if (ev.target.classList.contains('del')) return;
+      if (c.dataset.builtin) {
+        const t = BUILTIN_TEMPLATES.find(x => x.id === c.dataset.builtin);
+        const nt = t.builder();
+        data.trees.push(nt); curTree = nt; curFlow = nt.flows[0];
+      } else if (c.dataset.saved) {
+        const sv = loadTemplates().find(x => x.id === c.dataset.saved);
+        if (sv) {
+          const cl = JSON.parse(JSON.stringify(sv.tree));
+          cl.id = uid('tree_');
+          data.trees.push(cl); curTree = cl; curFlow = cl.flows[0];
+        }
+      }
+      document.getElementById('tpl-modal').style.display = 'none';
+      closeInspector(); fitView();
+    };
+  });
+  grid.querySelectorAll('.del').forEach(b => b.onclick = ev => {
+    ev.stopPropagation();
+    if (!confirm('Delete this saved template?')) return;
+    saveTemplates(loadTemplates().filter(t => t.id !== ev.target.dataset.del));
+    showTemplates();
+  });
+  document.getElementById('tpl-modal').style.display = 'flex';
+}
+document.getElementById('tpl-close').onclick = () => document.getElementById('tpl-modal').style.display = 'none';
+
+// ============================================================
 // Welcome
-// =========================================================
+// ============================================================
 function showWelcome() {
-  const modal = document.getElementById('welcome-modal');
-  modal.style.display = 'flex';
-  modal.querySelectorAll('.choice').forEach(c => {
+  const m = document.getElementById('welcome-modal');
+  m.style.display = 'flex';
+  m.querySelectorAll('.choice').forEach(c => {
     c.onclick = () => {
-      modal.style.display = 'none';
+      m.style.display = 'none';
       if (c.dataset.action === 'dummy') {
-        data.trees = [buildLowDoTree()];
-        curTree = data.trees[0]; curFlow = curTree.flows[2];
+        const t = buildLowDoTree(); data.trees = [t]; curTree = t; curFlow = t.flows[2];
       } else if (c.dataset.action === 'template') {
-        data.trees = [{ id: uid('tree_'), name: 'My tree', flows: [{ id: uid('f_'), name: 'Flow 1', nodes: [{ id: uid('n_'), type: 'entry', x: 100, y: 120, label: 'Flow entry' }], edges: [] }] }];
+        data.trees = [{ id: uid('tree_'), name: 'My tree', flows: [{ id: uid('f_'), name: 'Flow 1', nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: 'New trigger' }], edges: [] }] }];
         curTree = data.trees[0]; curFlow = curTree.flows[0];
         setTimeout(showTemplates, 100);
       } else {
-        data.trees = [{ id: uid('tree_'), name: 'My first tree', flows: [{ id: uid('f_'), name: 'Flow 1', nodes: [{ id: uid('n_'), type: 'entry', x: 120, y: 140, label: 'Flow entry' }], edges: [] }] }];
+        data.trees = [{ id: uid('tree_'), name: 'My first tree', flows: [{ id: uid('f_'), name: 'Flow 1', nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: 'Issue trigger' }], edges: [] }] }];
         curTree = data.trees[0]; curFlow = curTree.flows[0];
       }
-      render(); fitToView();
+      render(); fitView();
     };
   });
 }
 
-// =========================================================
+// ============================================================
 // Keyboard
-// =========================================================
+// ============================================================
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
   if ((e.key === 'Delete' || e.key === 'Backspace') && selection) {
     if (selection.kind === 'node') deleteNode(selection.id);
-    else if (selection.kind === 'edge') { curFlow.edges = curFlow.edges.filter(x => x.id !== selection.id); selection = null; render(); }
+    else if (selection.kind === 'edge') { curFlow.edges = curFlow.edges.filter(x => x.id !== selection.id); closeInspector(); }
   }
+  if (e.key === 'Escape') closeInspector();
 });
 
-function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+// ============================================================
+// Util
+// ============================================================
+function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
 
-// =========================================================
+// ============================================================
 // Init
-// =========================================================
+// ============================================================
 (function init() {
-  pan = { x: 40, y: 40 }; zoom = 0.7;
   renderPalette();
+  pan = { x: 40, y: 40 }; zoom = 0.7;
   if (!loadPersisted()) {
+    data.trees = [buildLowDoTree()];
+    curTree = data.trees[0]; curFlow = curTree.flows[2];
     showWelcome();
     render();
   } else {
-    render();
-    fitToView();
+    render(); fitView();
   }
 })();
 </script>
