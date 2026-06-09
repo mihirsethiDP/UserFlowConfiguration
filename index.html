@@ -144,8 +144,13 @@
   .node.selected { box-shadow: 0 0 0 3px rgba(99,102,241,0.2), var(--shadow-md); border-color: var(--accent-2) !important; }
   .node .nhead { display: flex; align-items: center; gap: 8px; }
   .node .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 5px; font-size: 9.5px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; }
-  .node .label { font-size: 13px; font-weight: 600; line-height: 1.35; margin-top: 8px; color: var(--text); }
-  .node .sub { font-size: 11.5px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+  .node .label { font-size: 13px; font-weight: 600; line-height: 1.35; margin-top: 8px; color: var(--text); outline: none; border-radius: 4px; padding: 1px 3px; margin-left: -3px; cursor: text; }
+  .node .label:focus { background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-2); }
+  .node .label:hover:not(:focus) { background: var(--panel-soft); }
+  .node .sub { font-size: 11.5px; color: var(--muted); margin-top: 4px; line-height: 1.4; outline: none; border-radius: 4px; padding: 1px 3px; margin-left: -3px; }
+  .node .sub[contenteditable="true"] { cursor: text; }
+  .node .sub[contenteditable="true"]:focus { background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-2); color: var(--text); }
+  .node .sub[contenteditable="true"]:hover:not(:focus) { background: var(--panel-soft); }
 
   .node.t-trigger { border-color: #a7f3d0; }
   .node.t-trigger .badge { background: var(--c-trigger); color: var(--c-trigger-fg); }
@@ -432,12 +437,10 @@ const NTYPES = {
   trigger:     { label: 'Trigger',               icon: '⚠', group: 'step',  help: 'Entry point of the diagnostic tree. Issue or event that kicks things off. Usually followed by Possible Root Causes.' },
   rootcause:   { label: 'Possible Root Causes',  icon: '🌱', group: 'step', help: 'List of possible root causes. Each cause has a sequence (display order) and routes to its own flow. Operator picks the matching one to start the right diagnostic.' },
   question:    { label: 'Question',              icon: '?',  group: 'step', help: 'A decision step inside a flow. Each option becomes its own port on the right edge. Set a sequence to control the order questions appear to the operator.' },
-  answer:      { label: 'Answer',                icon: '💬', group: 'step', help: 'A tappable answer card with an Action selector for what happens next.' },
   action:      { label: 'Action',                icon: '✓',  group: 'step', help: 'A task the operator performs. Pick an Action type in the inspector — Escalate also lets you pick a user.' },
   sensor:      { label: 'Sensor reading',        icon: '📡', group: 'step', help: 'Read a sensor by Tag — thresholds (Safe/Warning/Critical) are inherited from the tag and can be overridden.' },
-  observation: { label: 'Observation',           icon: '👁', group: 'step', help: 'Passive recording — visual or manual check, no branching.' },
   reassign:    { label: 'Reassign',              icon: '↻',  group: 'help', help: 'Hand the flow off to another role / user.' },
-  waiting:     { label: 'Waiting',               icon: '⏱', group: 'help', help: 'Pause the flow by time or event.' },
+  waiting:     { label: 'Waiting',               icon: '⏱', group: 'help', help: 'Pause the flow for a configurable duration before continuing.' },
   jump:        { label: 'Jump to flow',          icon: '↗',  group: 'help', help: 'Transition to another flow in the tree. Use to chain root-cause flows or hand off to a related diagnostic.' },
   end:         { label: 'Done',                  icon: '■',  group: 'help', help: 'Terminates the flow. The flow ends here.' }
 };
@@ -667,17 +670,23 @@ function applyTransform() {
   edgesSvg.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
   document.getElementById('zoom-lvl').textContent = Math.round(zoom * 100) + '%';
 }
-function render() {
+let inlineEditingId = null; // id of node whose card text is being edited inline
+function render(opts) {
+  opts = opts || {};
   refreshHeader();
-  canvas.innerHTML = '';
-  curFlow.nodes.forEach(n => canvas.appendChild(renderNode(n)));
-  // After DOM insertion, cache option-row offsets for each question node (used for edge endpoint Y)
-  curFlow.nodes.forEach(n => {
-    if ((n.type === 'question' || n.type === 'rootcause') && n.options) cacheOptOffsets(n);
-    if (n.type === 'sensor') cacheThresholdOffsets(n);
-  });
-  renderEdges();
-  if (selection) renderInspector();
+  if (!inlineEditingId) {
+    canvas.innerHTML = '';
+    curFlow.nodes.forEach(n => canvas.appendChild(renderNode(n)));
+    curFlow.nodes.forEach(n => {
+      if ((n.type === 'question' || n.type === 'rootcause') && n.options) cacheOptOffsets(n);
+      if (n.type === 'sensor') cacheThresholdOffsets(n);
+    });
+    renderEdges();
+  } else {
+    // Inline editing — only update edges (positions may have changed) and skip rebuilding card DOM
+    renderEdges();
+  }
+  if (selection && !opts.skipInspector) renderInspector();
   applyTransform();
   persist();
 }
@@ -713,7 +722,11 @@ function renderNode(n) {
     const tg = curTree.flows.find(f => f.id === n.targetFlow);
     sub = '→ ' + (tg ? tg.name : '(unset)');
   }
-  if (n.type === 'waiting' && n.duration) sub = '⏱ ' + n.duration;
+  if (n.type === 'waiting') {
+    if ((n.waitMode || 'time') === 'time' && n.waitValue != null) sub = '⏱ ' + n.waitValue + ' ' + (n.waitUnit || 'minutes');
+    else if (n.waitMode === 'event' && n.waitEvent) sub = '⚡ ' + n.waitEvent;
+    else if (n.duration) sub = '⏱ ' + n.duration; // legacy field
+  }
   if (n.type === 'reassign' && n.role) sub = '👤 ' + n.role + (n.userName ? ' · ' + n.userName : '');
   if ((n.type === 'action' || n.type === 'answer') && n.actionType) {
     const at = ACTION_TYPES.find(a => a.id === n.actionType);
@@ -731,10 +744,12 @@ function renderNode(n) {
 
   // Build inner HTML
   const seqChip = (n.type === 'question' && n.sequence) ? `<div style="margin-left:auto;font-size:10px;background:var(--accent-soft);color:var(--accent-2);padding:2px 7px;border-radius:4px;font-weight:700">#${n.sequence}</div>` : '';
+  // Description is editable too — but only for plain node types where sub is user-provided
+  const subEditable = ['trigger','action','reassign','waiting','end','question','rootcause','sensor'].includes(n.type);
   let inner = `
     <div class="nhead"><div class="badge">${m.label}</div>${seqChip}</div>
-    <div class="label">${escapeHtml(n.label || '(untitled)')}</div>
-    ${sub ? `<div class="sub">${escapeHtml(sub)}</div>` : ''}
+    <div class="label" contenteditable="true" spellcheck="false">${escapeHtml(n.label || '(untitled)')}</div>
+    ${sub ? `<div class="sub"${subEditable && !n.actionType && !n.role && !n.sensorTag && !n.duration ? ' contenteditable="true" spellcheck="false"' : ''}>${escapeHtml(sub)}</div>` : ''}
   `;
 
   const isBranching = (n.type === 'question' || n.type === 'rootcause') && n.options;
@@ -782,6 +797,22 @@ function renderNode(n) {
 
   el.innerHTML = inner;
   attachNodeHandlers(el, n);
+  // Inline edit handlers for label + sub
+  el.querySelectorAll('[contenteditable="true"]').forEach(ce => {
+    ce.addEventListener('mousedown', e => e.stopPropagation()); // don't trigger node drag
+    ce.addEventListener('focus', () => { inlineEditingId = n.id; });
+    ce.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ce.blur(); } });
+    ce.addEventListener('input', () => {
+      const txt = ce.textContent;
+      if (ce.classList.contains('label')) n.label = txt;
+      else if (ce.classList.contains('sub')) n.sub = txt;
+      persist();
+    });
+    ce.addEventListener('blur', () => {
+      inlineEditingId = null;
+      render({ skipInspector: true });
+    });
+  });
   el.querySelectorAll('.port').forEach(p => attachPortHandler(p, n, null));
   el.querySelectorAll('.opt-port').forEach(p => {
     if (p.dataset.optPort) attachPortHandler(p, n, { kind: 'option', id: p.dataset.optPort });
@@ -938,7 +969,24 @@ function renderInspector() {
       h += `</select>`;
       h += `<label>User / name (optional)</label><input id="i-user" value="${escapeHtml(n.userName || '')}">`;
     }
-    if (n.type === 'waiting') h += `<label>Wait for</label><input id="i-dur" value="${escapeHtml(n.duration || '')}" placeholder="1 hour, until DO > 2…">`;
+    if (n.type === 'waiting') {
+      const mode = n.waitMode || 'time';
+      h += `<label>Wait mode</label><select id="i-wmode">
+        <option value="time" ${mode==='time'?'selected':''}>⏱ Time-based</option>
+        <option value="event" ${mode==='event'?'selected':''}>⚡ Event-based</option>
+      </select>`;
+      if (mode === 'time') {
+        h += `<label>Duration</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <input id="i-wval" type="number" min="0" value="${n.waitValue == null ? '' : n.waitValue}" placeholder="e.g. 5">
+          <select id="i-wunit">
+            ${['seconds','minutes','hours','days'].map(u => `<option value="${u}" ${(n.waitUnit||'minutes')===u?'selected':''}>${u}</option>`).join('')}
+          </select>
+        </div>`;
+      } else {
+        h += `<label>Wait for event</label><input id="i-wevent" value="${escapeHtml(n.waitEvent || '')}" placeholder="e.g. DO reading > 2 mg/L">`;
+      }
+    }
     if (n.type === 'question') {
       h += `<label>Sequence (display order in flow)</label><input id="i-seq" type="number" min="1" value="${n.sequence || ''}" placeholder="e.g. 1, 2, 3…">`;
     }
@@ -1017,19 +1065,21 @@ function renderInspector() {
       <label>Condition label</label>
       <input id="i-cond" value="${escapeHtml(e.cond || '')}">
       <button class="danger-btn" id="i-del">Delete connection</button>`;
-    document.getElementById('i-cond').oninput = ev => { e.cond = ev.target.value; render(); };
+    document.getElementById('i-cond').oninput = ev => { e.cond = ev.target.value; render({ skipInspector: true }); };
     document.getElementById('i-del').onclick = () => { curFlow.edges = curFlow.edges.filter(x => x.id !== e.id); closeInspector(); };
   }
 }
 function bindInspector(n) {
   const $ = id => document.getElementById(id);
-  if ($('i-label')) $('i-label').oninput = e => { n.label = e.target.value; render(); };
-  if ($('i-sub')) $('i-sub').oninput = e => { n.sub = e.target.value; render(); };
+  // KEY BUG FIX: text inputs use {skipInspector:true} so the drawer DOM isn't rebuilt mid-keystroke
+  const NO_REBUILD = { skipInspector: true };
+  if ($('i-label')) $('i-label').oninput = e => { n.label = e.target.value; render(NO_REBUILD); };
+  if ($('i-sub')) $('i-sub').oninput = e => { n.sub = e.target.value; render(NO_REBUILD); };
   if ($('i-actype')) $('i-actype').onchange = e => { n.actionType = e.target.value; render(); };
-  if ($('i-custact')) $('i-custact').oninput = e => { n.customAction = e.target.value; };
+  if ($('i-custact')) $('i-custact').oninput = e => { n.customAction = e.target.value; render(NO_REBUILD); };
   if ($('i-erole')) $('i-erole').onchange = e => { n.escalateRole = e.target.value; render(); };
-  if ($('i-euser')) $('i-euser').oninput = e => { n.escalateUser = e.target.value; render(); };
-  if ($('i-seq')) $('i-seq').oninput = e => { n.sequence = e.target.value === '' ? null : +e.target.value; render(); };
+  if ($('i-euser')) $('i-euser').oninput = e => { n.escalateUser = e.target.value; render(NO_REBUILD); };
+  if ($('i-seq')) $('i-seq').oninput = e => { n.sequence = e.target.value === '' ? null : +e.target.value; render(NO_REBUILD); };
   if ($('i-stag')) $('i-stag').onchange = e => {
     n.sensorTag = e.target.value;
     const preset = SENSOR_TAGS.find(t => t.id === n.sensorTag);
@@ -1045,16 +1095,19 @@ function bindInspector(n) {
     render();
   };
   if ($('i-role')) $('i-role').onchange = e => { n.role = e.target.value; render(); };
-  if ($('i-user')) $('i-user').oninput = e => { n.userName = e.target.value; render(); };
-  if ($('i-dur')) $('i-dur').oninput = e => { n.duration = e.target.value; render(); };
+  if ($('i-user')) $('i-user').oninput = e => { n.userName = e.target.value; render(NO_REBUILD); };
+  if ($('i-wmode')) $('i-wmode').onchange = e => { n.waitMode = e.target.value; render(); };
+  if ($('i-wval')) $('i-wval').oninput = e => { n.waitValue = e.target.value === '' ? null : +e.target.value; render(NO_REBUILD); };
+  if ($('i-wunit')) $('i-wunit').onchange = e => { n.waitUnit = e.target.value; render(NO_REBUILD); };
+  if ($('i-wevent')) $('i-wevent').oninput = e => { n.waitEvent = e.target.value; render(NO_REBUILD); };
   if ($('i-tflow')) $('i-tflow').onchange = e => { n.targetFlow = e.target.value; render(); };
-  if ($('i-sname')) $('i-sname').oninput = e => { n.sensorName = e.target.value; render(); };
-  if ($('i-unit')) $('i-unit').oninput = e => { n.unit = e.target.value; render(); };
+  if ($('i-sname')) $('i-sname').oninput = e => { n.sensorName = e.target.value; render(NO_REBUILD); };
+  if ($('i-unit')) $('i-unit').oninput = e => { n.unit = e.target.value; render(NO_REBUILD); };
   document.querySelectorAll('#i-opts input').forEach(inp => inp.oninput = e => {
     const i = +e.target.dataset.i, f = e.target.dataset.f;
     if (f === 'sequence') n.options[i].sequence = e.target.value === '' ? null : +e.target.value;
     else n.options[i][f] = e.target.value;
-    render();
+    render(NO_REBUILD);
   });
   document.querySelectorAll('#i-opts select').forEach(sel => sel.onchange = e => { n.options[+e.target.dataset.i].route = e.target.value; render(); });
   document.querySelectorAll('#i-opts .del').forEach(b => b.onclick = e => { n.options.splice(+e.target.dataset.del, 1); render(); });
@@ -1064,13 +1117,15 @@ function bindInspector(n) {
     render();
   };
   document.querySelectorAll('[data-thr]').forEach(inp => {
-    inp.oninput = inp.onchange = e => {
+    const handler = e => {
       const t = n.thresholds[+e.target.dataset.thr];
       const f = e.target.dataset.f;
       if (f === 'min' || f === 'max') t[f] = e.target.value === '' ? null : +e.target.value;
       else t[f] = e.target.value;
-      render();
+      // Skip inspector rebuild for text/number inputs, allow it for selects (route)
+      if (e.target.tagName === 'SELECT') render(); else render(NO_REBUILD);
     };
+    inp.oninput = handler; inp.onchange = handler;
   });
   $('i-del').onclick = () => deleteNode(n.id);
 }
