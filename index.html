@@ -34,6 +34,7 @@
     --c-reassign: #fed7aa; --c-reassign-fg: #9a3412;
     --c-jump: #fbcfe8; --c-jump-fg: #831843;
     --c-end: #e5e7eb; --c-end-fg: #374151;
+    --c-skip_end: #f3e8ff; --c-skip_end-fg: #6b21a8;
 
     --shadow-sm: 0 1px 2px rgba(15,23,42,0.04);
     --shadow-md: 0 4px 14px rgba(15,23,42,0.06);
@@ -71,6 +72,35 @@
   #header .avs .av:nth-child(2) { background: linear-gradient(135deg, #06b6d4, #10b981); }
   #header .avs .av:nth-child(3) { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
   #header .avs .more { background: rgba(255,255,255,0.1); color: #9ca3af; font-size: 9px; }
+  .view-toggle { display: inline-flex; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 3px; border-radius: 8px; gap: 2px; }
+  .view-toggle button { background: transparent; border: none; color: #9ca3af; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; }
+  .view-toggle button:hover { color: #fff; }
+  .view-toggle button.active { background: var(--accent); color: #fff; font-weight: 600; }
+
+  /* ============ STEPPED (vertical) VIEW ============ */
+  #stepped-view { display: none; position: absolute; inset: 0; overflow-y: auto; padding: 30px 24px 80px; background: var(--canvas-bg); background-image: radial-gradient(circle at 1px 1px, #d1d5db 1px, transparent 0); background-size: 22px 22px; }
+  #stepped-view.active { display: block; }
+  #canvas-wrap.stepped #canvas, #canvas-wrap.stepped #edges, #canvas-wrap.stepped .canvas-top, #canvas-wrap.stepped .saved-status, #canvas-wrap.stepped .zoom-pill, #canvas-wrap.stepped .quick-pill { display: none; }
+  .step-stack { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 0; }
+  .step-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; box-shadow: var(--shadow-sm); position: relative; transition: all 0.15s; cursor: pointer; }
+  .step-card:hover { box-shadow: var(--shadow-md); border-color: var(--muted-2); }
+  .step-card.selected { box-shadow: 0 0 0 3px rgba(99,102,241,0.2), var(--shadow-md); border-color: var(--accent-2); }
+  .step-card .nhead { display: flex; align-items: center; gap: 8px; }
+  .step-card .badge { padding: 3px 8px; border-radius: 5px; font-size: 9.5px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; }
+  .step-card .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--header); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-right: 4px; }
+  .step-card .label { font-size: 14px; font-weight: 600; margin-top: 8px; outline: none; cursor: text; border-radius: 4px; padding: 1px 3px; margin-left: -3px; }
+  .step-card .label:focus { background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-2); }
+  .step-card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .step-card .branches { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 6px; }
+  .step-card .branch-row { display: grid; grid-template-columns: 24px 1fr 1fr; gap: 6px; align-items: center; padding: 6px 8px; background: var(--panel-soft); border-radius: 7px; }
+  .step-card .branch-row .bn { width: 22px; height: 22px; background: var(--accent-2); color: #fff; border-radius: 5px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .step-card .branch-row input, .step-card .branch-row select { padding: 5px 7px; font-size: 11.5px; border: 1px solid var(--border); border-radius: 5px; background: #fff; }
+  .step-card .delcard { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 6px; border: none; background: transparent; color: var(--muted); cursor: pointer; opacity: 0; }
+  .step-card:hover .delcard { opacity: 1; }
+  .step-card .delcard:hover { background: #fef2f2; color: var(--red); }
+  .step-arrow { display: flex; justify-content: center; padding: 6px 0; color: var(--muted-2); font-size: 18px; }
+  .step-add-btn { margin: 12px auto; display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--panel); border: 1px dashed var(--muted-2); border-radius: 10px; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .step-add-btn:hover { border-color: var(--accent-2); color: var(--accent-2); background: var(--accent-soft); }
 
   /* ============ MAIN ============ */
   #main { display: grid; grid-template-columns: auto 1fr; position: relative; overflow: hidden; }
@@ -112,6 +142,7 @@
   .pic.t-reassign { background: var(--c-reassign); color: var(--c-reassign-fg); }
   .pic.t-jump { background: var(--c-jump); color: var(--c-jump-fg); }
   .pic.t-end { background: var(--c-end); color: var(--c-end-fg); }
+  .pic.t-skip_end { background: var(--c-skip_end); color: var(--c-skip_end-fg); }
 
   /* ============ CANVAS ============ */
   #canvas-wrap {
@@ -165,6 +196,7 @@
   .node.t-jump .badge { background: var(--c-jump); color: var(--c-jump-fg); }
   .node.t-end { border-radius: 24px; padding: 10px 22px; width: 220px; text-align: center; }
   .node.t-end .badge { background: var(--c-end); color: var(--c-end-fg); }
+  .node.t-skip_end .badge { background: var(--c-skip_end); color: var(--c-skip_end-fg); }
 
   /* Per-option rows with their own ports — FIXED HEIGHTS */
   .node .options { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 5px; }
@@ -212,6 +244,8 @@
   .port.right  { right: -6px;  top: 28px; }
   .port.bottom { bottom: -6px; left: 50%; transform: translateX(-50%); }
   .port.left   { left: -6px;   top: 28px; }
+  /* Short / end nodes: center the port vertically so the connection lands at card middle */
+  .node.t-end .port.right, .node.t-end .port.left { top: 50%; margin-top: -7px; }
   .port.top:hover, .port.top.hot { transform: translateX(-50%) scale(1.4); }
   .port.bottom:hover, .port.bottom.hot { transform: translateX(-50%) scale(1.4); }
 
@@ -333,6 +367,10 @@
       <div class="step-chip"><span class="n">3</span>Review</div>
     </div>
     <div class="spacer"></div>
+    <div class="view-toggle">
+      <button data-view="canvas" id="vt-canvas" class="active">⇆ Horizontal</button>
+      <button data-view="stepped" id="vt-stepped">↓ Vertical</button>
+    </div>
     <button class="h-pill-btn" id="btn-templates">📚 Templates</button>
     <button class="h-pill-btn primary" id="btn-save-tpl">💾 Save as template</button>
     <div class="avs">
@@ -360,6 +398,7 @@
     <div id="canvas-wrap">
       <svg id="edges"></svg>
       <div id="canvas"></div>
+      <div id="stepped-view"></div>
 
       <div class="canvas-top">
         <div class="filter-chip">📊 <span id="filter-flow">Flow</span></div>
@@ -441,6 +480,7 @@ const NTYPES = {
   sensor:      { label: 'Sensor reading',        icon: '📡', group: 'step', help: 'Read a sensor by Tag — thresholds (Safe/Warning/Critical) are inherited from the tag and can be overridden.' },
   reassign:    { label: 'Reassign',              icon: '↻',  group: 'help', help: 'Hand the flow off to another role / user.' },
   waiting:     { label: 'Waiting',               icon: '⏱', group: 'help', help: 'Pause the flow for a configurable duration before continuing.' },
+  skip_end:    { label: 'Skip to the end',       icon: '⏭', group: 'help', help: 'Operator bypass — auto-chains to Photo + RCA capture then Done. Use when the operator wants to abandon the diagnostic.' },
   jump:        { label: 'Jump to flow',          icon: '↗',  group: 'help', help: 'Transition to another flow in the tree. Use to chain root-cause flows or hand off to a related diagnostic.' },
   end:         { label: 'Done',                  icon: '■',  group: 'help', help: 'Terminates the flow. The flow ends here.' }
 };
@@ -457,14 +497,11 @@ const SENSOR_TAGS = [
 ];
 
 const ACTION_TYPES = [
-  { id: 'photo',     label: 'Photo upload' },
-  { id: 'message',   label: 'Send message' },
-  { id: 'call',      label: 'Call supervisor' },
-  { id: 'form',      label: 'Form input' },
-  { id: 'rca',       label: 'RCA selector' },
-  { id: 'photo_rca', label: 'Photo + RCA' },
-  { id: 'escalate',  label: 'Escalate' },
-  { id: 'custom',    label: 'Custom' }
+  { id: 'photo',     label: 'Photo upload', userSelect: false },
+  { id: 'message',   label: 'Send message', userSelect: true },
+  { id: 'call',      label: 'Call supervisor', userSelect: true },
+  { id: 'escalate',  label: 'Escalate', userSelect: true },
+  { id: 'custom',    label: 'Custom', userSelect: false }
 ];
 const ROLES = ['Supervisor','Maintenance','Process Engineer','Lab Technician','Field Operator','Custom'];
 
@@ -592,6 +629,7 @@ let curTree, curFlow;
 let selection = null;
 let pan = { x: 0, y: 0 }, zoom = 1;
 let dragInProgress = false;
+let viewMode = localStorage.getItem('flowconfig-view') || 'canvas';
 
 const canvas = document.getElementById('canvas');
 const edgesSvg = document.getElementById('edges');
@@ -641,6 +679,14 @@ document.getElementById('btn-collapse').onclick = () => {
   document.getElementById('sidebar').classList.toggle('collapsed');
 };
 document.getElementById('palette-search').oninput = renderPalette;
+document.getElementById('vt-canvas').onclick = () => setViewMode('canvas');
+document.getElementById('vt-stepped').onclick = () => setViewMode('stepped');
+function setViewMode(m) {
+  viewMode = m;
+  try { localStorage.setItem('flowconfig-view', m); } catch (_) {}
+  render();
+  if (m === 'canvas') fitView();
+}
 
 // =============================================================
 // Header
@@ -674,20 +720,29 @@ let inlineEditingId = null; // id of node whose card text is being edited inline
 function render(opts) {
   opts = opts || {};
   refreshHeader();
-  if (!inlineEditingId) {
-    canvas.innerHTML = '';
-    curFlow.nodes.forEach(n => canvas.appendChild(renderNode(n)));
-    curFlow.nodes.forEach(n => {
-      if ((n.type === 'question' || n.type === 'rootcause') && n.options) cacheOptOffsets(n);
-      if (n.type === 'sensor') cacheThresholdOffsets(n);
-    });
-    renderEdges();
+  // Apply view mode visibility
+  wrap.classList.toggle('stepped', viewMode === 'stepped');
+  document.getElementById('stepped-view').classList.toggle('active', viewMode === 'stepped');
+  document.getElementById('vt-canvas').classList.toggle('active', viewMode === 'canvas');
+  document.getElementById('vt-stepped').classList.toggle('active', viewMode === 'stepped');
+
+  if (viewMode === 'canvas') {
+    if (!inlineEditingId) {
+      canvas.innerHTML = '';
+      curFlow.nodes.forEach(n => canvas.appendChild(renderNode(n)));
+      curFlow.nodes.forEach(n => {
+        if ((n.type === 'question' || n.type === 'rootcause') && n.options) cacheOptOffsets(n);
+        if (n.type === 'sensor') cacheThresholdOffsets(n);
+      });
+      renderEdges();
+    } else {
+      renderEdges();
+    }
+    applyTransform();
   } else {
-    // Inline editing — only update edges (positions may have changed) and skip rebuilding card DOM
-    renderEdges();
+    if (!inlineEditingId) renderStepped();
   }
   if (selection && !opts.skipInspector) renderInspector();
-  applyTransform();
   persist();
 }
 function cacheOptOffsets(n) {
@@ -732,7 +787,7 @@ function renderNode(n) {
     const at = ACTION_TYPES.find(a => a.id === n.actionType);
     if (at) {
       sub = '⚙ ' + at.label;
-      if (n.actionType === 'escalate' && n.escalateRole) sub += ' → ' + n.escalateRole + (n.escalateUser ? ' (' + n.escalateUser + ')' : '');
+      if (at.userSelect && n.escalateRole) sub += ' → ' + n.escalateRole + (n.escalateUser ? ' (' + n.escalateUser + ')' : '');
     }
   }
   if (n.type === 'sensor') {
@@ -741,6 +796,7 @@ function renderNode(n) {
       if (tag) sub = '🏷 ' + tag.label + ' · ' + tag.unit;
     } else if (n.sensorName) sub = '🏷 ' + n.sensorName + (n.unit ? ' · ' + n.unit : '');
   }
+  if (n.type === 'skip_end') sub = '→ Photo + RCA → Done';
 
   // Build inner HTML
   const seqChip = (n.type === 'question' && n.sequence) ? `<div style="margin-left:auto;font-size:10px;background:var(--accent-soft);color:var(--accent-2);padding:2px 7px;border-radius:4px;font-weight:700">#${n.sequence}</div>` : '';
@@ -834,6 +890,135 @@ function routeLabel(route) {
 }
 
 // =============================================================
+// Stepped (vertical) view — same data, list layout
+// =============================================================
+function renderStepped() {
+  const sv = document.getElementById('stepped-view');
+  // Order: walk from trigger via edges + options, BFS; fallback to array order
+  const order = orderNodesForStepped();
+  let h = `<div class="step-stack">`;
+  order.forEach((n, i) => {
+    h += renderStepCard(n, i);
+    if (i < order.length - 1) h += `<div class="step-arrow">↓</div>`;
+  });
+  h += `<button class="step-add-btn" id="step-add">＋ Add step</button>`;
+  h += `</div>`;
+  sv.innerHTML = h;
+  // Bind handlers
+  sv.querySelectorAll('.step-card').forEach(card => {
+    const id = card.dataset.id;
+    const n = curFlow.nodes.find(x => x.id === id);
+    if (!n) return;
+    card.addEventListener('click', e => {
+      if (e.target.closest('.label') || e.target.closest('input') || e.target.closest('select') || e.target.closest('button')) return;
+      selection = { kind: 'node', id: n.id };
+      openInspector();
+      render({ skipInspector: false });
+    });
+    const lbl = card.querySelector('.label');
+    if (lbl) {
+      lbl.addEventListener('focus', () => { inlineEditingId = n.id; });
+      lbl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lbl.blur(); } });
+      lbl.addEventListener('input', () => { n.label = lbl.textContent; persist(); });
+      lbl.addEventListener('blur', () => { inlineEditingId = null; render({ skipInspector: true }); });
+    }
+    card.querySelectorAll('.branch-row input').forEach(inp => {
+      inp.oninput = e => {
+        const oid = e.target.dataset.opt;
+        const opt = n.options.find(o => o.id === oid);
+        if (opt) { opt.text = e.target.value; persist(); }
+      };
+    });
+    card.querySelectorAll('.branch-row select').forEach(sel => {
+      sel.onchange = e => {
+        const oid = e.target.dataset.opt;
+        const opt = n.options.find(o => o.id === oid);
+        if (opt) { opt.route = e.target.value; render(); }
+      };
+    });
+    const del = card.querySelector('.delcard');
+    if (del) del.onclick = ev => { ev.stopPropagation(); deleteNode(n.id); };
+  });
+  document.getElementById('step-add').onclick = () => {
+    // Use insert popover at end
+    const r = wrap.getBoundingClientRect();
+    openInsertPopover(null, null, 0, 0, r.left + r.width / 2, r.top + r.height / 2);
+  };
+}
+
+function orderNodesForStepped() {
+  const visited = new Set();
+  const out = [];
+  const start = curFlow.nodes.find(n => n.type === 'trigger') || curFlow.nodes[0];
+  if (!start) return [];
+  const queue = [start.id];
+  while (queue.length) {
+    const id = queue.shift();
+    if (visited.has(id)) continue;
+    visited.add(id);
+    const n = curFlow.nodes.find(x => x.id === id);
+    if (!n) continue;
+    out.push(n);
+    // Follow regular edges
+    curFlow.edges.filter(e => e.from === id).forEach(e => { if (!visited.has(e.to)) queue.push(e.to); });
+    // Follow option / threshold routes
+    if (n.options) n.options.forEach(o => { if (o.route && o.route.startsWith('node:') && !visited.has(o.route.slice(5))) queue.push(o.route.slice(5)); });
+    if (n.thresholds) n.thresholds.forEach(t => { if (t.route && t.route.startsWith('node:') && !visited.has(t.route.slice(5))) queue.push(t.route.slice(5)); });
+  }
+  // Append any orphan nodes
+  curFlow.nodes.forEach(n => { if (!visited.has(n.id)) out.push(n); });
+  return out;
+}
+
+function renderStepCard(n, idx) {
+  const m = NTYPES[n.type] || NTYPES.action;
+  const sel = selection && selection.kind === 'node' && selection.id === n.id ? ' selected' : '';
+  let sub = stepCardSub(n);
+  let branches = '';
+  if ((n.type === 'question' || n.type === 'rootcause') && n.options) {
+    branches = `<div class="branches">` + n.options.map((o, i) => {
+      const seq = o.sequence || i + 1;
+      return `<div class="branch-row">
+        <div class="bn">${seq}</div>
+        <input data-opt="${o.id}" value="${escapeHtml(o.text || '')}" placeholder="${n.type === 'rootcause' ? 'Root cause name' : 'Option text'}">
+        <select data-opt="${o.id}">${destOpts(n.id, o.route, n.type === 'rootcause')}</select>
+      </div>`;
+    }).join('') + `</div>`;
+  }
+  if (n.type === 'sensor' && n.thresholds) {
+    branches = `<div class="branches">` + n.thresholds.map(t => {
+      return `<div class="branch-row">
+        <div class="bn" style="background:${t.id==='safe'?'var(--green)':t.id==='warn'?'var(--yellow)':'var(--red)'}">${t.id==='safe'?'S':t.id==='warn'?'W':'C'}</div>
+        <input value="${escapeHtml(t.label)}" disabled>
+        <select disabled><option>${routeLabel(t.route)}</option></select>
+      </div>`;
+    }).join('') + `</div>`;
+  }
+  return `<div class="step-card${sel}" data-id="${n.id}">
+    <button class="delcard" title="Delete">×</button>
+    <div class="nhead">
+      <div class="step-num">${idx + 1}</div>
+      <div class="badge" style="background:var(--c-${n.type});color:var(--c-${n.type}-fg)">${m.label}</div>
+    </div>
+    <div class="label" contenteditable="true" spellcheck="false">${escapeHtml(n.label || '(untitled)')}</div>
+    ${sub ? `<div class="sub">${escapeHtml(sub)}</div>` : ''}
+    ${branches}
+  </div>`;
+}
+function stepCardSub(n) {
+  if (n.type === 'jump' && n.targetFlow) { const tg = curTree.flows.find(f => f.id === n.targetFlow); return '→ ' + (tg ? tg.name : '(unset)'); }
+  if (n.type === 'waiting') { if ((n.waitMode||'time')==='time' && n.waitValue!=null) return '⏱ ' + n.waitValue + ' ' + (n.waitUnit||'minutes'); if (n.waitMode==='event' && n.waitEvent) return '⚡ ' + n.waitEvent; }
+  if (n.type === 'reassign' && n.role) return '👤 ' + n.role + (n.userName ? ' · ' + n.userName : '');
+  if ((n.type === 'action' || n.type === 'answer') && n.actionType) {
+    const at = ACTION_TYPES.find(a => a.id === n.actionType);
+    if (at) return '⚙ ' + at.label + (at.userSelect && n.escalateRole ? ' → ' + n.escalateRole + (n.escalateUser ? ' ('+n.escalateUser+')' : '') : '');
+  }
+  if (n.type === 'sensor') { const tag = SENSOR_TAGS.find(s => s.id === n.sensorTag); return tag ? '🏷 ' + tag.label + ' · ' + tag.unit : (n.sensorName ? '🏷 ' + n.sensorName : ''); }
+  if (n.type === 'skip_end') return '→ Photo + RCA → Done';
+  return n.sub || '';
+}
+
+// =============================================================
 // Edge rendering — uses cached option/threshold offsets for stable endpoints
 // =============================================================
 function renderEdges() {
@@ -874,6 +1059,8 @@ function renderEdges() {
     const bEl = canvas.querySelector(`[data-id="${b.id}"]`);
     if (!aEl || !bEl) continue;
 
+    // Port centers: right/left ports are at top:28 (CSS) with 12px diameter → center y = 34
+    const PORT_Y = 34;
     let ax, ay;
     if (e.fromOption && a._optY && a._optY[e.fromOption] != null) {
       ax = a.x + aEl.offsetWidth;
@@ -883,10 +1070,11 @@ function renderEdges() {
       ay = a.y + a._thrY[e.fromThreshold];
     } else {
       ax = a.x + aEl.offsetWidth;
-      ay = a.y + aEl.offsetHeight / 2;
+      // Short cards (end, etc.) center the port; tall cards anchor at top:28
+      ay = a.y + (aEl.offsetHeight < 70 ? aEl.offsetHeight / 2 : PORT_Y);
     }
     const bx = b.x;
-    const by = b.y + (bEl.offsetHeight > 80 ? 28 : bEl.offsetHeight / 2);
+    const by = b.y + (bEl.offsetHeight < 70 ? bEl.offsetHeight / 2 : PORT_Y);
 
     const isSel = selection && selection.kind === 'edge' && selection.id === e.id;
     let stroke = '#94a3b8', marker = 'arrow';
@@ -895,8 +1083,22 @@ function renderEdges() {
     else if (e.marker === 'warn') { stroke = '#f59e0b'; marker = 'arrow-y'; }
     else if (e.marker === 'crit') { stroke = '#ef4444'; marker = 'arrow-r'; }
 
-    const dx = Math.max(40, Math.abs(bx - ax) * 0.4);
-    const d = `M ${ax} ${ay} C ${ax + dx} ${ay}, ${bx - dx} ${by}, ${bx} ${by}`;
+    let d;
+    if (bx > ax + 20) {
+      // Normal left → right
+      const dx = Math.max(40, (bx - ax) * 0.5);
+      d = `M ${ax} ${ay} C ${ax + dx} ${ay}, ${bx - dx} ${by}, ${bx} ${by}`;
+    } else {
+      // Target is behind / overlapping source — route around with vertical offset
+      const goDown = (by + ay) / 2 < (a.y + aEl.offsetHeight + 80);
+      const peakY = goDown ? Math.max(a.y + aEl.offsetHeight, b.y + bEl.offsetHeight) + 60
+                           : Math.min(a.y, b.y) - 60;
+      const stepOut = 80;
+      d = `M ${ax} ${ay}
+           C ${ax + stepOut} ${ay}, ${ax + stepOut} ${peakY}, ${ax + stepOut - 20} ${peakY}
+           L ${bx - stepOut + 20} ${peakY}
+           C ${bx - stepOut} ${peakY}, ${bx - stepOut} ${by}, ${bx} ${by}`;
+    }
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', d);
     path.setAttribute('stroke', stroke);
@@ -956,11 +1158,13 @@ function renderInspector() {
       ACTION_TYPES.forEach(a => h += `<option value="${a.id}" ${n.actionType === a.id ? 'selected' : ''}>${a.label}</option>`);
       h += `</select>`;
       if (n.actionType === 'custom') h += `<label>Custom action name</label><input id="i-custact" value="${escapeHtml(n.customAction || '')}">`;
-      if (n.actionType === 'escalate') {
-        h += `<label>Escalate to role</label><select id="i-erole"><option value="">— pick role —</option>`;
+      const at = ACTION_TYPES.find(a => a.id === n.actionType);
+      if (at && at.userSelect) {
+        const verb = n.actionType === 'escalate' ? 'Escalate to' : n.actionType === 'message' ? 'Send to' : 'Call';
+        h += `<label>${verb} (role)</label><select id="i-erole"><option value="">— pick role —</option>`;
         ROLES.forEach(r => h += `<option value="${r}" ${n.escalateRole === r ? 'selected' : ''}>${r}</option>`);
         h += `</select>`;
-        h += `<label>Escalate to (user — optional)</label><input id="i-euser" value="${escapeHtml(n.escalateUser || '')}" placeholder="e.g. R. Sharma">`;
+        h += `<label>${verb} (user — optional)</label><input id="i-euser" value="${escapeHtml(n.escalateUser || '')}" placeholder="e.g. R. Sharma">`;
       }
     }
     if (n.type === 'reassign') {
