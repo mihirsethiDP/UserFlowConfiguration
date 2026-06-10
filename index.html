@@ -117,6 +117,14 @@
   .step-unrouted { font-size: 12px; color: var(--muted); padding: 8px 12px; background: #fffbeb; border: 1px dashed #fbbf24; border-radius: 8px; }
   .step-loopback { font-size: 11.5px; color: var(--muted); padding: 8px 12px; background: var(--panel-soft); border-radius: 8px; font-style: italic; }
   .step-done-card { font-size: 12px; color: var(--c-end-fg); padding: 8px 14px; background: var(--c-end); border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+  /* Side-by-side branches when all options route to flows (root-cause sketch style) */
+  .branch-row-fan { display: flex; gap: 12px; justify-content: center; margin-top: 14px; padding-top: 14px; position: relative; flex-wrap: wrap; }
+  .branch-row-fan::before { content: ''; position: absolute; top: 0; left: 50%; width: 2px; height: 14px; background: var(--border); }
+  .fan-col { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 160px; max-width: 200px; position: relative; }
+  .fan-col::before { content: ''; position: absolute; top: -14px; left: 50%; width: 2px; height: 14px; background: var(--border); }
+  .fan-port { width: 12px; height: 12px; background: #fff; border: 2px solid var(--muted-2); border-radius: 50%; margin-top: -7px; }
+  .fan-label { font-size: 11px; font-weight: 600; color: var(--text); text-align: center; line-height: 1.3; padding: 0 4px; }
+  .fan-col .step-flow-card { width: 100%; }
 
   /* ============ MAIN ============ */
   #main { display: grid; grid-template-columns: auto 1fr; position: relative; overflow: hidden; }
@@ -230,17 +238,25 @@
   .node .opt-row .opt-rt { font-size: 9.5px; color: var(--muted); background: #fff; padding: 1px 6px; border-radius: 3px; border: 1px solid var(--border); cursor: pointer; }
   .node .opt-row .opt-rt:hover { border-color: var(--accent-2); color: var(--accent-2); }
 
-  /* The PER-OPTION port — child of its row, follows naturally during drag */
+  /* PER-OPTION ports distributed along the BOTTOM edge of the card */
   .node .opt-port {
-    position: absolute; right: -7px; top: 50%; transform: translateY(-50%);
+    position: absolute; bottom: -7px;
     width: 14px; height: 14px; background: #fff; border: 2px solid var(--muted-2);
     border-radius: 50%; cursor: crosshair; transition: all 0.15s; z-index: 3;
+    transform: translateX(-50%);
   }
-  .node .opt-port:hover, .node .opt-port.hot { background: var(--accent-2); border-color: var(--accent-2); transform: translateY(-50%) scale(1.4); box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
-  /* Per-option / per-threshold + insert button */
-  .node .opt-add-btn { position: absolute; right: -32px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; border: none; cursor: pointer; font-size: 14px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; opacity: 0; transition: all 0.15s; z-index: 3; box-shadow: var(--shadow-sm); }
-  .node:hover .opt-add-btn { opacity: 1; }
-  .node .opt-add-btn:hover { background: #059669; transform: translateY(-50%) scale(1.15); }
+  .node .opt-port:hover, .node .opt-port.hot { background: var(--accent-2); border-color: var(--accent-2); transform: translateX(-50%) scale(1.35); box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
+  .opt-port-num {
+    position: absolute; bottom: -28px;
+    transform: translateX(-50%);
+    background: var(--accent-2); color: #fff;
+    font-size: 9.5px; font-weight: 700;
+    padding: 2px 6px; border-radius: 4px;
+    pointer-events: none; white-space: nowrap;
+  }
+  .opt-port-num.safe { background: var(--green); }
+  .opt-port-num.warn { background: var(--yellow); color: #fff; }
+  .opt-port-num.crit { background: var(--red); }
 
   /* Add-branch row */
   .node .opt-add { padding: 5px 8px; height: 26px; background: transparent; border: 1px dashed var(--border); border-radius: 6px; color: var(--muted); font-size: 11px; cursor: pointer; text-align: center; font-weight: 600; }
@@ -263,19 +279,17 @@
     cursor: crosshair; transition: all 0.15s; z-index: 3;
   }
   .port:hover, .port.hot { background: var(--accent-2); border-color: var(--accent-2); transform: scale(1.4); box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
-  .port.top    { top: -6px;    left: 50%; transform: translateX(-50%); }
-  .port.right  { right: -6px;  top: 28px; }
-  .port.bottom { bottom: -6px; left: 50%; transform: translateX(-50%); }
-  .port.left   { left: -6px;   top: 28px; }
-  /* Short / end nodes: center the port vertically so the connection lands at card middle */
-  .node.t-end .port.right, .node.t-end .port.left { top: 50%; margin-top: -7px; }
-  .port.top:hover, .port.top.hot { transform: translateX(-50%) scale(1.4); }
-  .port.bottom:hover, .port.bottom.hot { transform: translateX(-50%) scale(1.4); }
+  /* Top-down flow direction — input on top, output on bottom */
+  .port.top    { top: -7px;    left: 50%; transform: translateX(-50%); }
+  .port.bottom { bottom: -7px; left: 50%; transform: translateX(-50%); }
+  .port.top:hover, .port.top.hot, .port.bottom:hover, .port.bottom.hot { transform: translateX(-50%) scale(1.35); }
+  /* Legacy left/right kept for backward-compat but hidden */
+  .port.left, .port.right { display: none; }
 
-  /* The little "+" button beside a port on hover — shortcut to insert */
+  /* The little "+" button below the bottom output port — shortcut to insert next step */
   .node:hover .port-add { opacity: 1; }
-  .port-add { position: absolute; right: -32px; top: 28px; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; border: none; cursor: pointer; font-size: 13px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; opacity: 0; transition: all 0.15s; box-shadow: var(--shadow-sm); z-index: 3; }
-  .port-add:hover { background: #059669; transform: scale(1.15); }
+  .port-add { position: absolute; bottom: -34px; left: 50%; transform: translateX(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; border: none; cursor: pointer; font-size: 14px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; opacity: 0; transition: all 0.15s; box-shadow: var(--shadow-sm); z-index: 3; }
+  .port-add:hover { background: #059669; transform: translateX(-50%) scale(1.15); }
 
   /* ============ ZOOM PILL ============ */
   .zoom-pill { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--header); color: #fff; border-radius: 999px; padding: 5px 8px; display: flex; align-items: center; gap: 4px; font-size: 12.5px; box-shadow: var(--shadow-md); z-index: 5; }
@@ -434,6 +448,7 @@
         <span class="lvl" id="zoom-lvl">100%</span>
         <button id="zoom-in">+</button>
         <span class="div"></span>
+        <button id="auto-layout-btn" title="Auto-arrange top-down">⤓ Layout</button>
         <button id="zoom-fit">⊡ Fit</button>
       </div>
       <div class="quick-pill" id="quick-add">＋ Quick add <span class="qa-btn">⌘K</span></div>
@@ -534,7 +549,7 @@ const ROLES = ['Supervisor','Maintenance','Process Engineer','Lab Technician','F
 const data = { trees: [] };
 let nextId = 1000;
 function uid(p) { return `${p}${++nextId}`; }
-const STORAGE_KEY = 'flowconfig-v5';
+const STORAGE_KEY = 'flowconfig-v6';
 const TEMPLATES_KEY = 'flowconfig-templates-v1';
 
 function persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (_) {} }
@@ -836,7 +851,7 @@ function renderNode(n) {
 
   if (isBranching) {
     const sortedOpts = [...n.options].map((o, i) => ({ o, i })).sort((a, b) => (a.o.sequence || a.i + 1) - (b.o.sequence || b.i + 1));
-    inner += `<div class="options">` + sortedOpts.map(({ o, i }) => {
+    inner += `<div class="options">` + sortedOpts.map(({ o, i }, displayIdx) => {
       const rt = routeLabel(o.route);
       const seq = o.sequence || i + 1;
       const isFlow = o.route && o.route.startsWith('flow:');
@@ -846,10 +861,16 @@ function renderNode(n) {
         <div class="opt-num">${seq}</div>
         <div class="opt-text" contenteditable="true" spellcheck="false" data-edit-opt="${o.id}" title="Click to edit">${escapeHtml(o.text)}</div>
         <div class="opt-rt" title="Click to change destination — ${escapeHtml(rt)}" style="${rtStyle}" ${jumpAttr} data-pick-route="${o.id}">${escapeHtml(rt)}</div>
-        <div class="opt-port" data-opt-port="${o.id}"></div>
-        <button class="opt-add-btn" data-add-from-opt="${o.id}" title="Insert next step">+</button>
       </div>`;
     }).join('') + `<div class="opt-add" data-add-opt="1">+ Add ${n.type === 'rootcause' ? 'root cause' : 'option'}</div></div>`;
+    // Bottom-edge ports — one per option, distributed horizontally
+    sortedOpts.forEach(({ o, i }, displayIdx) => {
+      const pct = ((displayIdx + 1) / (sortedOpts.length + 1)) * 100;
+      const seq = o.sequence || i + 1;
+      inner += `<div class="opt-port" data-opt-port="${o.id}" style="left:${pct}%"></div>`;
+      inner += `<div class="opt-port-num" style="left:${pct}%">${seq}</div>`;
+    });
+    inner += `<div class="port top" data-port="top"></div>`;
   } else if (isSensor && n.thresholds) {
     inner += `<div class="thresholds">` + n.thresholds.map(t => {
       const c = t.id === 'safe' ? 'safe' : t.id === 'warn' ? 'warn' : 'crit';
@@ -858,24 +879,23 @@ function renderNode(n) {
         <div class="thr-dot ${c}"></div>
         <div class="lbl">${escapeHtml(t.label)}</div>
         <div class="range">${range} ${n.unit || ''}</div>
-        <div class="opt-port" data-thr-port="${t.id}"></div>
-        <button class="opt-add-btn" data-add-from-thr="${t.id}" title="Insert next step">+</button>
       </div>`;
     }).join('') + `</div>`;
+    n.thresholds.forEach((t, i) => {
+      const pct = ((i + 1) / (n.thresholds.length + 1)) * 100;
+      const cls = t.id === 'safe' ? 'safe' : t.id === 'warn' ? 'warn' : 'crit';
+      const letter = t.id === 'safe' ? 'S' : t.id === 'warn' ? 'W' : 'C';
+      inner += `<div class="opt-port" data-thr-port="${t.id}" style="left:${pct}%"></div>`;
+      inner += `<div class="opt-port-num ${cls}" style="left:${pct}%">${letter}</div>`;
+    });
+    inner += `<div class="port top" data-port="top"></div>`;
   } else {
-    // generic 4-side ports for non-branching nodes
+    // Non-branching: input top, output bottom (with quick-add +)
+    if (n.type !== 'trigger') inner += `<div class="port top" data-port="top"></div>`;
     if (n.type !== 'end') {
-      inner += `<div class="port right" data-port="right"></div>`;
+      inner += `<div class="port bottom" data-port="bottom"></div>`;
       inner += `<button class="port-add" title="Add next step">+</button>`;
     }
-    if (n.type !== 'trigger') inner += `<div class="port left" data-port="left"></div>`;
-    inner += `<div class="port top" data-port="top"></div>`;
-    if (n.type !== 'end') inner += `<div class="port bottom" data-port="bottom"></div>`;
-  }
-
-  // Input port (left side) for branching nodes too
-  if (isBranching || isSensor) {
-    inner += `<div class="port left" data-port="left" style="top:28px"></div>`;
   }
 
   el.innerHTML = inner;
@@ -1020,13 +1040,33 @@ function renderStepTree(node, visited, depth, counter) {
     h += renderBranchTarget(branches[0], visited, depth, counter);
     return h;
   }
-  // Multiple branches — render each in its own group, indented
+  // If ALL branches are flow links → render side-by-side row (root-cause sketch style)
+  const allFlowLinks = branches.length > 1 && branches.every(b => b.route && b.route.startsWith('flow:'));
+  if (allFlowLinks) {
+    h += `<div class="branch-row-fan">`;
+    branches.forEach((br, i) => {
+      const seq = br.sequence || (i + 1);
+      const fid = br.route.slice(5);
+      const f = curTree.flows.find(x => x.id === fid);
+      h += `<div class="fan-col">
+        <div class="fan-port"></div>
+        <div class="fan-label">${seq}. ${escapeHtml(br.label || '')}</div>
+        <div class="step-flow-card" data-jump-flow="${fid}">
+          <div class="lbl">↗ DIAGNOSTIC FLOW</div>
+          <div class="nm">${escapeHtml(f ? f.name : '(unknown)')}</div>
+          <div class="arrow">›</div>
+        </div>
+      </div>`;
+    });
+    h += `</div>`;
+    return h;
+  }
+
+  // Default: each branch in its own group, indented
   h += `<div class="branch-group">`;
   branches.forEach((br, i) => {
     const seq = br.sequence || (i + 1);
-    // Branch label (shown above branch's target)
     if (br.route && br.route.startsWith('flow:')) {
-      // Flow link — collapse the branch to a flow card
       const fid = br.route.slice(5);
       const f = curTree.flows.find(x => x.id === fid);
       h += `<div class="branch-label flow-link" data-jump-flow="${fid}">
@@ -1205,22 +1245,28 @@ function renderEdges() {
     const bEl = canvas.querySelector(`[data-id="${b.id}"]`);
     if (!aEl || !bEl) continue;
 
-    // Port centers: right/left ports are at top:28 (CSS) with 12px diameter → center y = 34
-    const PORT_Y = 34;
-    let ax, ay;
-    if (e.fromOption && a._optY && a._optY[e.fromOption] != null) {
-      ax = a.x + aEl.offsetWidth;
-      ay = a.y + a._optY[e.fromOption];
-    } else if (e.fromThreshold && a._thrY && a._thrY[e.fromThreshold] != null) {
-      ax = a.x + aEl.offsetWidth;
-      ay = a.y + a._thrY[e.fromThreshold];
+    // Top-down: source bottom → target top. Per-option ports distributed along bottom edge.
+    let ax, ay, bx, by;
+    const aW = aEl.offsetWidth, aH = aEl.offsetHeight;
+    const bW = bEl.offsetWidth;
+    if (e.fromOption && a.options) {
+      // Find the option's display index (sorted by sequence)
+      const sorted = [...a.options].map((o,i)=>({o,i})).sort((p,q)=>(p.o.sequence||p.i+1)-(q.o.sequence||q.i+1));
+      const idx = sorted.findIndex(s => s.o.id === e.fromOption);
+      const pct = (idx + 1) / (sorted.length + 1);
+      ax = a.x + aW * pct;
+      ay = a.y + aH;
+    } else if (e.fromThreshold && a.thresholds) {
+      const idx = a.thresholds.findIndex(t => t.id === e.fromThreshold);
+      const pct = (idx + 1) / (a.thresholds.length + 1);
+      ax = a.x + aW * pct;
+      ay = a.y + aH;
     } else {
-      ax = a.x + aEl.offsetWidth;
-      // Short cards (end, etc.) center the port; tall cards anchor at top:28
-      ay = a.y + (aEl.offsetHeight < 70 ? aEl.offsetHeight / 2 : PORT_Y);
+      ax = a.x + aW / 2;
+      ay = a.y + aH;
     }
-    const bx = b.x;
-    const by = b.y + (bEl.offsetHeight < 70 ? bEl.offsetHeight / 2 : PORT_Y);
+    bx = b.x + bW / 2;
+    by = b.y;
 
     const isSel = selection && selection.kind === 'edge' && selection.id === e.id;
     let stroke = '#94a3b8', marker = 'arrow';
@@ -1230,20 +1276,20 @@ function renderEdges() {
     else if (e.marker === 'crit') { stroke = '#ef4444'; marker = 'arrow-r'; }
 
     let d;
-    if (bx > ax + 20) {
-      // Normal left → right
-      const dx = Math.max(40, (bx - ax) * 0.5);
-      d = `M ${ax} ${ay} C ${ax + dx} ${ay}, ${bx - dx} ${by}, ${bx} ${by}`;
+    if (by > ay + 20) {
+      // Normal top → bottom
+      const dy = Math.max(40, (by - ay) * 0.5);
+      d = `M ${ax} ${ay} C ${ax} ${ay + dy}, ${bx} ${by - dy}, ${bx} ${by}`;
     } else {
-      // Target is behind / overlapping source — route around with vertical offset
-      const goDown = (by + ay) / 2 < (a.y + aEl.offsetHeight + 80);
-      const peakY = goDown ? Math.max(a.y + aEl.offsetHeight, b.y + bEl.offsetHeight) + 60
-                           : Math.min(a.y, b.y) - 60;
-      const stepOut = 80;
+      // Target is above source — route around with horizontal detour
+      const goRight = bx >= ax;
+      const side = goRight ? Math.max(a.x + aEl.offsetWidth, b.x + bEl.offsetWidth) + 60
+                           : Math.min(a.x, b.x) - 60;
+      const stepDown = 60;
       d = `M ${ax} ${ay}
-           C ${ax + stepOut} ${ay}, ${ax + stepOut} ${peakY}, ${ax + stepOut - 20} ${peakY}
-           L ${bx - stepOut + 20} ${peakY}
-           C ${bx - stepOut} ${peakY}, ${bx - stepOut} ${by}, ${bx} ${by}`;
+           C ${ax} ${ay + stepDown}, ${side} ${ay + stepDown}, ${side} ${ay}
+           L ${side} ${by}
+           C ${side} ${by - stepDown}, ${bx} ${by - stepDown}, ${bx} ${by}`;
     }
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', d);
@@ -1553,16 +1599,19 @@ function attachPortHandler(port, n, sub) {
   port.addEventListener('mousedown', ev => {
     ev.stopPropagation();
     const el = canvas.querySelector(`[data-id="${n.id}"]`);
+    const w = el.offsetWidth, h = el.offsetHeight;
     let A;
-    if (sub && sub.kind === 'option') A = { x: n.x + el.offsetWidth, y: n.y + (n._optY?.[sub.id] || 30) };
-    else if (sub && sub.kind === 'threshold') A = { x: n.x + el.offsetWidth, y: n.y + (n._thrY?.[sub.id] || 30) };
-    else {
-      const side = port.dataset.port || 'right';
-      const w = el.offsetWidth, h = el.offsetHeight;
-      A = side === 'right' ? { x: n.x + w, y: n.y + 28 } :
-          side === 'left'  ? { x: n.x,     y: n.y + 28 } :
-          side === 'top'   ? { x: n.x + w/2, y: n.y } :
-                             { x: n.x + w/2, y: n.y + h };
+    if (sub && sub.kind === 'option' && n.options) {
+      const sorted = [...n.options].map((o,i)=>({o,i})).sort((p,q)=>(p.o.sequence||p.i+1)-(q.o.sequence||q.i+1));
+      const idx = sorted.findIndex(s => s.o.id === sub.id);
+      A = { x: n.x + w * (idx + 1) / (sorted.length + 1), y: n.y + h };
+    } else if (sub && sub.kind === 'threshold' && n.thresholds) {
+      const idx = n.thresholds.findIndex(t => t.id === sub.id);
+      A = { x: n.x + w * (idx + 1) / (n.thresholds.length + 1), y: n.y + h };
+    } else {
+      const side = port.dataset.port || 'bottom';
+      A = side === 'top'    ? { x: n.x + w/2, y: n.y } :
+                              { x: n.x + w/2, y: n.y + h };
     }
     const tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     tempPath.setAttribute('stroke', '#6366f1');
@@ -1575,8 +1624,8 @@ function attachPortHandler(port, n, sub) {
       const r = wrap.getBoundingClientRect();
       const mx = (e.clientX - r.left - pan.x) / zoom;
       const my = (e.clientY - r.top - pan.y) / zoom;
-      const dx = Math.max(40, Math.abs(mx - A.x) * 0.5);
-      tempPath.setAttribute('d', `M ${A.x} ${A.y} C ${A.x + dx} ${A.y}, ${mx - dx} ${my}, ${mx} ${my}`);
+      const dy = Math.max(40, Math.abs(my - A.y) * 0.5);
+      tempPath.setAttribute('d', `M ${A.x} ${A.y} C ${A.x} ${A.y + dy}, ${mx} ${my - dy}, ${mx} ${my}`);
       const hover = document.elementFromPoint(e.clientX, e.clientY);
       if (lastTarget && lastTarget !== hover) lastTarget.classList.remove('hot');
       if (hover && (hover.classList.contains('port') || hover.classList.contains('opt-port'))) { hover.classList.add('hot'); lastTarget = hover; }
@@ -1697,6 +1746,58 @@ wrap.addEventListener('wheel', ev => {
 document.getElementById('zoom-in').onclick = () => { zoom = Math.min(2, zoom * 1.15); applyTransform(); };
 document.getElementById('zoom-out').onclick = () => { zoom = Math.max(0.2, zoom / 1.15); applyTransform(); };
 document.getElementById('zoom-fit').onclick = fitView;
+document.getElementById('auto-layout-btn').onclick = () => { autoLayoutTopDown(); render(); fitView(); toast('Re-arranged top-down'); };
+
+function autoLayoutTopDown() {
+  // BFS from triggers; level → y, x distributed per level.
+  const triggers = curFlow.nodes.filter(n => n.type === 'trigger');
+  const start = triggers.length ? triggers : (curFlow.nodes[0] ? [curFlow.nodes[0]] : []);
+  const depth = {};
+  const queue = start.map(n => ({ id: n.id, d: 0 }));
+  while (queue.length) {
+    const { id, d } = queue.shift();
+    if (depth[id] != null && depth[id] >= d) continue;
+    depth[id] = d;
+    const n = curFlow.nodes.find(x => x.id === id);
+    if (!n) continue;
+    // Follow outgoing edges + option/threshold routes
+    curFlow.edges.filter(e => e.from === id).forEach(e => queue.push({ id: e.to, d: d + 1 }));
+    if (n.options) n.options.forEach(o => { if (o.route && o.route.startsWith('node:')) queue.push({ id: o.route.slice(5), d: d + 1 }); });
+    if (n.thresholds) n.thresholds.forEach(t => { if (t.route && t.route.startsWith('node:')) queue.push({ id: t.route.slice(5), d: d + 1 }); });
+  }
+  // Orphans → depth 0
+  curFlow.nodes.forEach(n => { if (depth[n.id] == null) depth[n.id] = 0; });
+  // Group by depth
+  const byDepth = {};
+  curFlow.nodes.forEach(n => { (byDepth[depth[n.id]] = byDepth[depth[n.id]] || []).push(n); });
+  const ROW_GAP = 60;   // vertical gap between rows
+  const COL_GAP = 60;   // horizontal gap between cards in same row
+  const CARD_W = 260, CARD_H_BASE = 130;
+  Object.keys(byDepth).map(Number).sort((a, b) => a - b).forEach((d, dIdx) => {
+    const nodesAtD = byDepth[d];
+    // y = sum of max heights of previous rows + gaps
+    let y = 60;
+    for (let i = 0; i < d; i++) {
+      const prev = byDepth[i] || [];
+      const maxH = Math.max(CARD_H_BASE, ...prev.map(n => estimateHeight(n)));
+      y += maxH + ROW_GAP;
+    }
+    // Total row width
+    const totalW = nodesAtD.length * CARD_W + (nodesAtD.length - 1) * COL_GAP;
+    let startX = 60;
+    // Try to center under parent if possible — simple: start at 60
+    nodesAtD.forEach((n, i) => {
+      n.x = startX + i * (CARD_W + COL_GAP);
+      n.y = y;
+    });
+  });
+}
+function estimateHeight(n) {
+  let h = 100;
+  if (n.options) h += n.options.length * 35 + 40;
+  if (n.thresholds) h += n.thresholds.length * 35 + 40;
+  return h;
+}
 function fitView() {
   if (!curFlow.nodes.length) { pan = { x: 60, y: 60 }; zoom = 1; applyTransform(); return; }
   const xs = curFlow.nodes.map(n => n.x), ys = curFlow.nodes.map(n => n.y);
@@ -1789,6 +1890,9 @@ function showTemplates() {
 }
 document.getElementById('tpl-close').onclick = () => document.getElementById('tpl-modal').style.display = 'none';
 
+function applyTopDownToAllFlows(tree) {
+  tree.flows.forEach(f => { const save = curFlow; curFlow = f; autoLayoutTopDown(); curFlow = save; });
+}
 function showWelcome() {
   const m = document.getElementById('welcome-modal');
   m.style.display = 'flex';
@@ -1797,6 +1901,7 @@ function showWelcome() {
       m.style.display = 'none';
       if (c.dataset.action === 'dummy') {
         const t = buildLowDoTree(); data.trees = [t]; curTree = t; curFlow = t.flows[2];
+        applyTopDownToAllFlows(t);
       } else if (c.dataset.action === 'template') {
         data.trees = [{ id: uid('tree_'), name: 'My tree', flows: [{ id: uid('f_'), name: 'Flow 1', nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: 'New trigger' }], edges: [] }] }];
         curTree = data.trees[0]; curFlow = curTree.flows[0];
@@ -1837,6 +1942,7 @@ function toast(msg) { const t = document.createElement('div'); t.className = 'to
   if (!loadPersisted()) {
     data.trees = [buildLowDoTree()];
     curTree = data.trees[0]; curFlow = curTree.flows[2];
+    applyTopDownToAllFlows(data.trees[0]);
     showWelcome();
     render();
   } else {
