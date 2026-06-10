@@ -78,7 +78,7 @@
   .view-toggle button.active { background: var(--accent); color: #fff; font-weight: 600; }
 
   /* ============ STEPPED (vertical) VIEW ============ */
-  #stepped-view { display: none; position: absolute; inset: 0; overflow-y: auto; padding: 30px 24px 80px; background: var(--canvas-bg); background-image: radial-gradient(circle at 1px 1px, #d1d5db 1px, transparent 0); background-size: 22px 22px; }
+  #stepped-view { display: none; position: absolute; inset: 0; overflow-y: scroll; padding: 30px 24px 80px; background: var(--canvas-bg); background-image: radial-gradient(circle at 1px 1px, #d1d5db 1px, transparent 0); background-size: 22px 22px; }
   #stepped-view.active { display: block; }
   #canvas-wrap.stepped #canvas, #canvas-wrap.stepped #edges, #canvas-wrap.stepped .canvas-top, #canvas-wrap.stepped .saved-status, #canvas-wrap.stepped .zoom-pill, #canvas-wrap.stepped .quick-pill { display: none; }
   .step-stack { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 0; }
@@ -101,6 +101,22 @@
   .step-arrow { display: flex; justify-content: center; padding: 6px 0; color: var(--muted-2); font-size: 18px; }
   .step-add-btn { margin: 12px auto; display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--panel); border: 1px dashed var(--muted-2); border-radius: 10px; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; }
   .step-add-btn:hover { border-color: var(--accent-2); color: var(--accent-2); background: var(--accent-soft); }
+
+  /* Branching in vertical view */
+  .branch-group { position: relative; padding-left: 28px; border-left: 2px dashed var(--border); margin-left: 20px; padding-top: 6px; margin-top: 4px; }
+  .branch-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 6px 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; margin: 8px 0; box-shadow: var(--shadow-sm); position: relative; left: -10px; }
+  .branch-label .bn-seq { background: var(--accent-2); color: #fff; padding: 2px 7px; border-radius: 999px; font-size: 9px; }
+  .branch-label.flow-link { background: var(--c-jump); color: var(--c-jump-fg); border-color: transparent; cursor: pointer; }
+  .branch-label.flow-link:hover { background: var(--jump, #ec4899); color: #fff; }
+  .branch-label.end-link { background: var(--c-end); color: var(--c-end-fg); border-color: transparent; }
+  .step-flow-card { background: linear-gradient(135deg, #fdf2f8 0%, #fff 100%); border: 1px solid #fbcfe8; border-radius: 12px; padding: 12px 16px; cursor: pointer; transition: all 0.15s; box-shadow: var(--shadow-sm); position: relative; }
+  .step-flow-card:hover { border-color: var(--jump, #ec4899); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .step-flow-card .lbl { font-size: 11px; font-weight: 700; color: var(--c-jump-fg); text-transform: uppercase; letter-spacing: 0.06em; }
+  .step-flow-card .nm { font-size: 13.5px; font-weight: 600; margin-top: 4px; color: var(--text); }
+  .step-flow-card .arrow { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--c-jump-fg); font-size: 16px; }
+  .step-unrouted { font-size: 12px; color: var(--muted); padding: 8px 12px; background: #fffbeb; border: 1px dashed #fbbf24; border-radius: 8px; }
+  .step-loopback { font-size: 11.5px; color: var(--muted); padding: 8px 12px; background: var(--panel-soft); border-radius: 8px; font-style: italic; }
+  .step-done-card { font-size: 12px; color: var(--c-end-fg); padding: 8px 14px; background: var(--c-end); border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
 
   /* ============ MAIN ============ */
   #main { display: grid; grid-template-columns: auto 1fr; position: relative; overflow: hidden; }
@@ -218,6 +234,10 @@
     border-radius: 50%; cursor: crosshair; transition: all 0.15s; z-index: 3;
   }
   .node .opt-port:hover, .node .opt-port.hot { background: var(--accent-2); border-color: var(--accent-2); transform: translateY(-50%) scale(1.4); box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
+  /* Per-option / per-threshold + insert button */
+  .node .opt-add-btn { position: absolute; right: -32px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; border: none; cursor: pointer; font-size: 14px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; opacity: 0; transition: all 0.15s; z-index: 3; box-shadow: var(--shadow-sm); }
+  .node:hover .opt-add-btn { opacity: 1; }
+  .node .opt-add-btn:hover { background: #059669; transform: translateY(-50%) scale(1.15); }
 
   /* Add-branch row */
   .node .opt-add { padding: 5px 8px; height: 26px; background: transparent; border: 1px dashed var(--border); border-radius: 6px; color: var(--muted); font-size: 11px; cursor: pointer; text-align: center; font-weight: 600; }
@@ -812,16 +832,19 @@ function renderNode(n) {
   const isSensor = n.type === 'sensor';
 
   if (isBranching) {
-    // Sort options by sequence (rootcause especially — operator sees them in this order)
     const sortedOpts = [...n.options].map((o, i) => ({ o, i })).sort((a, b) => (a.o.sequence || a.i + 1) - (b.o.sequence || b.i + 1));
     inner += `<div class="options">` + sortedOpts.map(({ o, i }) => {
       const rt = routeLabel(o.route);
       const seq = o.sequence || i + 1;
+      const isFlow = o.route && o.route.startsWith('flow:');
+      const rtStyle = isFlow ? 'background:var(--c-jump);color:var(--c-jump-fg);border-color:transparent;font-weight:600;cursor:pointer' : '';
+      const jumpAttr = isFlow ? `data-jump-flow="${o.route.slice(5)}"` : '';
       return `<div class="opt-row" data-opt="${o.id}">
         <div class="opt-num">${seq}</div>
         <div class="opt-text" title="${escapeHtml(o.text)}">${escapeHtml(o.text)}</div>
-        <div class="opt-rt" title="${escapeHtml(rt)}">${escapeHtml(rt)}</div>
+        <div class="opt-rt" title="${escapeHtml(rt)}" style="${rtStyle}" ${jumpAttr}>${escapeHtml(rt)}</div>
         <div class="opt-port" data-opt-port="${o.id}"></div>
+        <button class="opt-add-btn" data-add-from-opt="${o.id}" title="Insert next step">+</button>
       </div>`;
     }).join('') + `<div class="opt-add" data-add-opt="1">+ Add ${n.type === 'rootcause' ? 'root cause' : 'option'}</div></div>`;
   } else if (isSensor && n.thresholds) {
@@ -833,6 +856,7 @@ function renderNode(n) {
         <div class="lbl">${escapeHtml(t.label)}</div>
         <div class="range">${range} ${n.unit || ''}</div>
         <div class="opt-port" data-thr-port="${t.id}"></div>
+        <button class="opt-add-btn" data-add-from-thr="${t.id}" title="Insert next step">+</button>
       </div>`;
     }).join('') + `</div>`;
   } else {
@@ -878,6 +902,33 @@ function renderNode(n) {
   if (addOptBtn) addOptBtn.onclick = ev => { ev.stopPropagation(); n.options.push({ id: uid('opt_'), text: 'New option', route: '' }); selection = { kind: 'node', id: n.id }; openInspector(); render(); };
   const portAdd = el.querySelector('.port-add');
   if (portAdd) portAdd.onclick = ev => { ev.stopPropagation(); openInsertPopover(n, null, n.x + 280, n.y + 30); };
+  // Per-option/per-threshold "+" — open insert popover wired to that option/threshold
+  el.querySelectorAll('[data-add-from-opt]').forEach(btn => {
+    btn.onclick = ev => {
+      ev.stopPropagation();
+      const optId = btn.dataset.addFromOpt;
+      const yOff = n._optY?.[optId] || 30;
+      openInsertPopover(n, { kind: 'option', id: optId }, n.x + 300, n.y + yOff, ev.clientX, ev.clientY);
+    };
+  });
+  el.querySelectorAll('[data-add-from-thr]').forEach(btn => {
+    btn.onclick = ev => {
+      ev.stopPropagation();
+      const thrId = btn.dataset.addFromThr;
+      const yOff = n._thrY?.[thrId] || 30;
+      openInsertPopover(n, { kind: 'threshold', id: thrId }, n.x + 300, n.y + yOff, ev.clientX, ev.clientY);
+    };
+  });
+  // Click flow-route pill to navigate to that flow
+  el.querySelectorAll('[data-jump-flow]').forEach(pill => {
+    pill.addEventListener('mousedown', e => e.stopPropagation()); // don't trigger drag
+    pill.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const fid = pill.dataset.jumpFlow;
+      const f = curTree.flows.find(x => x.id === fid);
+      if (f) { curFlow = f; selection = null; closeInspector(); render(); fitView(); }
+    });
+  });
 
   return el;
 }
@@ -894,17 +945,107 @@ function routeLabel(route) {
 // =============================================================
 function renderStepped() {
   const sv = document.getElementById('stepped-view');
-  // Order: walk from trigger via edges + options, BFS; fallback to array order
-  const order = orderNodesForStepped();
+  const start = curFlow.nodes.find(n => n.type === 'trigger') || curFlow.nodes[0];
+  if (!start) {
+    sv.innerHTML = `<div class="step-stack"><div style="text-align:center;color:var(--muted);padding:40px">No steps yet. Add a Trigger to begin.</div><button class="step-add-btn" id="step-add">＋ Add step</button></div>`;
+    bindSteppedHandlers(sv);
+    return;
+  }
+  const stepCounter = { n: 0 };
+  const visited = new Set();
   let h = `<div class="step-stack">`;
-  order.forEach((n, i) => {
-    h += renderStepCard(n, i);
-    if (i < order.length - 1) h += `<div class="step-arrow">↓</div>`;
-  });
+  h += renderStepTree(start, visited, 0, stepCounter);
+  // Append any unreachable orphan nodes
+  const orphans = curFlow.nodes.filter(n => !visited.has(n.id));
+  if (orphans.length) {
+    h += `<div style="margin-top:24px;padding-top:14px;border-top:1px dashed var(--border);font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700;letter-spacing:0.06em">Disconnected steps</div>`;
+    orphans.forEach(n => { h += renderStepCard(n, stepCounter.n++); });
+  }
   h += `<button class="step-add-btn" id="step-add">＋ Add step</button>`;
   h += `</div>`;
   sv.innerHTML = h;
-  // Bind handlers
+  bindSteppedHandlers(sv);
+}
+
+function renderStepTree(node, visited, depth, counter) {
+  if (visited.has(node.id)) {
+    return `<div class="step-loopback">↑ Loops back to: <b>${escapeHtml(node.label || node.type)}</b> (step ${node._stepNo || '?'})</div>`;
+  }
+  visited.add(node.id);
+  node._stepNo = ++counter.n;
+  let h = renderStepCard(node, counter.n - 1);
+
+  const branches = getBranches(node);
+  if (branches.length === 0) return h;
+  if (branches.length === 1 && branches[0].kind === 'edge') {
+    // Single linear next step — no branch label, just arrow + recurse
+    h += `<div class="step-arrow">↓</div>`;
+    h += renderBranchTarget(branches[0], visited, depth, counter);
+    return h;
+  }
+  // Multiple branches — render each in its own group, indented
+  h += `<div class="branch-group">`;
+  branches.forEach((br, i) => {
+    const seq = br.sequence || (i + 1);
+    // Branch label (shown above branch's target)
+    if (br.route && br.route.startsWith('flow:')) {
+      // Flow link — collapse the branch to a flow card
+      const fid = br.route.slice(5);
+      const f = curTree.flows.find(x => x.id === fid);
+      h += `<div class="branch-label flow-link" data-jump-flow="${fid}">
+        <span class="bn-seq">${seq}</span>${escapeHtml(br.label || 'option')} → Diagnostic Flow
+      </div>`;
+      h += `<div class="step-flow-card" data-jump-flow="${fid}">
+        <div class="lbl">↗ DIAGNOSTIC FLOW</div>
+        <div class="nm">${escapeHtml(f ? f.name : '(unknown flow)')}</div>
+        <div class="arrow">›</div>
+      </div>`;
+    } else if (br.route === 'end') {
+      h += `<div class="branch-label end-link"><span class="bn-seq">${seq}</span>${escapeHtml(br.label || '')} → Done</div>`;
+      h += `<div class="step-done-card">■ End of flow</div>`;
+    } else if (br.route && br.route.startsWith('node:')) {
+      h += `<div class="branch-label"><span class="bn-seq">${seq}</span>${escapeHtml(br.label || '(option)')}</div>`;
+      h += renderBranchTarget(br, visited, depth + 1, counter);
+    } else {
+      h += `<div class="branch-label"><span class="bn-seq">${seq}</span>${escapeHtml(br.label || '(option)')}</div>`;
+      h += `<div class="step-unrouted">⚠ No destination set — configure in inspector</div>`;
+    }
+  });
+  h += `</div>`;
+  return h;
+}
+
+function getBranches(node) {
+  const br = [];
+  if ((node.type === 'question' || node.type === 'rootcause') && node.options) {
+    const sorted = [...node.options].map((o, i) => ({ o, i })).sort((a, b) => (a.o.sequence || a.i + 1) - (b.o.sequence || b.i + 1));
+    sorted.forEach(({ o, i }) => br.push({ label: o.text, route: o.route, kind: node.type, sequence: o.sequence || i + 1 }));
+  } else if (node.type === 'sensor' && node.thresholds) {
+    node.thresholds.forEach(t => br.push({ label: t.label, route: t.route, kind: 'sensor' }));
+  } else {
+    curFlow.edges.filter(e => e.from === node.id).forEach(e => br.push({ label: '', route: 'node:' + e.to, kind: 'edge' }));
+  }
+  return br;
+}
+
+function renderBranchTarget(br, visited, depth, counter) {
+  if (!br.route) return `<div class="step-unrouted">⚠ Unrouted</div>`;
+  if (br.route === 'end') return `<div class="step-done-card">■ End of flow</div>`;
+  if (br.route.startsWith('flow:')) {
+    const fid = br.route.slice(5);
+    const f = curTree.flows.find(x => x.id === fid);
+    return `<div class="step-flow-card" data-jump-flow="${fid}"><div class="lbl">↗ DIAGNOSTIC FLOW</div><div class="nm">${escapeHtml(f ? f.name : '?')}</div><div class="arrow">›</div></div>`;
+  }
+  if (br.route.startsWith('node:')) {
+    const tid = br.route.slice(5);
+    const target = curFlow.nodes.find(n => n.id === tid);
+    if (!target) return `<div class="step-unrouted">⚠ Missing target node</div>`;
+    return renderStepTree(target, visited, depth, counter);
+  }
+  return '';
+}
+
+function bindSteppedHandlers(sv) {
   sv.querySelectorAll('.step-card').forEach(card => {
     const id = card.dataset.id;
     const n = curFlow.nodes.find(x => x.id === id);
@@ -925,75 +1066,43 @@ function renderStepped() {
     card.querySelectorAll('.branch-row input').forEach(inp => {
       inp.oninput = e => {
         const oid = e.target.dataset.opt;
-        const opt = n.options.find(o => o.id === oid);
+        const opt = n.options && n.options.find(o => o.id === oid);
         if (opt) { opt.text = e.target.value; persist(); }
       };
     });
     card.querySelectorAll('.branch-row select').forEach(sel => {
       sel.onchange = e => {
         const oid = e.target.dataset.opt;
-        const opt = n.options.find(o => o.id === oid);
+        const opt = n.options && n.options.find(o => o.id === oid);
         if (opt) { opt.route = e.target.value; render(); }
       };
     });
     const del = card.querySelector('.delcard');
     if (del) del.onclick = ev => { ev.stopPropagation(); deleteNode(n.id); };
   });
-  document.getElementById('step-add').onclick = () => {
-    // Use insert popover at end
+  sv.querySelectorAll('[data-jump-flow]').forEach(el => {
+    el.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const fid = el.dataset.jumpFlow;
+      const f = curTree.flows.find(x => x.id === fid);
+      if (f) { curFlow = f; selection = null; closeInspector(); render(); }
+    });
+  });
+  const addBtn = document.getElementById('step-add');
+  if (addBtn) addBtn.onclick = () => {
     const r = wrap.getBoundingClientRect();
     openInsertPopover(null, null, 0, 0, r.left + r.width / 2, r.top + r.height / 2);
   };
 }
 
-function orderNodesForStepped() {
-  const visited = new Set();
-  const out = [];
-  const start = curFlow.nodes.find(n => n.type === 'trigger') || curFlow.nodes[0];
-  if (!start) return [];
-  const queue = [start.id];
-  while (queue.length) {
-    const id = queue.shift();
-    if (visited.has(id)) continue;
-    visited.add(id);
-    const n = curFlow.nodes.find(x => x.id === id);
-    if (!n) continue;
-    out.push(n);
-    // Follow regular edges
-    curFlow.edges.filter(e => e.from === id).forEach(e => { if (!visited.has(e.to)) queue.push(e.to); });
-    // Follow option / threshold routes
-    if (n.options) n.options.forEach(o => { if (o.route && o.route.startsWith('node:') && !visited.has(o.route.slice(5))) queue.push(o.route.slice(5)); });
-    if (n.thresholds) n.thresholds.forEach(t => { if (t.route && t.route.startsWith('node:') && !visited.has(t.route.slice(5))) queue.push(t.route.slice(5)); });
-  }
-  // Append any orphan nodes
-  curFlow.nodes.forEach(n => { if (!visited.has(n.id)) out.push(n); });
-  return out;
-}
-
 function renderStepCard(n, idx) {
   const m = NTYPES[n.type] || NTYPES.action;
   const sel = selection && selection.kind === 'node' && selection.id === n.id ? ' selected' : '';
-  let sub = stepCardSub(n);
-  let branches = '';
-  if ((n.type === 'question' || n.type === 'rootcause') && n.options) {
-    branches = `<div class="branches">` + n.options.map((o, i) => {
-      const seq = o.sequence || i + 1;
-      return `<div class="branch-row">
-        <div class="bn">${seq}</div>
-        <input data-opt="${o.id}" value="${escapeHtml(o.text || '')}" placeholder="${n.type === 'rootcause' ? 'Root cause name' : 'Option text'}">
-        <select data-opt="${o.id}">${destOpts(n.id, o.route, n.type === 'rootcause')}</select>
-      </div>`;
-    }).join('') + `</div>`;
-  }
-  if (n.type === 'sensor' && n.thresholds) {
-    branches = `<div class="branches">` + n.thresholds.map(t => {
-      return `<div class="branch-row">
-        <div class="bn" style="background:${t.id==='safe'?'var(--green)':t.id==='warn'?'var(--yellow)':'var(--red)'}">${t.id==='safe'?'S':t.id==='warn'?'W':'C'}</div>
-        <input value="${escapeHtml(t.label)}" disabled>
-        <select disabled><option>${routeLabel(t.route)}</option></select>
-      </div>`;
-    }).join('') + `</div>`;
-  }
+  const sub = stepCardSub(n);
+  let countHint = '';
+  if (n.type === 'rootcause' && n.options) countHint = `<div style="font-size:11px;color:var(--muted);margin-top:4px">${n.options.length} possible root cause${n.options.length === 1 ? '' : 's'} ↓</div>`;
+  else if (n.type === 'question' && n.options) countHint = `<div style="font-size:11px;color:var(--muted);margin-top:4px">${n.options.length} branch${n.options.length === 1 ? '' : 'es'} ↓</div>`;
+  else if (n.type === 'sensor' && n.thresholds) countHint = `<div style="font-size:11px;color:var(--muted);margin-top:4px">${n.thresholds.length} threshold band${n.thresholds.length === 1 ? '' : 's'} ↓</div>`;
   return `<div class="step-card${sel}" data-id="${n.id}">
     <button class="delcard" title="Delete">×</button>
     <div class="nhead">
@@ -1002,7 +1111,7 @@ function renderStepCard(n, idx) {
     </div>
     <div class="label" contenteditable="true" spellcheck="false">${escapeHtml(n.label || '(untitled)')}</div>
     ${sub ? `<div class="sub">${escapeHtml(sub)}</div>` : ''}
-    ${branches}
+    ${countHint}
   </div>`;
 }
 function stepCardSub(n) {
@@ -1376,7 +1485,7 @@ function deleteNode(id) {
 // =============================================================
 function attachNodeHandlers(el, n) {
   el.addEventListener('mousedown', ev => {
-    if (ev.target.classList.contains('port') || ev.target.classList.contains('opt-port') || ev.target.classList.contains('opt-add') || ev.target.classList.contains('port-add')) return;
+    if (ev.target.classList.contains('port') || ev.target.classList.contains('opt-port') || ev.target.classList.contains('opt-add') || ev.target.classList.contains('port-add') || ev.target.classList.contains('opt-add-btn')) return;
     if (ev.button !== 0) return;
     ev.stopPropagation();
     const wasSelected = selection && selection.kind === 'node' && selection.id === n.id;
@@ -1528,6 +1637,7 @@ document.addEventListener('click', e => {
 // Pan / zoom
 // =============================================================
 wrap.addEventListener('mousedown', ev => {
+  if (viewMode === 'stepped') return; // no pan/zoom interactions in vertical view
   if (ev.target.tagName === 'path') return;
   if (ev.target.closest('.node') || ev.target.closest('.zoom-pill') || ev.target.closest('.quick-pill') || ev.target.closest('.canvas-top') || ev.target.closest('.saved-status')) return;
   if (selection) closeInspector();
@@ -1537,6 +1647,7 @@ wrap.addEventListener('mousedown', ev => {
   document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
 });
 wrap.addEventListener('wheel', ev => {
+  if (viewMode === 'stepped') return; // let native scroll work in vertical view
   ev.preventDefault();
   const r = wrap.getBoundingClientRect();
   const mx = ev.clientX - r.left, my = ev.clientY - r.top;
