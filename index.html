@@ -105,10 +105,6 @@
   .rc-item:hover { border-color: var(--brand2); background: var(--brand-soft); }
   .rc-item .seq { width: 22px; height: 22px; flex-shrink: 0; border-radius: 6px; background: var(--c-rootcause-fg); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
   .rc-item .rc-name { flex: 1; font-size: 12.5px; font-weight: 500; line-height: 1.3; }
-  .rc-item .rc-freq { font-size: 9.5px; padding: 2px 7px; border-radius: 999px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
-  .freq-low { background: var(--green-soft); color: #047857; }
-  .freq-mod { background: var(--amber-soft); color: #b45309; }
-  .freq-high { background: var(--red-soft); color: #b91c1c; }
   .rc-item .rc-port { position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); width: 11px; height: 11px; border-radius: 50%; background: #fff; border: 2px solid var(--c-rootcause-fg); }
   .rc-add { margin-top: 4px; padding: 8px; border: 1px dashed var(--muted2); border-radius: 8px; text-align: center; font-size: 12px; color: var(--muted); cursor: pointer; font-weight: 600; }
   .rc-add:hover { border-color: var(--brand2); color: var(--brand2); }
@@ -414,11 +410,10 @@ const TAGS = [
   {id:'PH',label:'Inlet pH',unit:'pH',bands:{safe:[6.5,8.5],warn:[6,6.5],crit:[null,6]}},
   {id:'MLSS',label:'MLSS',unit:'mg/L',bands:{safe:[2500,4000],warn:[1500,2500],crit:[null,1500]}}
 ];
-const FREQ = { low:'freq-low', mod:'freq-mod', high:'freq-high' };
 
 // ============================================================
 // DATA MODEL
-//  tree { id, name, trigger{id,label,desc}, rootCauses[{id,label,sequence,frequency,flowId}], flows[{id,name,rootCauseId,nodes,edges}] }
+//  tree { id, name, trigger{id,label,desc}, rootCauses[{id,label,sequence,flowId}], flows[{id,name,rootCauseId,nodes,edges}] }
 // ============================================================
 let data = { trees: [] };
 let curTree, curFlow=null;
@@ -440,16 +435,16 @@ function saveTpl(l){ try{ localStorage.setItem(TKEY, JSON.stringify(l)); }catch(
 // ============================================================
 function demoTree(){
   const causes = [
-    ['Blower is OFF','low'], ['Blower performance','low'],
-    ['Uneven bubbling / dead zones','mod'], ['DO sensor failure','mod'],
-    ['Sludge bulking','high'], ['Shock load / toxicity','high']
+    'Blower is OFF', 'Blower performance',
+    'Uneven bubbling / dead zones', 'DO sensor failure',
+    'Sludge bulking', 'Shock load / toxicity'
   ];
   const tree = { id:uid('tree_'), name:'Low DO in Aeration Tank',
     trigger:{ id:uid('trg_'), label:'Low DO alarm in Aeration tank', desc:'DO reading dropped below setpoint' },
     rootCauses:[], flows:[] };
-  causes.forEach(([nm,fr],i)=>{
+  causes.forEach((nm,i)=>{
     const flowId = uid('flow_'); const rcId = uid('rc_');
-    tree.rootCauses.push({ id:rcId, label:nm, sequence:i+1, frequency:fr, flowId });
+    tree.rootCauses.push({ id:rcId, label:nm, sequence:i+1, flowId });
     if(i===2) tree.flows.push(buildFlow3(flowId,rcId,nm));
     else tree.flows.push({ id:flowId, name:nm, rootCauseId:rcId, nodes:[], edges:[] });
   });
@@ -493,7 +488,7 @@ const BUILTINS = [
       const f=uid('flow_'), rc=uid('rc_');
       return { id:uid('tree_'), name:'New diagnostic tree',
         trigger:{id:uid('trg_'),label:'Issue reported',desc:''},
-        rootCauses:[{id:rc,label:'Root cause 1',sequence:1,frequency:'mod',flowId:f}],
+        rootCauses:[{id:rc,label:'Root cause 1',sequence:1,flowId:f}],
         flows:[{id:f,name:'Root cause 1',rootCauseId:rc,nodes:[],edges:[]}] }; } }
 ];
 
@@ -578,7 +573,6 @@ function renderMap(){
     rcHtml+=`<div class="rc-item" data-open-flow="${r.flowId}">
       <div class="seq">${r.sequence}</div>
       <div class="rc-name">${esc(r.label)}</div>
-      <div class="rc-freq ${FREQ[r.frequency]||'freq-mod'}">${r.frequency}</div>
       <div class="rc-port" data-rc-port="${r.id}"></div>
     </div>`;
   });
@@ -637,7 +631,7 @@ function renderMap(){
 function addRootCause(){
   const seq = curTree.rootCauses.length+1;
   const flowId=uid('flow_'), rcId=uid('rc_');
-  curTree.rootCauses.push({ id:rcId, label:'New root cause', sequence:seq, frequency:'mod', flowId });
+  curTree.rootCauses.push({ id:rcId, label:'New root cause', sequence:seq, flowId });
   curTree.flows.push({ id:flowId, name:'New root cause', rootCauseId:rcId, nodes:[], edges:[] });
   persist(); renderMap();
 }
@@ -973,11 +967,9 @@ function renderInspMap(){
     $('iBody').innerHTML=`<div class="hint"><div>💡</div><div>A candidate root cause. Its diagnostic flow runs to confirm or rule it out.</div></div>
       <label>Name</label><input id="rc-l" value="${esc(r.label)}">
       <label>Sequence</label><input id="rc-s" type="number" min="1" value="${r.sequence}">
-      <label>Frequency</label><select id="rc-f">${['low','mod','high'].map(f=>`<option value="${f}" ${r.frequency===f?'selected':''}>${f}</option>`).join('')}</select>
       <button class="dangerb" id="rc-del">Delete root cause + flow</button>`;
     $('rc-l').oninput=e=>{ r.label=e.target.value; const f=curTree.flows.find(x=>x.id===r.flowId); if(f)f.name=e.target.value; persist(); renderMapSoft(); };
     $('rc-s').oninput=e=>{ r.sequence=+e.target.value||1; persist(); renderMapSoft(); };
-    $('rc-f').onchange=e=>{ r.frequency=e.target.value; persist(); renderMapSoft(); };
     $('rc-del').onclick=()=>{ if(!confirm('Delete this root cause and its flow?'))return; curTree.flows=curTree.flows.filter(f=>f.id!==r.flowId); curTree.rootCauses=curTree.rootCauses.filter(x=>x.id!==r.id); closeInsp(); };
   }
 }
