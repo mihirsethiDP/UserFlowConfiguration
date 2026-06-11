@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FlowConfig — Diagnostic Flow Designer</title>
+<style>
+  :root {
+    --bg: #f3f4f6;
+    --canvas-bg: #f8fafc;
+    --panel: #ffffff;
+    --panel-soft: #f8fafc;
+    --border: #e5e7eb;
+    --border-2: #f1f5f9;
+    --text: #111827;
+    --muted: #6b7280;
+    --muted-2: #9ca3af;
+    --header: #111827;
+    --accent: #10b981;
+    --accent-2: #6366f1;
+    --accent-soft: #eef2ff;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+
+    --c-trigger: #d1fae5; --c-trigger-fg: #065f46;
+    --c-question: #fed7aa; --c-question-fg: #9a3412;
+    --c-answer: #ddd6fe; --c-answer-fg: #5b21b6;
+    --c-action: #cffafe; --c-action-fg: #155e75;
+    --c-waiting: #fef3c7; --c-waiting-fg: #92400e;
+    --c-rootcause: #fce7f3; --c-rootcause-fg: #9d174d;
+    --c-observation: #e0e7ff; --c-observation-fg: #3730a3;
+    --c-sensor: #cffafe; --c-sensor-fg: #155e75;
+    --c-reassign: #fed7aa; --c-reassign-fg: #9a3412;
+    --c-jump: #fbcfe8; --c-jump-fg: #831843;
+    --c-end: #e5e7eb; --c-end-fg: #374151;
+    --c-skip_end: #f3e8ff; --c-skip_end-fg: #6b21a8;
+
+    --shadow-sm: 0 1px 2px rgba(15,23,42,0.04);
+    --shadow-md: 0 4px 14px rgba(15,23,42,0.06);
+    --shadow-lg: 0 18px 50px rgba(15,23,42,0.16);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; font-family: -apple-system, "Inter", "Segoe UI", Roboto, sans-serif; color: var(--text); background: var(--bg); user-select: none; -webkit-font-smoothing: antialiased; overflow: hidden; }
+
+  #app { display: grid; grid-template-rows: 56px 1fr; height: 100vh; }
+
+  /* ============ HEADER (dark) ============ */
+  #header { background: var(--header); color: #fff; display: flex; align-items: center; padding: 0 18px; gap: 14px; }
+  #header .logo { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+  #header .logo .lg-ic { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #6366f1, #ec4899); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  #header .menu-btn { width: 32px; height: 32px; border-radius: 8px; background: transparent; border: none; color: #9ca3af; cursor: pointer; font-size: 16px; }
+  #header .menu-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  #header .crumb { color: #6b7280; font-size: 13px; padding: 0 6px; }
+  #header select { background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 7px 28px 7px 12px; font-size: 13px; appearance: none; cursor: pointer; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%239ca3af' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>"); background-repeat: no-repeat; background-position: right 10px center; }
+  #header select:hover { background-color: rgba(255,255,255,0.1); }
+  #header .stepper-mini { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 10px; background: rgba(255,255,255,0.06); border-radius: 999px; }
+  .step-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 500; color: #9ca3af; }
+  .step-chip.done { color: #d1fae5; }
+  .step-chip.active { background: var(--accent); color: #fff; font-weight: 600; }
+  .step-chip .n { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+  .step-chip.done .n { background: rgba(16,185,129,0.35); }
+  .step-chip.active .n { background: rgba(255,255,255,0.2); }
+  #header .spacer { flex: 1; }
+  #header .h-pill-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #e5e7eb; padding: 7px 14px; border-radius: 8px; font-size: 12.5px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+  #header .h-pill-btn:hover { background: rgba(255,255,255,0.1); }
+  #header .h-pill-btn.primary { background: var(--accent); border-color: transparent; color: #fff; font-weight: 600; }
+  #header .h-pill-btn.primary:hover { background: #059669; }
+  #header .avs { display: flex; }
+  #header .avs .av { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--header); margin-left: -8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 700; }
+  #header .avs .av:nth-child(1) { background: linear-gradient(135deg, #f97316, #ec4899); }
+  #header .avs .av:nth-child(2) { background: linear-gradient(135deg, #06b6d4, #10b981); }
+  #header .avs .av:nth-child(3) { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+  #header .avs .more { background: rgba(255,255,255,0.1); color: #9ca3af; font-size: 9px; }
+  .view-toggle { display: inline-flex; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 3px; border-radius: 8px; gap: 2px; }
+  .view-toggle button { background: transparent; border: none; color: #9ca3af; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; }
+  .view-toggle button:hover { color: #fff; }
+  .view-toggle button.active { background: var(--accent); color: #fff; font-weight: 600; }
+
+  /* ============ STEPPED (vertical) VIEW ============ */
+  #stepped-view { display: none; position: absolute; inset: 0; overflow-y: scroll; padding: 30px 24px 80px; background: var(--canvas-bg); background-image: radial-gradient(circle at 1px 1px, #d1d5db 1px, transparent 0); background-size: 22px 22px; }
+  #stepped-view.active { display: block; }
+  #canvas-wrap.stepped #canvas, #canvas-wrap.stepped #edges, #canvas-wrap.stepped .canvas-top, #canvas-wrap.stepped .saved-status, #canvas-wrap.stepped .zoom-pill, #canvas-wrap.stepped .quick-pill { display: none; }
+  .step-stack { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 0; }
+  .step-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; box-shadow: var(--shadow-sm); position: relative; transition: all 0.15s; cursor: pointer; }
+  .step-card:hover { box-shadow: var(--shadow-md); border-color: var(--muted-2); }
+  .step-card.selected { box-shadow: 0 0 0 3px rgba(99,102,241,0.2), var(--shadow-md); border-color: var(--accent-2); }
+  .step-card .nhead { display: flex; align-items: center; gap: 8px; }
+  .step-card .badge { padding: 3px 8px; border-radius: 5px; font-size: 9.5px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; }
+  .step-card .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--header); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-right: 4px; }
+  .step-card .label { font-size: 14px; font-weight: 600; margin-top: 8px; outline: none; cursor: text; border-radius: 4px; padding: 1px 3px; margin-left: -3px; }
+  .step-card .label:focus { background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-2); }
+  .step-card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .step-card .branches { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 6px; }
+  .step-card .branch-row { display: grid; grid-template-columns: 24px 1fr 1fr; gap: 6px; align-items: center; padding: 6px 8px; background: var(--panel-soft); border-radius: 7px; }
+  .step-card .branch-row .bn { width: 22px; height: 22px; background: var(--accent-2); color: #fff; border-radius: 5px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .step-card .branch-row input, .step-card .branch-row select { padding: 5px 7px; font-size: 11.5px; border: 1px solid var(--border); border-radius: 5px; background: #fff; }
+  .step-card .delcard { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 6px; border: none; background: transparent; color: var(--muted); cursor: pointer; opacity: 0; }
+  .step-card:hover .delcard { opacity: 1; }
+  .step-card .delcard:hover { background: #fef2f2; color: var(--red); }
+  .step-arrow { display: flex; justify-content: center; padding: 6px 0; color: var(--muted-2); font-size: 18px; }
+  .step-add-btn { margin: 12px auto; display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--panel); border: 1px dashed var(--muted-2); border-radius: 10px; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .step-add-btn:hover { border-color: var(--accent-2); color: var(--accent-2); background: var(--accent-soft); }
+
+  /* Branching in vertical view */
+  .branch-group { position: relative; padding-left: 28px; border-left: 2px dashed var(--border); margin-left: 20px; padding-top: 6px; margin-top: 4px; }
+  .branch-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 6px 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; margin: 8px 0; box-shadow: var(--shadow-sm); position: relative; left: -10px; }
+  .branch-label .bn-seq { background: var(--accent-2); color: #fff; padding: 2px 7px; border-radius: 999px; font-size: 9px; }
+  .branch-label.flow-link { background: var(--c-jump); color: var(--c-jump-fg); border-color: transparent; cursor: pointer; }
+  .branch-label.flow-link:hover { background: var(--jump, #ec4899); color: #fff; }
+  .branch-label.end-link { background: var(--c-end); color: var(--c-end-fg); border-color: transparent; }
+  .step-flow-card { background: linear-gradient(135deg, #fdf2f8 0%, #fff 100%); border: 1px solid #fbcfe8; border-radius: 12px; padding: 12px 16px; cursor: pointer; transition: all 0.15s; box-shadow: var(--shadow-sm); position: relative; }
+  .step-flow-card:hover { border-color: var(--jump, #ec4899); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .step-flow-card .lbl { font-size: 11px; font-weight: 700; color: var(--c-jump-fg); text-transform: uppercase; letter-spacing: 0.06em; }
+  .step-flow-card .nm { font-size: 13.5px; font-weight: 600; margin-top: 4px; color: var(--text); }
+  .step-flow-card .arrow { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--c-jump-fg); font-size: 16px; }
+  .step-unrouted { font-size: 12px; color: var(--muted); padding: 8px 12px; background: #fffbeb; border: 1px dashed #fbbf24; border-radius: 8px; }
+  .step-loopback { font-size: 11.5px; color: var(--muted); padding: 8px 12px; background: var(--panel-soft); border-radius: 8px; font-style: italic; }
+  .step-done-card { font-size: 12px; color: var(--c-end-fg); padding: 8px 14px; background: var(--c-end); border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+  /* Side-by-side branches when all options route to flows (root-cause sketch style) */
+  .branch-row-fan { display: flex; gap: 12px; justify-content: center; margin-top: 14px; padding-top: 14px; position: relative; flex-wrap: wrap; }
+  .branch-row-fan::before { content: ''; position: absolute; top: 0; left: 50%; width: 2px; height: 14px; background: var(--border); }
+  .fan-col { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 160px; max-width: 200px; position: relative; }
+  .fan-col::before { content: ''; position: absolute; top: -14px; left: 50%; width: 2px; height: 14px; background: var(--border); }
+  .fan-port { width: 12px; height: 12px; background: #fff; border: 2px solid var(--muted-2); border-radius: 50%; margin-top: -7px; }
+  .fan-label { font-size: 11px; font-weight: 600; color: var(--text); text-align: center; line-height: 1.3; padding: 0 4px; }
+  .fan-col .step-flow-card { width: 100%; }
+
+  /* ============ MAIN ============ */
+  #main { display: grid; grid-template-columns: auto 1fr; position: relative; overflow: hidden; }
+
+  /* ============ SIDEBAR (palette) ============ */
+  #sidebar { background: var(--panel); border-right: 1px solid var(--border-2); width: 252px; padding: 14px; overflow-y: auto; transition: width 0.2s; }
+  #sidebar.collapsed { width: 56px; padding: 14px 6px; }
+  #sidebar.collapsed .panel-search, #sidebar.collapsed .pgroup-head .lbl, #sidebar.collapsed .pcard .lbl, #sidebar.collapsed .pgroup-head .ct { display: none; }
+  #sidebar.collapsed .pgroup-grid { grid-template-columns: 1fr; }
+  #sidebar.collapsed .pcard { padding: 8px 6px; }
+  .panel-search { position: relative; margin-bottom: 14px; }
+  .panel-search input { width: 100%; padding: 9px 12px 9px 34px; border: 1px solid var(--border); border-radius: 9px; font-size: 12.5px; background: var(--panel-soft); transition: all 0.15s; }
+  .panel-search input:focus { outline: none; border-color: var(--accent-2); background: #fff; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .panel-search::before { content: '🔍'; position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 11px; opacity: 0.5; }
+  .pgroup { margin-bottom: 14px; }
+  .pgroup-head { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 8px; }
+  .pgroup-head .lbl { font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--muted); letter-spacing: 0.05em; }
+  .pgroup-head .ct { font-size: 10px; color: var(--muted-2); }
+  .pgroup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .pcard {
+    padding: 12px 8px; border: 1px solid var(--border); border-radius: 12px;
+    background: var(--panel); cursor: grab; transition: all 0.15s;
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 7px;
+    position: relative; min-height: 78px;
+  }
+  .pcard:hover { border-color: var(--accent-2); background: var(--panel-soft); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .pcard:active { cursor: grabbing; }
+  .pcard .pic { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .pcard .lbl { font-size: 11px; font-weight: 600; line-height: 1.2; }
+  .pcard.notif::after { content: ''; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
+  .pic.t-trigger { background: var(--c-trigger); color: var(--c-trigger-fg); }
+  .pic.t-question { background: var(--c-question); color: var(--c-question-fg); }
+  .pic.t-answer { background: var(--c-answer); color: var(--c-answer-fg); }
+  .pic.t-action { background: var(--c-action); color: var(--c-action-fg); }
+  .pic.t-waiting { background: var(--c-waiting); color: var(--c-waiting-fg); }
+  .pic.t-rootcause { background: var(--c-rootcause); color: var(--c-rootcause-fg); }
+  .pic.t-observation { background: var(--c-observation); color: var(--c-observation-fg); }
+  .pic.t-sensor { background: var(--c-sensor); color: var(--c-sensor-fg); }
+  .pic.t-reassign { background: var(--c-reassign); color: var(--c-reassign-fg); }
+  .pic.t-jump { background: var(--c-jump); color: var(--c-jump-fg); }
+  .pic.t-end { background: var(--c-end); color: var(--c-end-fg); }
+  .pic.t-skip_end { background: var(--c-skip_end); color: var(--c-skip_end-fg); }
+
+  /* ============ CANVAS ============ */
+  #canvas-wrap {
+    position: relative; overflow: hidden;
+    background: var(--canvas-bg);
+    background-image: radial-gradient(circle at 1px 1px, #d1d5db 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+  #canvas { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+  #edges { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; transform-origin: 0 0; }
+  #edges path.edge { pointer-events: stroke; transition: stroke 0.15s; }
+  #edges path.edge:hover { stroke: var(--accent-2); }
+
+  /* Canvas top filters */
+  .canvas-top { position: absolute; top: 14px; left: 14px; display: flex; gap: 6px; z-index: 4; }
+  .filter-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 7px; font-size: 12px; color: var(--text); box-shadow: var(--shadow-sm); }
+  .filter-chip .ic { color: var(--muted); font-size: 10px; }
+  .saved-status { position: absolute; top: 14px; right: 14px; font-size: 11.5px; color: var(--muted); background: var(--panel); padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 6px; z-index: 4; }
+  .saved-status::before { content: '✓'; color: var(--accent); font-weight: 700; }
+
+  /* ============ NODES ============ */
+  .node {
+    position: absolute; width: 240px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px;
+    box-shadow: var(--shadow-sm);
+    cursor: move; transition: box-shadow 0.15s, border-color 0.15s;
+  }
+  .node:hover { box-shadow: var(--shadow-md); border-color: var(--muted-2); }
+  .node.selected { box-shadow: 0 0 0 3px rgba(99,102,241,0.2), var(--shadow-md); border-color: var(--accent-2) !important; }
+  .node .nhead { display: flex; align-items: center; gap: 8px; }
+  .node .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 5px; font-size: 9.5px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; }
+  .node .label { font-size: 13px; font-weight: 600; line-height: 1.35; margin-top: 8px; color: var(--text); outline: none; border-radius: 4px; padding: 1px 3px; margin-left: -3px; cursor: text; }
+  .node .label:focus { background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-2); }
+  .node .label:hover:not(:focus) { background: var(--panel-soft); }
+  .node .sub { font-size: 11.5px; color: var(--muted); margin-top: 4px; line-height: 1.4; outline: none; border-radius: 4px; padding: 1px 3px; margin-left: -3px; }
+  .node .sub[contenteditable="true"] { cursor: text; }
+  .node .sub[contenteditable="true"]:focus { background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-2); color: var(--text); }
+  .node .sub[contenteditable="true"]:hover:not(:focus) { background: var(--panel-soft); }
+
+  .node.t-trigger { border-color: #a7f3d0; }
+  .node.t-trigger .badge { background: var(--c-trigger); color: var(--c-trigger-fg); }
+  .node.t-question .badge { background: var(--c-question); color: var(--c-question-fg); }
+  .node.t-answer .badge { background: var(--c-answer); color: var(--c-answer-fg); }
+  .node.t-action .badge { background: var(--c-action); color: var(--c-action-fg); }
+  .node.t-waiting .badge { background: var(--c-waiting); color: var(--c-waiting-fg); }
+  .node.t-rootcause .badge { background: var(--c-rootcause); color: var(--c-rootcause-fg); }
+  .node.t-observation .badge { background: var(--c-observation); color: var(--c-observation-fg); }
+  .node.t-sensor .badge { background: var(--c-sensor); color: var(--c-sensor-fg); }
+  .node.t-reassign .badge { background: var(--c-reassign); color: var(--c-reassign-fg); }
+  .node.t-jump .badge { background: var(--c-jump); color: var(--c-jump-fg); }
+  .node.t-end { border-radius: 24px; padding: 10px 22px; width: 220px; text-align: center; }
+  .node.t-end .badge { background: var(--c-end); color: var(--c-end-fg); }
+  .node.t-skip_end .badge { background: var(--c-skip_end); color: var(--c-skip_end-fg); }
+
+  /* Per-option rows with their own ports — FIXED HEIGHTS */
+  .node .options { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 5px; }
+  .node .opt-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; background: var(--panel-soft);
+    border-radius: 7px; position: relative;
+    height: 30px;
+  }
+  .node .opt-row:hover { background: var(--accent-soft); }
+  .node .opt-row .opt-num { width: 18px; height: 18px; border-radius: 5px; background: var(--accent-2); color: #fff; font-size: 9.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .node .opt-row .opt-text { font-size: 11.5px; flex: 1; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; outline: none; border-radius: 4px; padding: 1px 3px; margin-left: -3px; cursor: text; }
+  .node .opt-row .opt-text:focus { background: var(--panel); box-shadow: 0 0 0 2px var(--accent-2); overflow: visible; white-space: normal; }
+  .node .opt-row .opt-text:hover:not(:focus) { background: var(--panel); }
+  .node .opt-row .opt-rt { font-size: 9.5px; color: var(--muted); background: #fff; padding: 1px 6px; border-radius: 3px; border: 1px solid var(--border); cursor: pointer; }
+  .node .opt-row .opt-rt:hover { border-color: var(--accent-2); color: var(--accent-2); }
+
+  /* PER-OPTION ports distributed along the BOTTOM edge of the card */
+  .node .opt-port {
+    position: absolute; bottom: -7px;
+    width: 14px; height: 14px; background: #fff; border: 2px solid var(--muted-2);
+    border-radius: 50%; cursor: crosshair; transition: all 0.15s; z-index: 3;
+    transform: translateX(-50%);
+  }
+  .node .opt-port:hover, .node .opt-port.hot { background: var(--accent-2); border-color: var(--accent-2); transform: translateX(-50%) scale(1.35); box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
+  .opt-port-num {
+    position: absolute; bottom: -28px;
+    transform: translateX(-50%);
+    background: var(--accent-2); color: #fff;
+    font-size: 9.5px; font-weight: 700;
+    padding: 2px 6px; border-radius: 4px;
+    pointer-events: none; white-space: nowrap;
+  }
+  .opt-port-num.safe { background: var(--green); }
+  .opt-port-num.warn { background: var(--yellow); color: #fff; }
+  .opt-port-num.crit { background: var(--red); }
+
+  /* Add-branch row */
+  .node .opt-add { padding: 5px 8px; height: 26px; background: transparent; border: 1px dashed var(--border); border-radius: 6px; color: var(--muted); font-size: 11px; cursor: pointer; text-align: center; font-weight: 600; }
+  .node .opt-add:hover { border-color: var(--accent-2); color: var(--accent-2); }
+
+  /* Sensor thresholds inline */
+  .node .thresholds { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 5px; }
+  .node .thr-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--panel-soft); border-radius: 7px; height: 30px; position: relative; }
+  .node .thr-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .node .thr-dot.safe { background: var(--green); }
+  .node .thr-dot.warn { background: var(--yellow); }
+  .node .thr-dot.crit { background: var(--red); }
+  .node .thr-row .lbl { flex: 1; font-size: 11.5px; font-weight: 500; }
+  .node .thr-row .range { color: var(--muted); font-size: 10px; }
+
+  /* 4-side generic ports */
+  .port {
+    position: absolute; width: 12px; height: 12px;
+    background: #fff; border: 2px solid var(--muted-2); border-radius: 50%;
+    cursor: crosshair; transition: all 0.15s; z-index: 3;
+  }
+  .port:hover, .port.hot { background: var(--accent-2); border-color: var(--accent-2); transform: scale(1.4); box-shadow: 0 0 0 4px rgba(99,102,241,0.2); }
+  /* Top-down flow direction — input on top, output on bottom */
+  .port.top    { top: -7px;    left: 50%; transform: translateX(-50%); }
+  .port.bottom { bottom: -7px; left: 50%; transform: translateX(-50%); }
+  .port.top:hover, .port.top.hot, .port.bottom:hover, .port.bottom.hot { transform: translateX(-50%) scale(1.35); }
+  /* Legacy left/right kept for backward-compat but hidden */
+  .port.left, .port.right { display: none; }
+
+  /* The little "+" button below the bottom output port — shortcut to insert next step */
+  .node:hover .port-add { opacity: 1; }
+  .port-add { position: absolute; bottom: -34px; left: 50%; transform: translateX(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; border: none; cursor: pointer; font-size: 14px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; opacity: 0; transition: all 0.15s; box-shadow: var(--shadow-sm); z-index: 3; }
+  .port-add:hover { background: #059669; transform: translateX(-50%) scale(1.15); }
+
+  /* ============ ZOOM PILL ============ */
+  .zoom-pill { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--header); color: #fff; border-radius: 999px; padding: 5px 8px; display: flex; align-items: center; gap: 4px; font-size: 12.5px; box-shadow: var(--shadow-md); z-index: 5; }
+  .zoom-pill button { background: transparent; border: none; color: #fff; padding: 6px 12px; border-radius: 999px; cursor: pointer; font-size: 12.5px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: background 0.15s; }
+  .zoom-pill button:hover { background: rgba(255,255,255,0.08); }
+  .zoom-pill .lvl { padding: 6px 10px; font-weight: 600; min-width: 50px; text-align: center; }
+  .zoom-pill .div { width: 1px; height: 16px; background: rgba(255,255,255,0.12); margin: 0 4px; }
+  .quick-pill { position: absolute; bottom: 20px; right: 30px; background: var(--header); color: #fff; border-radius: 999px; padding: 5px 8px 5px 14px; display: flex; align-items: center; gap: 6px; font-size: 12.5px; box-shadow: var(--shadow-md); z-index: 5; cursor: pointer; }
+  .quick-pill:hover { background: #1f2937; }
+  .quick-pill .qa-btn { background: var(--accent); color: #fff; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+
+  /* ============ INSPECTOR DRAWER ============ */
+  #inspector { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; background: var(--panel); border-left: 1px solid var(--border-2); box-shadow: var(--shadow-lg); transform: translateX(100%); transition: transform 0.25s ease; z-index: 10; display: flex; flex-direction: column; }
+  #inspector.open { transform: translateX(0); }
+  .insp-head { padding: 16px 20px; border-bottom: 1px solid var(--border-2); display: flex; align-items: center; gap: 10px; }
+  .insp-head .badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; }
+  .insp-head .htitle { flex: 1; min-width: 0; }
+  .insp-head .t { font-size: 14px; font-weight: 700; }
+  .insp-head .s { font-size: 11px; color: var(--muted); font-family: ui-monospace, monospace; }
+  .insp-head .x { width: 30px; height: 30px; border-radius: 8px; background: var(--panel-soft); border: 1px solid var(--border); color: var(--muted); cursor: pointer; font-size: 16px; }
+  .insp-head .x:hover { background: var(--bg); color: var(--text); }
+  .insp-tabs { display: flex; padding: 0 20px; border-bottom: 1px solid var(--border-2); gap: 18px; }
+  .insp-tab { padding: 10px 0 11px; font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
+  .insp-tab.active { color: var(--accent-2); border-bottom-color: var(--accent-2); }
+  .insp-body { flex: 1; overflow-y: auto; padding: 18px 20px; font-size: 13px; }
+  .insp-body label { display: block; font-size: 10px; text-transform: uppercase; color: var(--muted); margin: 16px 0 6px; letter-spacing: 0.08em; font-weight: 700; }
+  .insp-body label:first-child { margin-top: 0; }
+  .insp-body input, .insp-body textarea, .insp-body select { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; background: var(--panel); transition: all 0.15s; }
+  .insp-body input:focus, .insp-body textarea:focus, .insp-body select:focus { outline: none; border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .insp-body textarea { min-height: 64px; resize: vertical; }
+  .helper-box { background: var(--accent-soft); border: 1px solid #c7d2fe; border-radius: 10px; padding: 11px 13px; margin-bottom: 16px; font-size: 12.5px; color: #3730a3; line-height: 1.5; display: flex; gap: 9px; }
+  .helper-box .ic { font-size: 14px; flex-shrink: 0; }
+
+  .route-table { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #fff; }
+  .route-row { padding: 9px; border-bottom: 1px solid var(--border-2); display: grid; grid-template-columns: 22px 1fr 24px; gap: 8px; align-items: start; }
+  .route-row:last-child { border-bottom: none; }
+  .route-row .num { width: 22px; height: 22px; border-radius: 6px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; color: #fff; margin-top: 4px; }
+  .num.safe { background: var(--green); } .num.warn { background: var(--yellow); } .num.crit { background: var(--red); } .num.opt { background: var(--accent-2); }
+  .route-row .rfields { display: flex; flex-direction: column; gap: 4px; }
+  .route-row input, .route-row select { padding: 7px 9px; font-size: 12px; }
+  .route-row .del { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 6px; cursor: pointer; font-size: 13px; height: 28px; margin-top: 4px; }
+  .route-row .del:hover { background: #fee2e2; }
+  .row-range { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+
+  .add-btn { background: var(--panel-soft); border: 1px dashed var(--muted-2); padding: 9px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; font-weight: 600; }
+  .add-btn:hover { border-color: var(--accent-2); color: var(--accent-2); background: #fff; }
+  .gen-btn { width: 100%; padding: 10px; background: var(--header); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12.5px; margin-top: 10px; }
+  .gen-btn:hover { background: #1f2937; }
+  .danger-btn { background: #fff; border: 1px solid #fecaca; color: var(--red); padding: 10px 14px; border-radius: 8px; cursor: pointer; margin-top: 24px; width: 100%; font-weight: 600; font-size: 12.5px; }
+  .danger-btn:hover { background: var(--red); color: #fff; }
+
+  /* ============ INSERT POPOVER ============ */
+  .insert-popover { position: absolute; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-lg); padding: 12px; width: 280px; z-index: 100; animation: pop 0.15s; }
+  .insert-popover h4 { font-size: 11px; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; letter-spacing: 0.06em; font-weight: 700; }
+  .insert-popover .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .insert-popover .ip-card { padding: 10px 8px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; transition: all 0.15s; }
+  .insert-popover .ip-card:hover { border-color: var(--accent-2); background: var(--accent-soft); }
+  .insert-popover .ip-card .pic { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .insert-popover .ip-card .lbl { font-size: 11px; font-weight: 600; }
+  .insert-popover .close { position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
+
+  /* ============ TOOLTIP ============ */
+  .tooltip { position: fixed; background: var(--header); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 11.5px; max-width: 240px; line-height: 1.5; box-shadow: var(--shadow-lg); z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+  .tooltip.show { opacity: 1; }
+
+  /* ============ MODALS ============ */
+  .modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 200; animation: fade 0.2s; }
+  .modal { background: var(--panel); border-radius: 16px; padding: 28px; width: 540px; max-width: 92vw; box-shadow: var(--shadow-lg); animation: pop 0.25s; max-height: 86vh; overflow-y: auto; }
+  .modal h2 { margin: 0 0 6px; font-size: 18px; font-weight: 700; }
+  .modal p { color: var(--muted); margin: 0 0 18px; font-size: 13.5px; line-height: 1.5; }
+  .modal .choice { padding: 16px; border: 1.5px solid var(--border); border-radius: 12px; cursor: pointer; margin-bottom: 10px; transition: all 0.15s; }
+  .modal .choice:hover { border-color: var(--accent-2); background: var(--accent-soft); }
+  .modal .choice h3 { margin: 0 0 4px; font-size: 14px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .modal .choice p { margin: 0; font-size: 12.5px; }
+  .modal .em { font-size: 22px; }
+  .modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+  .modal input, .modal select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; }
+  .modal button { font-size: 13px; padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; font-weight: 500; }
+  .modal button.primary { background: var(--accent); color: #fff; border: none; font-weight: 600; }
+  .modal button.primary:hover { background: #059669; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+  .tpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .tpl-card { padding: 16px; border: 1.5px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.15s; background: var(--panel); position: relative; }
+  .tpl-card:hover { border-color: var(--accent-2); background: var(--accent-soft); }
+  .tpl-card .em { font-size: 22px; margin-bottom: 8px; display: block; }
+  .tpl-card .nm { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .tpl-card .mt { font-size: 11px; color: var(--muted); }
+  .tpl-card .del { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--border-2); border: none; color: var(--muted); font-size: 12px; cursor: pointer; opacity: 0; transition: opacity 0.15s; }
+  .tpl-card:hover .del { opacity: 1; }
+  .tpl-card .del:hover { background: var(--red); color: #fff; }
+
+  .edge-label { fill: var(--text); font-size: 11px; font-weight: 600; }
+  .edge-label-bg { fill: #fff; stroke: #fff; stroke-width: 5; paint-order: stroke; }
+
+  .toast { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); background: var(--header); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); z-index: 300; animation: pop 0.2s; }
+</style>
+</head>
+<body><div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#1e293b;color:#fff;font:600 12px/1.4 -apple-system,Segoe UI,sans-serif;padding:7px 14px;text-align:center">Previous version (archived). <a href="../" style="color:#a5b4fc">→ Go to current version</a></div>
+<div id="app">
+  <div id="header">
+    <button class="menu-btn" id="btn-collapse">≡</button>
+    <div class="logo"><div class="lg-ic">⚡</div>flowconfig.io</div>
+    <span class="crumb">/</span>
+    <select id="tree-sel"></select>
+    <span class="crumb">/</span>
+    <select id="flow-sel"></select>
+    <div class="stepper-mini">
+      <div class="step-chip done"><span class="n">✓</span>Set up</div>
+      <div class="step-chip active"><span class="n">2</span>Build the flow</div>
+      <div class="step-chip"><span class="n">3</span>Review</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="view-toggle">
+      <button data-view="canvas" id="vt-canvas" class="active">⇆ Horizontal</button>
+      <button data-view="stepped" id="vt-stepped">↓ Vertical</button>
+    </div>
+    <button class="h-pill-btn" id="btn-templates">📚 Templates</button>
+    <button class="h-pill-btn primary" id="btn-save-tpl">💾 Save as template</button>
+    <div class="avs">
+      <div class="av">MS</div>
+      <div class="av">RA</div>
+      <div class="av">AK</div>
+      <div class="av more">+2</div>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="sidebar">
+      <div class="panel-search"><input id="palette-search" placeholder="Search node types…" /></div>
+
+      <div class="pgroup">
+        <div class="pgroup-head"><div class="lbl">Step blocks</div><div class="ct" id="ct-step">7</div></div>
+        <div class="pgroup-grid" id="pg-step"></div>
+      </div>
+      <div class="pgroup">
+        <div class="pgroup-head"><div class="lbl">Helpers</div><div class="ct" id="ct-help">4</div></div>
+        <div class="pgroup-grid" id="pg-help"></div>
+      </div>
+    </div>
+
+    <div id="canvas-wrap">
+      <svg id="edges"></svg>
+      <div id="canvas"></div>
+      <div id="stepped-view"></div>
+
+      <div class="canvas-top">
+        <div class="filter-chip">📊 <span id="filter-flow">Flow</span></div>
+        <div class="filter-chip">Status: pending <span class="ic">✕</span></div>
+      </div>
+      <div class="saved-status">saved just now</div>
+
+      <div class="zoom-pill">
+        <button id="zoom-out">−</button>
+        <span class="lvl" id="zoom-lvl">100%</span>
+        <button id="zoom-in">+</button>
+        <span class="div"></span>
+        <button id="auto-layout-btn" title="Auto-arrange top-down">⤓ Layout</button>
+        <button id="zoom-fit">⊡ Fit</button>
+      </div>
+      <div class="quick-pill" id="quick-add">＋ Quick add <span class="qa-btn">⌘K</span></div>
+    </div>
+
+    <div id="inspector">
+      <div class="insp-head">
+        <div class="badge" id="insp-badge">—</div>
+        <div class="htitle"><div class="t" id="insp-title">—</div><div class="s" id="insp-sub">—</div></div>
+        <button class="x" id="insp-close">×</button>
+      </div>
+      <div class="insp-body" id="insp-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Insert popover (shown when port-drag drops on empty canvas) -->
+<div class="insert-popover" id="insert-popover" style="display:none">
+  <button class="close" id="ip-close">×</button>
+  <h4>Pick a node to insert</h4>
+  <div class="grid" id="ip-grid"></div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<div class="modal-bg" id="welcome-modal" style="display:none">
+  <div class="modal">
+    <h2>Welcome to FlowConfig</h2>
+    <p>Pick how you want to start:</p>
+    <div class="choice" data-action="dummy"><h3><span class="em">🧪</span> Load demo · "Low DO in Aeration Tank"</h3><p>6-flow diagnostic tree. Flow 3 fully built.</p></div>
+    <div class="choice" data-action="template"><h3><span class="em">📚</span> Start from a template</h3><p>Built-in or saved templates.</p></div>
+    <div class="choice" data-action="scratch"><h3><span class="em">✨</span> Start from scratch</h3><p>Blank canvas with a single Trigger.</p></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="tpl-modal" style="display:none">
+  <div class="modal" style="width: 640px">
+    <h2>📚 Template library</h2>
+    <p>Pick a template to load.</p>
+    <div class="tpl-grid" id="tpl-grid"></div>
+    <div class="actions"><button id="tpl-close">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="tpl-save-modal" style="display:none">
+  <div class="modal">
+    <h2>💾 Save as template</h2>
+    <p>Saves the <b>current tree</b> for reuse.</p>
+    <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin-bottom:6px">Template name</label>
+    <input id="tpl-save-name" />
+    <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;display:block;margin:14px 0 6px">Emoji</label>
+    <input id="tpl-save-emoji" maxlength="2" />
+    <div class="actions"><button id="tpl-save-cancel">Cancel</button><button class="primary" id="tpl-save-confirm">Save</button></div>
+  </div>
+</div>
+
+<script>
+// =============================================================
+// Node-type metadata
+// =============================================================
+const NTYPES = {
+  // === HIERARCHY: Trigger → Possible Root Causes → flow steps → End/Jump ===
+  trigger:     { label: 'Trigger',               icon: '⚠', group: 'step',  help: 'Entry point of the diagnostic tree. Issue or event that kicks things off. Usually followed by Possible Root Causes.' },
+  rootcause:   { label: 'Possible Root Causes',  icon: '🌱', group: 'step', help: 'List of possible root causes. Each cause has a sequence (display order) and routes to its own flow. Operator picks the matching one to start the right diagnostic.' },
+  question:    { label: 'Question',              icon: '?',  group: 'step', help: 'A decision step inside a flow. Each option becomes its own port on the right edge. Set a sequence to control the order questions appear to the operator.' },
+  action:      { label: 'Action',                icon: '✓',  group: 'step', help: 'A task the operator performs. Pick an Action type in the inspector — Escalate also lets you pick a user.' },
+  sensor:      { label: 'Sensor reading',        icon: '📡', group: 'step', help: 'Read a sensor by Tag — thresholds (Safe/Warning/Critical) are inherited from the tag and can be overridden.' },
+  reassign:    { label: 'Reassign',              icon: '↻',  group: 'help', help: 'Hand the flow off to another role / user.' },
+  waiting:     { label: 'Waiting',               icon: '⏱', group: 'help', help: 'Pause the flow for a configurable duration before continuing.' },
+  skip_end:    { label: 'Skip to the end',       icon: '⏭', group: 'help', help: 'Operator bypass — auto-chains to Photo + RCA capture then Done. Use when the operator wants to abandon the diagnostic.' },
+  jump:        { label: 'Jump to flow',          icon: '↗',  group: 'help', help: 'Transition to another flow in the tree. Use to chain root-cause flows or hand off to a related diagnostic.' },
+  end:         { label: 'Done',                  icon: '■',  group: 'help', help: 'Terminates the flow. The flow ends here.' }
+};
+
+// Preset sensor tags — selecting a tag inherits its unit + threshold bands
+const SENSOR_TAGS = [
+  { id: 'DO_TANK_01',       label: 'DO Tank 01',         unit: 'mg/L', safe: { min: 2,    max: null }, warn: { min: 1,    max: 2 },    crit: { min: null, max: 1 } },
+  { id: 'DO_TANK_02',       label: 'DO Tank 02',         unit: 'mg/L', safe: { min: 2,    max: null }, warn: { min: 1,    max: 2 },    crit: { min: null, max: 1 } },
+  { id: 'PRESSURE_HEADER',  label: 'Header pressure',    unit: 'bar',  safe: { min: 0.5,  max: 1.5 },  warn: { min: 0.2,  max: 0.5 },  crit: { min: null, max: 0.2 } },
+  { id: 'TEMP_REACTOR',     label: 'Reactor temp',       unit: '°C',   safe: { min: 20,   max: 35 },   warn: { min: 35,   max: 45 },   crit: { min: 45,   max: null } },
+  { id: 'PH_INLET',         label: 'Inlet pH',           unit: 'pH',   safe: { min: 6.5,  max: 8.5 },  warn: { min: 6,    max: 6.5 },  crit: { min: null, max: 6 } },
+  { id: 'FLOW_RECIRC',      label: 'Recirculation flow', unit: 'm³/h', safe: { min: 50,   max: null }, warn: { min: 20,   max: 50 },   crit: { min: null, max: 20 } },
+  { id: 'MLSS',             label: 'MLSS',               unit: 'mg/L', safe: { min: 2500, max: 4000 }, warn: { min: 1500, max: 2500 }, crit: { min: null, max: 1500 } }
+];
+
+const ACTION_TYPES = [
+  { id: 'photo',     label: 'Photo upload', userSelect: false },
+  { id: 'message',   label: 'Send message', userSelect: true },
+  { id: 'call',      label: 'Call supervisor', userSelect: true },
+  { id: 'escalate',  label: 'Escalate', userSelect: true },
+  { id: 'custom',    label: 'Custom', userSelect: false }
+];
+const ROLES = ['Supervisor','Maintenance','Process Engineer','Lab Technician','Field Operator','Custom'];
+
+// =============================================================
+// Data + persistence
+// =============================================================
+const data = { trees: [] };
+let nextId = 1000;
+function uid(p) { return `${p}${++nextId}`; }
+const STORAGE_KEY = 'flowconfig-v6';
+const TEMPLATES_KEY = 'flowconfig-templates-v1';
+
+function persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (_) {} }
+function loadPersisted() {
+  try { const r = localStorage.getItem(STORAGE_KEY); if (!r) return false;
+    const p = JSON.parse(r); if (!p.trees || !p.trees.length) return false;
+    data.trees = p.trees; curTree = data.trees[0]; curFlow = curTree.flows[0]; return true;
+  } catch (_) { return false; }
+}
+function loadTemplates() { try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || '[]'); } catch (_) { return []; } }
+function saveTemplates(l) { try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(l)); } catch (_) {} }
+
+// =============================================================
+// Demo trees
+// =============================================================
+function buildLowDoTree() {
+  const t = { id: uid('tree_'), name: 'Low DO in Aeration Tank', flows: [] };
+  const causes = ['Blower OFF check','Blower performance','Uneven bubbling / dead zones','DO sensor failure','Sludge bulking','Shock load / toxicity'];
+  // Build child flows first so we can reference their IDs in the triage root-cause selector
+  causes.forEach((nm, i) => {
+    if (i === 2) t.flows.push(buildFlow3());
+    else t.flows.push({ id: uid('f_'), name: `Flow ${i+1} · ${nm}`, nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: nm }], edges: [] });
+  });
+  // Insert Triage flow as flow 0 — Trigger → Possible Root Causes
+  const tId = uid('n_'), rcId = uid('n_');
+  const triage = {
+    id: uid('f_'), name: 'Flow 0 · Triage',
+    nodes: [
+      { id: tId, type: 'trigger', x: 80, y: 280, label: 'Low DO alarm in Aeration tank' },
+      { id: rcId, type: 'rootcause', x: 440, y: 200, label: 'Possible Root Causes',
+        options: t.flows.map((f, i) => ({ id: uid('opt_'), text: causes[i], route: 'flow:' + f.id, sequence: i + 1 }))
+      }
+    ],
+    edges: [{ id: uid('e_'), from: tId, to: rcId }]
+  };
+  t.flows.unshift(triage);
+  return t;
+}
+function buildPumpTree() {
+  const t = { id: uid('tree_'), name: 'Pump leakage', flows: [] };
+  ['Discharge pressure','Filter choking','Mechanical seal','Gland packing','Bearing failure'].forEach((nm, i) =>
+    t.flows.push({ id: uid('f_'), name: `Flow ${i+1} · ${nm}`, nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: nm }], edges: [] }));
+  return t;
+}
+function buildBasicTree() {
+  const t = uid('n_'), q = uid('n_'), a1 = uid('n_'), a2 = uid('n_'), e = uid('n_');
+  return { id: uid('tree_'), name: 'Basic triage', flows: [{
+    id: uid('f_'), name: 'Flow 1 · Triage',
+    nodes: [
+      { id: t, type: 'trigger', x: 80, y: 200, label: 'Issue reported' },
+      { id: q, type: 'question', x: 400, y: 180, label: 'Is the issue urgent?', options: [
+        { id: uid('opt_'), text: 'Yes', route: 'node:' + a1 },
+        { id: uid('opt_'), text: 'No',  route: 'node:' + a2 }
+      ]},
+      { id: a1, type: 'action', x: 780, y: 100, label: 'Escalate', actionType: 'escalate' },
+      { id: a2, type: 'action', x: 780, y: 280, label: 'Log & monitor', actionType: 'form' },
+      { id: e,  type: 'end',    x: 1100, y: 200, label: 'Done' }
+    ],
+    edges: [{ id: uid('e_'), from: t, to: q }, { id: uid('e_'), from: a1, to: e }, { id: uid('e_'), from: a2, to: e }]
+  }]};
+}
+function buildFlow3() {
+  const i = {};
+  ['t','q1','q2','aCall','aSkip','aDiff','sens','aRca','aReasn','end1'].forEach(k => i[k] = uid('n_'));
+  return { id: uid('f_'), name: 'Flow 3 · Uneven bubbling',
+    nodes: [
+      { id: i.t,     type: 'trigger',  x: 60,   y: 320, label: 'Low DO in Aeration tank' },
+      { id: i.q1,    type: 'question', x: 380,  y: 240, label: 'Is aeration even across the tank?', options: [
+        { id: uid('opt_'), text: 'Yes — bubbles normal', route: 'node:' + i.q2 },
+        { id: uid('opt_'), text: 'Moderate bubbling',     route: 'node:' + i.q2 },
+        { id: uid('opt_'), text: 'No bubbles',             route: 'node:' + i.aCall },
+        { id: uid('opt_'), text: 'Skip to end',            route: 'node:' + i.aSkip }
+      ]},
+      { id: i.q2,    type: 'question', x: 780,  y: 80, label: 'Are dead zones created?', options: [
+        { id: uid('opt_'), text: 'Sludge accumulation',         route: 'node:' + i.aDiff },
+        { id: uid('opt_'), text: 'Dark / black water',           route: 'node:' + i.aDiff },
+        { id: uid('opt_'), text: 'Uneven DO readings',           route: 'node:' + i.sens },
+        { id: uid('opt_'), text: 'Reduced treatment performance',route: 'node:' + i.sens },
+        { id: uid('opt_'), text: 'Skip',                          route: 'node:' + i.aRca },
+        { id: uid('opt_'), text: 'Reassignment',                  route: 'node:' + i.aReasn }
+      ]},
+      { id: i.aCall, type: 'action',  x: 780, y: 540, label: 'Call supervisor', actionType: 'call', sub: 'Diffusers appear choked' },
+      { id: i.aSkip, type: 'action',  x: 780, y: 670, label: 'Photo + RCA', actionType: 'photo_rca' },
+      { id: i.aDiff, type: 'action',  x: 1180, y: 80, label: 'Diffusers choked — plan cleaning', actionType: 'message' },
+      { id: i.sens,  type: 'sensor',  x: 1180, y: 240, label: 'Verify DO reading', sensorName: 'DO sensor', unit: 'mg/L', thresholds: [
+        { id: 'safe', label: 'Safe',     min: 2,    max: null, route: '' },
+        { id: 'warn', label: 'Warning',  min: 1,    max: 2,    route: '' },
+        { id: 'crit', label: 'Critical', min: null, max: 1,    route: '' }
+      ]},
+      { id: i.aRca,    type: 'action',  x: 1180, y: 460, label: 'Media upload + RCA', actionType: 'photo_rca' },
+      { id: i.aReasn,  type: 'reassign',x: 1180, y: 600, label: 'Reassign', role: 'Supervisor' },
+      { id: i.end1,    type: 'end',     x: 1540, y: 540, label: 'Done' }
+    ],
+    edges: [
+      { id: uid('e_'), from: i.t, to: i.q1 },
+      { id: uid('e_'), from: i.aCall, to: i.end1 },
+      { id: uid('e_'), from: i.aSkip, to: i.end1 },
+      { id: uid('e_'), from: i.aDiff, to: i.end1 },
+      { id: uid('e_'), from: i.aRca, to: i.end1 },
+      { id: uid('e_'), from: i.aReasn, to: i.end1 }
+    ]
+  };
+}
+
+const BUILTIN_TEMPLATES = [
+  { id: 't1', name: 'Low DO Diagnostic',  emoji: '🌊', desc: '6 flows · aeration tank',    builder: buildLowDoTree },
+  { id: 't2', name: 'Pump Leakage',       emoji: '💧', desc: '5 flows · feed pump',         builder: buildPumpTree },
+  { id: 't3', name: 'Basic Triage',       emoji: '🧭', desc: '1 flow · starter',            builder: buildBasicTree }
+];
+
+// =============================================================
+// State + DOM
+// =============================================================
+let curTree, curFlow;
+let selection = null;
+let pan = { x: 0, y: 0 }, zoom = 1;
+let dragInProgress = false;
+let viewMode = localStorage.getItem('flowconfig-view') || 'canvas';
+
+const canvas = document.getElementById('canvas');
+const edgesSvg = document.getElementById('edges');
+const wrap = document.getElementById('canvas-wrap');
+const tooltip = document.getElementById('tooltip');
+const inspector = document.getElementById('inspector');
+const treeSel = document.getElementById('tree-sel');
+const flowSel = document.getElementById('flow-sel');
+const insertPop = document.getElementById('insert-popover');
+
+// Fixed pixel constants for option-port positioning (matches CSS)
+const NODE_HEAD_H = 64;   // top padding + badge + label margin (approx — only used for layout, not per-row)
+const OPT_ROW_H = 35;     // row height (30) + gap (5)
+
+// =============================================================
+// Palette
+// =============================================================
+function renderPalette() {
+  const search = (document.getElementById('palette-search').value || '').toLowerCase();
+  ['step', 'help'].forEach(grp => {
+    const el = document.getElementById('pg-' + grp);
+    const items = Object.entries(NTYPES).filter(([id, m]) => m.group === grp && (!search || m.label.toLowerCase().includes(search) || id.includes(search)));
+    el.innerHTML = items.map(([id, m]) => `
+      <div class="pcard" draggable="true" data-type="${id}" data-help="${escapeHtml(m.help)}">
+        <div class="pic t-${id}">${m.icon}</div>
+        <div class="lbl">${m.label}</div>
+      </div>`).join('');
+    document.getElementById('ct-' + grp).textContent = items.length;
+  });
+  document.querySelectorAll('.pcard').forEach(c => {
+    c.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', c.dataset.type));
+    c.addEventListener('mouseenter', e => showTooltip(c.dataset.help, c));
+    c.addEventListener('mouseleave', hideTooltip);
+  });
+}
+function showTooltip(t, el) {
+  if (!t) return;
+  tooltip.textContent = t;
+  const r = el.getBoundingClientRect();
+  tooltip.style.left = (r.right + 8) + 'px';
+  tooltip.style.top = r.top + 'px';
+  tooltip.classList.add('show');
+}
+function hideTooltip() { tooltip.classList.remove('show'); }
+
+document.getElementById('btn-collapse').onclick = () => {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+};
+document.getElementById('palette-search').oninput = renderPalette;
+document.getElementById('vt-canvas').onclick = () => setViewMode('canvas');
+document.getElementById('vt-stepped').onclick = () => setViewMode('stepped');
+function setViewMode(m) {
+  viewMode = m;
+  try { localStorage.setItem('flowconfig-view', m); } catch (_) {}
+  render();
+  if (m === 'canvas') fitView();
+}
+
+// =============================================================
+// Header
+// =============================================================
+function refreshHeader() {
+  treeSel.innerHTML = data.trees.map(t => `<option value="${t.id}" ${t === curTree ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('');
+  flowSel.innerHTML = curTree.flows.map(f => `<option value="${f.id}" ${f === curFlow ? 'selected' : ''}>${escapeHtml(f.name)}</option>`).join('') + `<option value="__new__">＋ New flow…</option>`;
+  document.getElementById('filter-flow').textContent = curFlow.name;
+}
+treeSel.onchange = e => { curTree = data.trees.find(t => t.id === e.target.value); curFlow = curTree.flows[0]; selection = null; closeInspector(); render(); fitView(); };
+flowSel.onchange = e => {
+  if (e.target.value === '__new__') {
+    const nm = prompt('Flow name?', 'New flow');
+    if (!nm) { refreshHeader(); return; }
+    const f = { id: uid('f_'), name: nm, nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: nm }], edges: [] };
+    curTree.flows.push(f); curFlow = f; selection = null; closeInspector(); render(); fitView(); return;
+  }
+  curFlow = curTree.flows.find(f => f.id === e.target.value);
+  selection = null; closeInspector(); render(); fitView();
+};
+
+// =============================================================
+// Render
+// =============================================================
+function applyTransform() {
+  canvas.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
+  edgesSvg.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
+  document.getElementById('zoom-lvl').textContent = Math.round(zoom * 100) + '%';
+}
+let inlineEditingId = null; // id of node whose card text is being edited inline
+function render(opts) {
+  opts = opts || {};
+  refreshHeader();
+  // Apply view mode visibility
+  wrap.classList.toggle('stepped', viewMode === 'stepped');
+  document.getElementById('stepped-view').classList.toggle('active', viewMode === 'stepped');
+  document.getElementById('vt-canvas').classList.toggle('active', viewMode === 'canvas');
+  document.getElementById('vt-stepped').classList.toggle('active', viewMode === 'stepped');
+
+  if (viewMode === 'canvas') {
+    if (!inlineEditingId) {
+      canvas.innerHTML = '';
+      curFlow.nodes.forEach(n => canvas.appendChild(renderNode(n)));
+      curFlow.nodes.forEach(n => {
+        if ((n.type === 'question' || n.type === 'rootcause') && n.options) cacheOptOffsets(n);
+        if (n.type === 'sensor') cacheThresholdOffsets(n);
+      });
+      renderEdges();
+    } else {
+      renderEdges();
+    }
+    applyTransform();
+  } else {
+    if (!inlineEditingId) renderStepped();
+  }
+  if (selection && !opts.skipInspector) renderInspector();
+  persist();
+}
+function cacheOptOffsets(n) {
+  const el = canvas.querySelector(`[data-id="${n.id}"]`);
+  if (!el) return;
+  n._optY = {};
+  n.options.forEach(o => {
+    const row = el.querySelector(`.opt-row[data-opt="${o.id}"]`);
+    if (row) n._optY[o.id] = row.offsetTop + row.offsetHeight / 2;
+  });
+}
+function cacheThresholdOffsets(n) {
+  const el = canvas.querySelector(`[data-id="${n.id}"]`);
+  if (!el) return;
+  n._thrY = {};
+  n.thresholds.forEach(t => {
+    const row = el.querySelector(`.thr-row[data-thr="${t.id}"]`);
+    if (row) n._thrY[t.id] = row.offsetTop + row.offsetHeight / 2;
+  });
+}
+
+function renderNode(n) {
+  const m = NTYPES[n.type] || NTYPES.action;
+  const el = document.createElement('div');
+  el.className = `node t-${n.type}` + (selection && selection.kind === 'node' && selection.id === n.id ? ' selected' : '');
+  el.style.left = n.x + 'px';
+  el.style.top = n.y + 'px';
+  el.dataset.id = n.id;
+
+  let sub = n.sub || '';
+  if (n.type === 'jump' && n.targetFlow) {
+    const tg = curTree.flows.find(f => f.id === n.targetFlow);
+    sub = '→ ' + (tg ? tg.name : '(unset)');
+  }
+  if (n.type === 'waiting') {
+    if ((n.waitMode || 'time') === 'time' && n.waitValue != null) sub = '⏱ ' + n.waitValue + ' ' + (n.waitUnit || 'minutes');
+    else if (n.waitMode === 'event' && n.waitEvent) sub = '⚡ ' + n.waitEvent;
+    else if (n.duration) sub = '⏱ ' + n.duration; // legacy field
+  }
+  if (n.type === 'reassign' && n.role) sub = '👤 ' + n.role + (n.userName ? ' · ' + n.userName : '');
+  if ((n.type === 'action' || n.type === 'answer') && n.actionType) {
+    const at = ACTION_TYPES.find(a => a.id === n.actionType);
+    if (at) {
+      sub = '⚙ ' + at.label;
+      if (at.userSelect && n.escalateRole) sub += ' → ' + n.escalateRole + (n.escalateUser ? ' (' + n.escalateUser + ')' : '');
+    }
+  }
+  if (n.type === 'sensor') {
+    if (n.sensorTag && n.sensorTag !== '__custom__') {
+      const tag = SENSOR_TAGS.find(s => s.id === n.sensorTag);
+      if (tag) sub = '🏷 ' + tag.label + ' · ' + tag.unit;
+    } else if (n.sensorName) sub = '🏷 ' + n.sensorName + (n.unit ? ' · ' + n.unit : '');
+  }
+  if (n.type === 'skip_end') sub = '→ Photo + RCA → Done';
+
+  // Build inner HTML
+  const seqChip = (n.type === 'question' && n.sequence) ? `<div style="margin-left:auto;font-size:10px;background:var(--accent-soft);color:var(--accent-2);padding:2px 7px;border-radius:4px;font-weight:700">#${n.sequence}</div>` : '';
+  // Description is editable too — but only for plain node types where sub is user-provided
+  const subEditable = ['trigger','action','reassign','waiting','end','question','rootcause','sensor'].includes(n.type);
+  let inner = `
+    <div class="nhead"><div class="badge">${m.label}</div>${seqChip}</div>
+    <div class="label" contenteditable="true" spellcheck="false">${escapeHtml(n.label || '(untitled)')}</div>
+    ${sub ? `<div class="sub"${subEditable && !n.actionType && !n.role && !n.sensorTag && !n.duration ? ' contenteditable="true" spellcheck="false"' : ''}>${escapeHtml(sub)}</div>` : ''}
+  `;
+
+  const isBranching = (n.type === 'question' || n.type === 'rootcause') && n.options;
+  const isSensor = n.type === 'sensor';
+
+  if (isBranching) {
+    const sortedOpts = [...n.options].map((o, i) => ({ o, i })).sort((a, b) => (a.o.sequence || a.i + 1) - (b.o.sequence || b.i + 1));
+    inner += `<div class="options">` + sortedOpts.map(({ o, i }, displayIdx) => {
+      const rt = routeLabel(o.route);
+      const seq = o.sequence || i + 1;
+      const isFlow = o.route && o.route.startsWith('flow:');
+      const rtStyle = isFlow ? 'background:var(--c-jump);color:var(--c-jump-fg);border-color:transparent;font-weight:600;cursor:pointer' : '';
+      const jumpAttr = isFlow ? `data-jump-flow="${o.route.slice(5)}"` : '';
+      return `<div class="opt-row" data-opt="${o.id}">
+        <div class="opt-num">${seq}</div>
+        <div class="opt-text" contenteditable="true" spellcheck="false" data-edit-opt="${o.id}" title="Click to edit">${escapeHtml(o.text)}</div>
+        <div class="opt-rt" title="Click to change destination — ${escapeHtml(rt)}" style="${rtStyle}" ${jumpAttr} data-pick-route="${o.id}">${escapeHtml(rt)}</div>
+      </div>`;
+    }).join('') + `<div class="opt-add" data-add-opt="1">+ Add ${n.type === 'rootcause' ? 'root cause' : 'option'}</div></div>`;
+    // Bottom-edge ports — one per option, distributed horizontally
+    sortedOpts.forEach(({ o, i }, displayIdx) => {
+      const pct = ((displayIdx + 1) / (sortedOpts.length + 1)) * 100;
+      const seq = o.sequence || i + 1;
+      inner += `<div class="opt-port" data-opt-port="${o.id}" style="left:${pct}%"></div>`;
+      inner += `<div class="opt-port-num" style="left:${pct}%">${seq}</div>`;
+    });
+    inner += `<div class="port top" data-port="top"></div>`;
+  } else if (isSensor && n.thresholds) {
+    inner += `<div class="thresholds">` + n.thresholds.map(t => {
+      const c = t.id === 'safe' ? 'safe' : t.id === 'warn' ? 'warn' : 'crit';
+      const range = t.min != null && t.max != null ? `${t.min}–${t.max}` : t.min != null ? `≥ ${t.min}` : t.max != null ? `< ${t.max}` : 'any';
+      return `<div class="thr-row" data-thr="${t.id}">
+        <div class="thr-dot ${c}"></div>
+        <div class="lbl">${escapeHtml(t.label)}</div>
+        <div class="range">${range} ${n.unit || ''}</div>
+      </div>`;
+    }).join('') + `</div>`;
+    n.thresholds.forEach((t, i) => {
+      const pct = ((i + 1) / (n.thresholds.length + 1)) * 100;
+      const cls = t.id === 'safe' ? 'safe' : t.id === 'warn' ? 'warn' : 'crit';
+      const letter = t.id === 'safe' ? 'S' : t.id === 'warn' ? 'W' : 'C';
+      inner += `<div class="opt-port" data-thr-port="${t.id}" style="left:${pct}%"></div>`;
+      inner += `<div class="opt-port-num ${cls}" style="left:${pct}%">${letter}</div>`;
+    });
+    inner += `<div class="port top" data-port="top"></div>`;
+  } else {
+    // Non-branching: input top, output bottom (with quick-add +)
+    if (n.type !== 'trigger') inner += `<div class="port top" data-port="top"></div>`;
+    if (n.type !== 'end') {
+      inner += `<div class="port bottom" data-port="bottom"></div>`;
+      inner += `<button class="port-add" title="Add next step">+</button>`;
+    }
+  }
+
+  el.innerHTML = inner;
+  attachNodeHandlers(el, n);
+  // Inline edit handlers for label + sub
+  el.querySelectorAll('[contenteditable="true"]').forEach(ce => {
+    ce.addEventListener('mousedown', e => e.stopPropagation()); // don't trigger node drag
+    ce.addEventListener('focus', () => { inlineEditingId = n.id; });
+    ce.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ce.blur(); } });
+    ce.addEventListener('input', () => {
+      const txt = ce.textContent;
+      if (ce.classList.contains('label')) n.label = txt;
+      else if (ce.classList.contains('sub')) n.sub = txt;
+      persist();
+    });
+    ce.addEventListener('blur', () => {
+      inlineEditingId = null;
+      render({ skipInspector: true });
+    });
+  });
+  el.querySelectorAll('.port').forEach(p => attachPortHandler(p, n, null));
+  el.querySelectorAll('.opt-port').forEach(p => {
+    if (p.dataset.optPort) attachPortHandler(p, n, { kind: 'option', id: p.dataset.optPort });
+    if (p.dataset.thrPort) attachPortHandler(p, n, { kind: 'threshold', id: p.dataset.thrPort });
+  });
+  const addOptBtn = el.querySelector('[data-add-opt]');
+  if (addOptBtn) addOptBtn.onclick = ev => { ev.stopPropagation(); n.options.push({ id: uid('opt_'), text: 'New option', route: '' }); selection = { kind: 'node', id: n.id }; openInspector(); render(); };
+  const portAdd = el.querySelector('.port-add');
+  if (portAdd) portAdd.onclick = ev => { ev.stopPropagation(); openInsertPopover(n, null, n.x + 280, n.y + 30); };
+  // Per-option/per-threshold "+" — open insert popover wired to that option/threshold
+  el.querySelectorAll('[data-add-from-opt]').forEach(btn => {
+    btn.onclick = ev => {
+      ev.stopPropagation();
+      const optId = btn.dataset.addFromOpt;
+      const yOff = n._optY?.[optId] || 30;
+      openInsertPopover(n, { kind: 'option', id: optId }, n.x + 300, n.y + yOff, ev.clientX, ev.clientY);
+    };
+  });
+  el.querySelectorAll('[data-add-from-thr]').forEach(btn => {
+    btn.onclick = ev => {
+      ev.stopPropagation();
+      const thrId = btn.dataset.addFromThr;
+      const yOff = n._thrY?.[thrId] || 30;
+      openInsertPopover(n, { kind: 'threshold', id: thrId }, n.x + 300, n.y + yOff, ev.clientX, ev.clientY);
+    };
+  });
+  // Click flow-route pill to navigate to that flow
+  el.querySelectorAll('[data-jump-flow]').forEach(pill => {
+    pill.addEventListener('mousedown', e => e.stopPropagation());
+    pill.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const fid = pill.dataset.jumpFlow;
+      const f = curTree.flows.find(x => x.id === fid);
+      if (f) { curFlow = f; selection = null; closeInspector(); render(); fitView(); }
+    });
+  });
+  // Inline editing of option text on the card
+  el.querySelectorAll('[data-edit-opt]').forEach(box => {
+    box.addEventListener('mousedown', e => e.stopPropagation()); // no drag
+    box.addEventListener('focus', () => { inlineEditingId = n.id; });
+    box.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); box.blur(); } });
+    box.addEventListener('input', () => {
+      const oid = box.dataset.editOpt;
+      const opt = n.options.find(o => o.id === oid);
+      if (opt) { opt.text = box.textContent; persist(); }
+    });
+    box.addEventListener('blur', () => { inlineEditingId = null; render({ skipInspector: true }); });
+  });
+  // Click route pill to open a quick inline picker (small native select overlay)
+  el.querySelectorAll('[data-pick-route]').forEach(pill => {
+    if (pill.dataset.jumpFlow) return; // flow links already handled
+    pill.addEventListener('mousedown', e => e.stopPropagation());
+    pill.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const oid = pill.dataset.pickRoute;
+      const opt = n.options.find(o => o.id === oid);
+      if (!opt) return;
+      // Build a transient select element overlay
+      const sel = document.createElement('select');
+      sel.innerHTML = destOpts(n.id, opt.route, n.type === 'rootcause');
+      sel.style.cssText = 'position:fixed;z-index:100;font-size:12px;padding:6px 8px;border:1px solid var(--accent-2);border-radius:6px;background:#fff;box-shadow:var(--shadow-md);min-width:240px';
+      const r = pill.getBoundingClientRect();
+      sel.style.left = r.left + 'px';
+      sel.style.top = r.bottom + 4 + 'px';
+      document.body.appendChild(sel);
+      sel.focus();
+      sel.onchange = () => { opt.route = sel.value; sel.remove(); render(); };
+      sel.onblur = () => setTimeout(() => sel.remove(), 100);
+    });
+  });
+
+  return el;
+}
+function routeLabel(route) {
+  if (!route) return 'no route';
+  if (route === 'end') return '→ End';
+  if (route.startsWith('node:')) { const id = route.slice(5); const x = curFlow.nodes.find(n => n.id === id); return x ? '→ ' + truncate(x.label, 18) : '→ ?'; }
+  if (route.startsWith('flow:')) { const fid = route.slice(5); const f = curTree.flows.find(x => x.id === fid); return f ? '↗ ' + truncate(f.name, 18) : '↗ ?'; }
+  return route;
+}
+
+// =============================================================
+// Stepped (vertical) view — same data, list layout
+// =============================================================
+function renderStepped() {
+  const sv = document.getElementById('stepped-view');
+  const start = curFlow.nodes.find(n => n.type === 'trigger') || curFlow.nodes[0];
+  if (!start) {
+    sv.innerHTML = `<div class="step-stack"><div style="text-align:center;color:var(--muted);padding:40px">No steps yet. Add a Trigger to begin.</div><button class="step-add-btn" id="step-add">＋ Add step</button></div>`;
+    bindSteppedHandlers(sv);
+    return;
+  }
+  const stepCounter = { n: 0 };
+  const visited = new Set();
+  let h = `<div class="step-stack">`;
+  h += renderStepTree(start, visited, 0, stepCounter);
+  // Append any unreachable orphan nodes
+  const orphans = curFlow.nodes.filter(n => !visited.has(n.id));
+  if (orphans.length) {
+    h += `<div style="margin-top:24px;padding-top:14px;border-top:1px dashed var(--border);font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700;letter-spacing:0.06em">Disconnected steps</div>`;
+    orphans.forEach(n => { h += renderStepCard(n, stepCounter.n++); });
+  }
+  h += `<button class="step-add-btn" id="step-add">＋ Add step</button>`;
+  h += `</div>`;
+  sv.innerHTML = h;
+  bindSteppedHandlers(sv);
+}
+
+function renderStepTree(node, visited, depth, counter) {
+  if (visited.has(node.id)) {
+    return `<div class="step-loopback">↑ Loops back to: <b>${escapeHtml(node.label || node.type)}</b> (step ${node._stepNo || '?'})</div>`;
+  }
+  visited.add(node.id);
+  node._stepNo = ++counter.n;
+  let h = renderStepCard(node, counter.n - 1);
+
+  const branches = getBranches(node);
+  if (branches.length === 0) return h;
+  if (branches.length === 1 && branches[0].kind === 'edge') {
+    // Single linear next step — no branch label, just arrow + recurse
+    h += `<div class="step-arrow">↓</div>`;
+    h += renderBranchTarget(branches[0], visited, depth, counter);
+    return h;
+  }
+  // If ALL branches are flow links → render side-by-side row (root-cause sketch style)
+  const allFlowLinks = branches.length > 1 && branches.every(b => b.route && b.route.startsWith('flow:'));
+  if (allFlowLinks) {
+    h += `<div class="branch-row-fan">`;
+    branches.forEach((br, i) => {
+      const seq = br.sequence || (i + 1);
+      const fid = br.route.slice(5);
+      const f = curTree.flows.find(x => x.id === fid);
+      h += `<div class="fan-col">
+        <div class="fan-port"></div>
+        <div class="fan-label">${seq}. ${escapeHtml(br.label || '')}</div>
+        <div class="step-flow-card" data-jump-flow="${fid}">
+          <div class="lbl">↗ DIAGNOSTIC FLOW</div>
+          <div class="nm">${escapeHtml(f ? f.name : '(unknown)')}</div>
+          <div class="arrow">›</div>
+        </div>
+      </div>`;
+    });
+    h += `</div>`;
+    return h;
+  }
+
+  // Default: each branch in its own group, indented
+  h += `<div class="branch-group">`;
+  branches.forEach((br, i) => {
+    const seq = br.sequence || (i + 1);
+    if (br.route && br.route.startsWith('flow:')) {
+      const fid = br.route.slice(5);
+      const f = curTree.flows.find(x => x.id === fid);
+      h += `<div class="branch-label flow-link" data-jump-flow="${fid}">
+        <span class="bn-seq">${seq}</span>${escapeHtml(br.label || 'option')} → Diagnostic Flow
+      </div>`;
+      h += `<div class="step-flow-card" data-jump-flow="${fid}">
+        <div class="lbl">↗ DIAGNOSTIC FLOW</div>
+        <div class="nm">${escapeHtml(f ? f.name : '(unknown flow)')}</div>
+        <div class="arrow">›</div>
+      </div>`;
+    } else if (br.route === 'end') {
+      h += `<div class="branch-label end-link"><span class="bn-seq">${seq}</span>${escapeHtml(br.label || '')} → Done</div>`;
+      h += `<div class="step-done-card">■ End of flow</div>`;
+    } else if (br.route && br.route.startsWith('node:')) {
+      h += `<div class="branch-label"><span class="bn-seq">${seq}</span>${escapeHtml(br.label || '(option)')}</div>`;
+      h += renderBranchTarget(br, visited, depth + 1, counter);
+    } else {
+      h += `<div class="branch-label"><span class="bn-seq">${seq}</span>${escapeHtml(br.label || '(option)')}</div>`;
+      h += `<div class="step-unrouted">⚠ No destination set — configure in inspector</div>`;
+    }
+  });
+  h += `</div>`;
+  return h;
+}
+
+function getBranches(node) {
+  const br = [];
+  if ((node.type === 'question' || node.type === 'rootcause') && node.options) {
+    const sorted = [...node.options].map((o, i) => ({ o, i })).sort((a, b) => (a.o.sequence || a.i + 1) - (b.o.sequence || b.i + 1));
+    sorted.forEach(({ o, i }) => br.push({ label: o.text, route: o.route, kind: node.type, sequence: o.sequence || i + 1 }));
+  } else if (node.type === 'sensor' && node.thresholds) {
+    node.thresholds.forEach(t => br.push({ label: t.label, route: t.route, kind: 'sensor' }));
+  } else {
+    curFlow.edges.filter(e => e.from === node.id).forEach(e => br.push({ label: '', route: 'node:' + e.to, kind: 'edge' }));
+  }
+  return br;
+}
+
+function renderBranchTarget(br, visited, depth, counter) {
+  if (!br.route) return `<div class="step-unrouted">⚠ Unrouted</div>`;
+  if (br.route === 'end') return `<div class="step-done-card">■ End of flow</div>`;
+  if (br.route.startsWith('flow:')) {
+    const fid = br.route.slice(5);
+    const f = curTree.flows.find(x => x.id === fid);
+    return `<div class="step-flow-card" data-jump-flow="${fid}"><div class="lbl">↗ DIAGNOSTIC FLOW</div><div class="nm">${escapeHtml(f ? f.name : '?')}</div><div class="arrow">›</div></div>`;
+  }
+  if (br.route.startsWith('node:')) {
+    const tid = br.route.slice(5);
+    const target = curFlow.nodes.find(n => n.id === tid);
+    if (!target) return `<div class="step-unrouted">⚠ Missing target node</div>`;
+    return renderStepTree(target, visited, depth, counter);
+  }
+  return '';
+}
+
+function bindSteppedHandlers(sv) {
+  sv.querySelectorAll('.step-card').forEach(card => {
+    const id = card.dataset.id;
+    const n = curFlow.nodes.find(x => x.id === id);
+    if (!n) return;
+    card.addEventListener('click', e => {
+      if (e.target.closest('.label') || e.target.closest('input') || e.target.closest('select') || e.target.closest('button')) return;
+      selection = { kind: 'node', id: n.id };
+      openInspector();
+      render({ skipInspector: false });
+    });
+    const lbl = card.querySelector('.label');
+    if (lbl) {
+      lbl.addEventListener('focus', () => { inlineEditingId = n.id; });
+      lbl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lbl.blur(); } });
+      lbl.addEventListener('input', () => { n.label = lbl.textContent; persist(); });
+      lbl.addEventListener('blur', () => { inlineEditingId = null; render({ skipInspector: true }); });
+    }
+    card.querySelectorAll('.branch-row input').forEach(inp => {
+      inp.oninput = e => {
+        const oid = e.target.dataset.opt;
+        const opt = n.options && n.options.find(o => o.id === oid);
+        if (opt) { opt.text = e.target.value; persist(); }
+      };
+    });
+    card.querySelectorAll('.branch-row select').forEach(sel => {
+      sel.onchange = e => {
+        const oid = e.target.dataset.opt;
+        const opt = n.options && n.options.find(o => o.id === oid);
+        if (opt) { opt.route = e.target.value; render(); }
+      };
+    });
+    const del = card.querySelector('.delcard');
+    if (del) del.onclick = ev => { ev.stopPropagation(); deleteNode(n.id); };
+  });
+  sv.querySelectorAll('[data-jump-flow]').forEach(el => {
+    el.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const fid = el.dataset.jumpFlow;
+      const f = curTree.flows.find(x => x.id === fid);
+      if (f) { curFlow = f; selection = null; closeInspector(); render(); }
+    });
+  });
+  const addBtn = document.getElementById('step-add');
+  if (addBtn) addBtn.onclick = () => {
+    const r = wrap.getBoundingClientRect();
+    openInsertPopover(null, null, 0, 0, r.left + r.width / 2, r.top + r.height / 2);
+  };
+}
+
+function renderStepCard(n, idx) {
+  const m = NTYPES[n.type] || NTYPES.action;
+  const sel = selection && selection.kind === 'node' && selection.id === n.id ? ' selected' : '';
+  const sub = stepCardSub(n);
+  let countHint = '';
+  if (n.type === 'rootcause' && n.options) countHint = `<div style="font-size:11px;color:var(--muted);margin-top:4px">${n.options.length} possible root cause${n.options.length === 1 ? '' : 's'} ↓</div>`;
+  else if (n.type === 'question' && n.options) countHint = `<div style="font-size:11px;color:var(--muted);margin-top:4px">${n.options.length} branch${n.options.length === 1 ? '' : 'es'} ↓</div>`;
+  else if (n.type === 'sensor' && n.thresholds) countHint = `<div style="font-size:11px;color:var(--muted);margin-top:4px">${n.thresholds.length} threshold band${n.thresholds.length === 1 ? '' : 's'} ↓</div>`;
+  return `<div class="step-card${sel}" data-id="${n.id}">
+    <button class="delcard" title="Delete">×</button>
+    <div class="nhead">
+      <div class="step-num">${idx + 1}</div>
+      <div class="badge" style="background:var(--c-${n.type});color:var(--c-${n.type}-fg)">${m.label}</div>
+    </div>
+    <div class="label" contenteditable="true" spellcheck="false">${escapeHtml(n.label || '(untitled)')}</div>
+    ${sub ? `<div class="sub">${escapeHtml(sub)}</div>` : ''}
+    ${countHint}
+  </div>`;
+}
+function stepCardSub(n) {
+  if (n.type === 'jump' && n.targetFlow) { const tg = curTree.flows.find(f => f.id === n.targetFlow); return '→ ' + (tg ? tg.name : '(unset)'); }
+  if (n.type === 'waiting') { if ((n.waitMode||'time')==='time' && n.waitValue!=null) return '⏱ ' + n.waitValue + ' ' + (n.waitUnit||'minutes'); if (n.waitMode==='event' && n.waitEvent) return '⚡ ' + n.waitEvent; }
+  if (n.type === 'reassign' && n.role) return '👤 ' + n.role + (n.userName ? ' · ' + n.userName : '');
+  if ((n.type === 'action' || n.type === 'answer') && n.actionType) {
+    const at = ACTION_TYPES.find(a => a.id === n.actionType);
+    if (at) return '⚙ ' + at.label + (at.userSelect && n.escalateRole ? ' → ' + n.escalateRole + (n.escalateUser ? ' ('+n.escalateUser+')' : '') : '');
+  }
+  if (n.type === 'sensor') { const tag = SENSOR_TAGS.find(s => s.id === n.sensorTag); return tag ? '🏷 ' + tag.label + ' · ' + tag.unit : (n.sensorName ? '🏷 ' + n.sensorName : ''); }
+  if (n.type === 'skip_end') return '→ Photo + RCA → Done';
+  return n.sub || '';
+}
+
+// =============================================================
+// Edge rendering — uses cached option/threshold offsets for stable endpoints
+// =============================================================
+function renderEdges() {
+  edgesSvg.innerHTML = `
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker>
+      <marker id="arrow-sel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/></marker>
+      <marker id="arrow-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#10b981"/></marker>
+      <marker id="arrow-y" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/></marker>
+      <marker id="arrow-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/></marker>
+    </defs>`;
+
+  const all = [...curFlow.edges];
+  curFlow.nodes.forEach(n => {
+    if ((n.type === 'question' || n.type === 'rootcause') && n.options) {
+      n.options.forEach(o => {
+        if (o.route && o.route.startsWith('node:')) {
+          const tid = o.route.slice(5);
+          if (curFlow.nodes.find(x => x.id === tid)) all.push({ id: 'opt_' + o.id, from: n.id, to: tid, cond: o.text, fromOption: o.id, implicit: true });
+        }
+      });
+    }
+    if (n.type === 'sensor' && n.thresholds) {
+      n.thresholds.forEach(t => {
+        if (t.route && t.route.startsWith('node:')) {
+          const tid = t.route.slice(5);
+          if (curFlow.nodes.find(x => x.id === tid)) all.push({ id: 'thr_' + n.id + '_' + t.id, from: n.id, to: tid, cond: t.label, fromThreshold: t.id, marker: t.id, implicit: true });
+        }
+      });
+    }
+  });
+
+  for (const e of all) {
+    const a = curFlow.nodes.find(n => n.id === e.from);
+    const b = curFlow.nodes.find(n => n.id === e.to);
+    if (!a || !b) continue;
+    const aEl = canvas.querySelector(`[data-id="${a.id}"]`);
+    const bEl = canvas.querySelector(`[data-id="${b.id}"]`);
+    if (!aEl || !bEl) continue;
+
+    // Top-down: source bottom → target top. Per-option ports distributed along bottom edge.
+    let ax, ay, bx, by;
+    const aW = aEl.offsetWidth, aH = aEl.offsetHeight;
+    const bW = bEl.offsetWidth;
+    if (e.fromOption && a.options) {
+      // Find the option's display index (sorted by sequence)
+      const sorted = [...a.options].map((o,i)=>({o,i})).sort((p,q)=>(p.o.sequence||p.i+1)-(q.o.sequence||q.i+1));
+      const idx = sorted.findIndex(s => s.o.id === e.fromOption);
+      const pct = (idx + 1) / (sorted.length + 1);
+      ax = a.x + aW * pct;
+      ay = a.y + aH;
+    } else if (e.fromThreshold && a.thresholds) {
+      const idx = a.thresholds.findIndex(t => t.id === e.fromThreshold);
+      const pct = (idx + 1) / (a.thresholds.length + 1);
+      ax = a.x + aW * pct;
+      ay = a.y + aH;
+    } else {
+      ax = a.x + aW / 2;
+      ay = a.y + aH;
+    }
+    bx = b.x + bW / 2;
+    by = b.y;
+
+    const isSel = selection && selection.kind === 'edge' && selection.id === e.id;
+    let stroke = '#94a3b8', marker = 'arrow';
+    if (isSel) { stroke = '#6366f1'; marker = 'arrow-sel'; }
+    else if (e.marker === 'safe') { stroke = '#10b981'; marker = 'arrow-g'; }
+    else if (e.marker === 'warn') { stroke = '#f59e0b'; marker = 'arrow-y'; }
+    else if (e.marker === 'crit') { stroke = '#ef4444'; marker = 'arrow-r'; }
+
+    let d;
+    if (by > ay + 20) {
+      // Normal top → bottom
+      const dy = Math.max(40, (by - ay) * 0.5);
+      d = `M ${ax} ${ay} C ${ax} ${ay + dy}, ${bx} ${by - dy}, ${bx} ${by}`;
+    } else {
+      // Target is above source — route around with horizontal detour
+      const goRight = bx >= ax;
+      const side = goRight ? Math.max(a.x + aEl.offsetWidth, b.x + bEl.offsetWidth) + 60
+                           : Math.min(a.x, b.x) - 60;
+      const stepDown = 60;
+      d = `M ${ax} ${ay}
+           C ${ax} ${ay + stepDown}, ${side} ${ay + stepDown}, ${side} ${ay}
+           L ${side} ${by}
+           C ${side} ${by - stepDown}, ${bx} ${by - stepDown}, ${bx} ${by}`;
+    }
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', stroke);
+    path.setAttribute('stroke-width', isSel ? '2.4' : '1.6');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('marker-end', `url(#${marker})`);
+    path.classList.add('edge');
+    path.style.cursor = 'pointer';
+    if (!e.implicit) path.addEventListener('click', ev => { ev.stopPropagation(); selection = { kind: 'edge', id: e.id }; openInspector(); render(); });
+    edgesSvg.appendChild(path);
+
+    if (e.cond) {
+      const mx = (ax + bx) / 2, my = (ay + by) / 2 - 4;
+      const bg = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      bg.setAttribute('x', mx); bg.setAttribute('y', my); bg.setAttribute('text-anchor', 'middle');
+      bg.setAttribute('class', 'edge-label edge-label-bg');
+      bg.textContent = truncate(e.cond, 28);
+      edgesSvg.appendChild(bg);
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', mx); t.setAttribute('y', my); t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('class', 'edge-label');
+      t.textContent = truncate(e.cond, 28);
+      edgesSvg.appendChild(t);
+    }
+  }
+  const w = Math.max(3000, ...curFlow.nodes.map(n => n.x + 400));
+  const h = Math.max(1800, ...curFlow.nodes.map(n => n.y + 500));
+  edgesSvg.setAttribute('width', w); edgesSvg.setAttribute('height', h);
+}
+
+// =============================================================
+// Inspector
+// =============================================================
+function openInspector() { inspector.classList.add('open'); renderInspector(); }
+function closeInspector() { inspector.classList.remove('open'); selection = null; render(); }
+document.getElementById('insp-close').onclick = closeInspector;
+
+function renderInspector() {
+  if (!selection) { closeInspector(); return; }
+  if (selection.kind === 'node') {
+    const n = curFlow.nodes.find(x => x.id === selection.id);
+    if (!n) { closeInspector(); return; }
+    const m = NTYPES[n.type];
+    document.getElementById('insp-badge').textContent = m.label;
+    document.getElementById('insp-badge').className = 'badge';
+    document.getElementById('insp-badge').style.cssText = `background:var(--c-${n.type});color:var(--c-${n.type}-fg)`;
+    document.getElementById('insp-title').textContent = n.label || m.label;
+    document.getElementById('insp-sub').textContent = n.id;
+
+    let h = `<div class="helper-box"><div class="ic">💡</div><div>${escapeHtml(m.help)}</div></div>`;
+    h += `<label>Label</label><input id="i-label" value="${escapeHtml(n.label || '')}">`;
+    if (['trigger','action','answer','observation','reassign','waiting','end'].includes(n.type)) {
+      h += `<label>Description</label><textarea id="i-sub" placeholder="Operator-facing notes…">${escapeHtml(n.sub || '')}</textarea>`;
+    }
+    if (n.type === 'action' || n.type === 'answer') {
+      h += `<label>Action type</label><select id="i-actype"><option value="">— pick action —</option>`;
+      ACTION_TYPES.forEach(a => h += `<option value="${a.id}" ${n.actionType === a.id ? 'selected' : ''}>${a.label}</option>`);
+      h += `</select>`;
+      if (n.actionType === 'custom') h += `<label>Custom action name</label><input id="i-custact" value="${escapeHtml(n.customAction || '')}">`;
+      const at = ACTION_TYPES.find(a => a.id === n.actionType);
+      if (at && at.userSelect) {
+        const verb = n.actionType === 'escalate' ? 'Escalate to' : n.actionType === 'message' ? 'Send to' : 'Call';
+        h += `<label>${verb} (role)</label><select id="i-erole"><option value="">— pick role —</option>`;
+        ROLES.forEach(r => h += `<option value="${r}" ${n.escalateRole === r ? 'selected' : ''}>${r}</option>`);
+        h += `</select>`;
+        h += `<label>${verb} (user — optional)</label><input id="i-euser" value="${escapeHtml(n.escalateUser || '')}" placeholder="e.g. R. Sharma">`;
+      }
+    }
+    if (n.type === 'reassign') {
+      h += `<label>Assign to role</label><select id="i-role"><option value="">— pick role —</option>`;
+      ROLES.forEach(r => h += `<option value="${r}" ${n.role === r ? 'selected' : ''}>${r}</option>`);
+      h += `</select>`;
+      h += `<label>User / name (optional)</label><input id="i-user" value="${escapeHtml(n.userName || '')}">`;
+    }
+    if (n.type === 'waiting') {
+      const mode = n.waitMode || 'time';
+      h += `<label>Wait mode</label><select id="i-wmode">
+        <option value="time" ${mode==='time'?'selected':''}>⏱ Time-based</option>
+        <option value="event" ${mode==='event'?'selected':''}>⚡ Event-based</option>
+      </select>`;
+      if (mode === 'time') {
+        h += `<label>Duration</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <input id="i-wval" type="number" min="0" value="${n.waitValue == null ? '' : n.waitValue}" placeholder="e.g. 5">
+          <select id="i-wunit">
+            ${['seconds','minutes','hours','days'].map(u => `<option value="${u}" ${(n.waitUnit||'minutes')===u?'selected':''}>${u}</option>`).join('')}
+          </select>
+        </div>`;
+      } else {
+        h += `<label>Wait for event</label><input id="i-wevent" value="${escapeHtml(n.waitEvent || '')}" placeholder="e.g. DO reading > 2 mg/L">`;
+      }
+    }
+    if (n.type === 'question') {
+      h += `<label>Sequence (display order in flow)</label><input id="i-seq" type="number" min="1" value="${n.sequence || ''}" placeholder="e.g. 1, 2, 3…">`;
+    }
+    if (n.type === 'question' || n.type === 'rootcause') {
+      const isRC = n.type === 'rootcause';
+      h += `<label>${isRC ? 'Possible root causes — each routes to its own flow' : 'Branches — each option is its own port'}</label>`;
+      h += `<div class="route-table" id="i-opts">`;
+      n.options = n.options || [];
+      // Show in current sequence order
+      const ordered = [...n.options].map((o, i) => ({ o, idx: i })).sort((a, b) => (a.o.sequence || a.idx + 1) - (b.o.sequence || b.idx + 1));
+      ordered.forEach(({ o, idx }, displayIdx) => {
+        const seq = o.sequence || displayIdx + 1;
+        h += `<div class="route-row">
+          <div class="num opt">${seq}</div>
+          <div class="rfields">
+            ${isRC ? `<input data-i="${idx}" data-f="sequence" type="number" min="1" value="${o.sequence || displayIdx + 1}" placeholder="Sequence" style="width:80px">` : ''}
+            <input data-i="${idx}" data-f="text" value="${escapeHtml(o.text || '')}" placeholder="${isRC ? 'Root cause name' : 'Option text'}">
+            <select data-i="${idx}" data-f="route">${destOpts(n.id, o.route, isRC)}</select>
+          </div>
+          <button class="del" data-del="${idx}">×</button>
+        </div>`;
+      });
+      h += `</div><button class="add-btn" id="i-add">+ Add ${isRC ? 'root cause' : 'option'}</button>`;
+      if (isRC) {
+        h += `<div class="helper-box" style="margin-top:14px"><div class="ic">🌱</div><div>Each root cause should route to its own flow. The flow's terminal is either <b>Done</b> or a <b>Jump</b> to another root-cause flow.</div></div>`;
+      }
+    }
+    if (n.type === 'sensor') {
+      h += `<label>Sensor tag (preset)</label><select id="i-stag">
+        <option value="">— pick tag —</option>
+        ${SENSOR_TAGS.map(t => `<option value="${t.id}" ${n.sensorTag === t.id ? 'selected' : ''}>${escapeHtml(t.label)} · ${t.unit}</option>`).join('')}
+        <option value="__custom__" ${n.sensorTag === '__custom__' ? 'selected' : ''}>＋ Custom tag…</option>
+      </select>`;
+      h += `<div class="helper-box" style="margin-top:8px;margin-bottom:8px;background:#fef3c7;border-color:#fde68a;color:#92400e"><div class="ic">💡</div><div>Selecting a tag inherits its unit and Safe / Warning / Critical thresholds. You can override below.</div></div>`;
+      if (n.sensorTag === '__custom__' || !n.sensorTag) {
+        h += `<label>Sensor name</label><input id="i-sname" value="${escapeHtml(n.sensorName || '')}" placeholder="e.g. DO sensor (custom)">`;
+      }
+      h += `<label>Unit</label><input id="i-unit" value="${escapeHtml(n.unit || '')}" placeholder="mg/L, bar…">`;
+      h += `<label>Threshold bands (each its own port)</label><div class="route-table">`;
+      n.thresholds = n.thresholds || [{id:'safe',label:'Safe',min:null,max:null,route:''},{id:'warn',label:'Warning',min:null,max:null,route:''},{id:'crit',label:'Critical',min:null,max:null,route:''}];
+      n.thresholds.forEach((t, i) => {
+        const c = t.id === 'safe' ? 'safe' : t.id === 'warn' ? 'warn' : 'crit';
+        h += `<div class="route-row">
+          <div class="num ${c}">${t.id === 'safe' ? 'S' : t.id === 'warn' ? 'W' : 'C'}</div>
+          <div class="rfields">
+            <input data-thr="${i}" data-f="label" value="${escapeHtml(t.label)}">
+            <div class="row-range">
+              <input data-thr="${i}" data-f="min" value="${t.min == null ? '' : t.min}" placeholder="Min">
+              <input data-thr="${i}" data-f="max" value="${t.max == null ? '' : t.max}" placeholder="Max">
+            </div>
+            <select data-thr="${i}" data-f="route">${destOpts(n.id, t.route)}</select>
+          </div>
+          <span></span>
+        </div>`;
+      });
+      h += `</div>`;
+    }
+    if (n.type === 'jump') {
+      h += `<label>Target flow</label><select id="i-tflow"><option value="">— pick flow —</option>`;
+      curTree.flows.filter(f => f !== curFlow).forEach(f => h += `<option value="${f.id}" ${n.targetFlow === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`);
+      h += `</select>`;
+    }
+    h += `<button class="danger-btn" id="i-del">Delete node</button>`;
+    document.getElementById('insp-body').innerHTML = h;
+    bindInspector(n);
+  } else if (selection.kind === 'edge') {
+    const e = curFlow.edges.find(x => x.id === selection.id);
+    if (!e) { closeInspector(); return; }
+    const a = curFlow.nodes.find(n => n.id === e.from), b = curFlow.nodes.find(n => n.id === e.to);
+    document.getElementById('insp-badge').textContent = '→ Connection';
+    document.getElementById('insp-badge').style.cssText = 'background:var(--panel-soft);color:var(--muted)';
+    document.getElementById('insp-title').textContent = 'Connection';
+    document.getElementById('insp-sub').textContent = e.id;
+    document.getElementById('insp-body').innerHTML = `
+      <div class="helper-box"><div class="ic">🔗</div><div>${escapeHtml(a?.label || '?')} → ${escapeHtml(b?.label || '?')}</div></div>
+      <label>Condition label</label>
+      <input id="i-cond" value="${escapeHtml(e.cond || '')}">
+      <button class="danger-btn" id="i-del">Delete connection</button>`;
+    document.getElementById('i-cond').oninput = ev => { e.cond = ev.target.value; render({ skipInspector: true }); };
+    document.getElementById('i-del').onclick = () => { curFlow.edges = curFlow.edges.filter(x => x.id !== e.id); closeInspector(); };
+  }
+}
+function bindInspector(n) {
+  const $ = id => document.getElementById(id);
+  // KEY BUG FIX: text inputs use {skipInspector:true} so the drawer DOM isn't rebuilt mid-keystroke
+  const NO_REBUILD = { skipInspector: true };
+  if ($('i-label')) $('i-label').oninput = e => { n.label = e.target.value; render(NO_REBUILD); };
+  if ($('i-sub')) $('i-sub').oninput = e => { n.sub = e.target.value; render(NO_REBUILD); };
+  if ($('i-actype')) $('i-actype').onchange = e => { n.actionType = e.target.value; render(); };
+  if ($('i-custact')) $('i-custact').oninput = e => { n.customAction = e.target.value; render(NO_REBUILD); };
+  if ($('i-erole')) $('i-erole').onchange = e => { n.escalateRole = e.target.value; render(); };
+  if ($('i-euser')) $('i-euser').oninput = e => { n.escalateUser = e.target.value; render(NO_REBUILD); };
+  if ($('i-seq')) $('i-seq').oninput = e => { n.sequence = e.target.value === '' ? null : +e.target.value; render(NO_REBUILD); };
+  if ($('i-stag')) $('i-stag').onchange = e => {
+    n.sensorTag = e.target.value;
+    const preset = SENSOR_TAGS.find(t => t.id === n.sensorTag);
+    if (preset) {
+      n.sensorName = preset.label;
+      n.unit = preset.unit;
+      n.thresholds = [
+        { id: 'safe', label: 'Safe',     min: preset.safe.min, max: preset.safe.max, route: n.thresholds?.find(x => x.id === 'safe')?.route || '' },
+        { id: 'warn', label: 'Warning',  min: preset.warn.min, max: preset.warn.max, route: n.thresholds?.find(x => x.id === 'warn')?.route || '' },
+        { id: 'crit', label: 'Critical', min: preset.crit.min, max: preset.crit.max, route: n.thresholds?.find(x => x.id === 'crit')?.route || '' }
+      ];
+    }
+    render();
+  };
+  if ($('i-role')) $('i-role').onchange = e => { n.role = e.target.value; render(); };
+  if ($('i-user')) $('i-user').oninput = e => { n.userName = e.target.value; render(NO_REBUILD); };
+  if ($('i-wmode')) $('i-wmode').onchange = e => { n.waitMode = e.target.value; render(); };
+  if ($('i-wval')) $('i-wval').oninput = e => { n.waitValue = e.target.value === '' ? null : +e.target.value; render(NO_REBUILD); };
+  if ($('i-wunit')) $('i-wunit').onchange = e => { n.waitUnit = e.target.value; render(NO_REBUILD); };
+  if ($('i-wevent')) $('i-wevent').oninput = e => { n.waitEvent = e.target.value; render(NO_REBUILD); };
+  if ($('i-tflow')) $('i-tflow').onchange = e => { n.targetFlow = e.target.value; render(); };
+  if ($('i-sname')) $('i-sname').oninput = e => { n.sensorName = e.target.value; render(NO_REBUILD); };
+  if ($('i-unit')) $('i-unit').oninput = e => { n.unit = e.target.value; render(NO_REBUILD); };
+  document.querySelectorAll('#i-opts input').forEach(inp => inp.oninput = e => {
+    const i = +e.target.dataset.i, f = e.target.dataset.f;
+    if (f === 'sequence') n.options[i].sequence = e.target.value === '' ? null : +e.target.value;
+    else n.options[i][f] = e.target.value;
+    render(NO_REBUILD);
+  });
+  document.querySelectorAll('#i-opts select').forEach(sel => sel.onchange = e => { n.options[+e.target.dataset.i].route = e.target.value; render(); });
+  document.querySelectorAll('#i-opts .del').forEach(b => b.onclick = e => { n.options.splice(+e.target.dataset.del, 1); render(); });
+  if ($('i-add')) $('i-add').onclick = () => {
+    const isRC = n.type === 'rootcause';
+    n.options.push({ id: uid('opt_'), text: isRC ? 'New root cause' : 'New option', route: '', sequence: isRC ? n.options.length + 1 : undefined });
+    render();
+  };
+  document.querySelectorAll('[data-thr]').forEach(inp => {
+    const handler = e => {
+      const t = n.thresholds[+e.target.dataset.thr];
+      const f = e.target.dataset.f;
+      if (f === 'min' || f === 'max') t[f] = e.target.value === '' ? null : +e.target.value;
+      else t[f] = e.target.value;
+      // Skip inspector rebuild for text/number inputs, allow it for selects (route)
+      if (e.target.tagName === 'SELECT') render(); else render(NO_REBUILD);
+    };
+    inp.oninput = handler; inp.onchange = handler;
+  });
+  $('i-del').onclick = () => deleteNode(n.id);
+}
+function destOpts(excludeId, selected, preferFlows) {
+  let h = `<option value="" ${!selected ? 'selected' : ''}>— pick destination —</option>`;
+  const flowsGroup = () => {
+    let s = `<optgroup label="Flows in this tree (recommended for root causes)">`;
+    curTree.flows.filter(f => f !== curFlow).forEach(f => {
+      const v = 'flow:' + f.id;
+      s += `<option value="${v}" ${selected === v ? 'selected' : ''}>↗ ${escapeHtml(f.name)}</option>`;
+    });
+    s += `</optgroup>`;
+    return s;
+  };
+  const nodesGroup = () => {
+    let s = `<optgroup label="Nodes in this flow">`;
+    curFlow.nodes.filter(n => n.id !== excludeId).forEach(n => {
+      const v = 'node:' + n.id;
+      s += `<option value="${v}" ${selected === v ? 'selected' : ''}>${typeLabel(n.type)} · ${escapeHtml(truncate(n.label, 32))}</option>`;
+    });
+    s += `</optgroup>`;
+    return s;
+  };
+  if (preferFlows) { h += flowsGroup() + nodesGroup(); }
+  else { h += nodesGroup() + flowsGroup(); }
+  h += `<optgroup label="Special"><option value="end" ${selected === 'end' ? 'selected' : ''}>→ Done</option></optgroup>`;
+  return h;
+}
+function typeLabel(t) { return (NTYPES[t] || { label: t }).label; }
+function truncate(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; }
+
+function deleteNode(id) {
+  curFlow.nodes = curFlow.nodes.filter(x => x.id !== id);
+  curFlow.edges = curFlow.edges.filter(e => e.from !== id && e.to !== id);
+  curFlow.nodes.forEach(n => {
+    if (n.options) n.options.forEach(o => { if (o.route === 'node:' + id) o.route = ''; });
+    if (n.thresholds) n.thresholds.forEach(t => { if (t.route === 'node:' + id) t.route = ''; });
+  });
+  closeInspector();
+}
+
+// =============================================================
+// Node drag handlers — bug fix: edges follow node smoothly
+// =============================================================
+function attachNodeHandlers(el, n) {
+  el.addEventListener('mousedown', ev => {
+    if (ev.target.classList.contains('port') || ev.target.classList.contains('opt-port') || ev.target.classList.contains('opt-add') || ev.target.classList.contains('port-add') || ev.target.classList.contains('opt-add-btn')) return;
+    if (ev.button !== 0) return;
+    ev.stopPropagation();
+    const wasSelected = selection && selection.kind === 'node' && selection.id === n.id;
+    selection = { kind: 'node', id: n.id };
+    const start = { x: ev.clientX, y: ev.clientY, nx: n.x, ny: n.y };
+    let dragged = false;
+    const move = e => {
+      const ddx = (e.clientX - start.x) / zoom, ddy = (e.clientY - start.y) / zoom;
+      if (!dragged && Math.hypot(ddx, ddy) > 3) dragged = true;
+      n.x = start.nx + ddx; n.y = start.ny + ddy;
+      el.style.left = n.x + 'px'; el.style.top = n.y + 'px';
+      renderEdges();
+    };
+    const up = () => {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+      if (!dragged && !wasSelected) openInspector();
+      else if (dragged) persist();
+      render();
+    };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+    if (!wasSelected) render();
+  });
+}
+
+function attachPortHandler(port, n, sub) {
+  port.addEventListener('mousedown', ev => {
+    ev.stopPropagation();
+    const el = canvas.querySelector(`[data-id="${n.id}"]`);
+    const w = el.offsetWidth, h = el.offsetHeight;
+    let A;
+    if (sub && sub.kind === 'option' && n.options) {
+      const sorted = [...n.options].map((o,i)=>({o,i})).sort((p,q)=>(p.o.sequence||p.i+1)-(q.o.sequence||q.i+1));
+      const idx = sorted.findIndex(s => s.o.id === sub.id);
+      A = { x: n.x + w * (idx + 1) / (sorted.length + 1), y: n.y + h };
+    } else if (sub && sub.kind === 'threshold' && n.thresholds) {
+      const idx = n.thresholds.findIndex(t => t.id === sub.id);
+      A = { x: n.x + w * (idx + 1) / (n.thresholds.length + 1), y: n.y + h };
+    } else {
+      const side = port.dataset.port || 'bottom';
+      A = side === 'top'    ? { x: n.x + w/2, y: n.y } :
+                              { x: n.x + w/2, y: n.y + h };
+    }
+    const tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    tempPath.setAttribute('stroke', '#6366f1');
+    tempPath.setAttribute('stroke-width', '2.4');
+    tempPath.setAttribute('fill', 'none');
+    tempPath.setAttribute('stroke-dasharray', '6 4');
+    edgesSvg.appendChild(tempPath);
+    let lastTarget = null;
+    const move = e => {
+      const r = wrap.getBoundingClientRect();
+      const mx = (e.clientX - r.left - pan.x) / zoom;
+      const my = (e.clientY - r.top - pan.y) / zoom;
+      const dy = Math.max(40, Math.abs(my - A.y) * 0.5);
+      tempPath.setAttribute('d', `M ${A.x} ${A.y} C ${A.x} ${A.y + dy}, ${mx} ${my - dy}, ${mx} ${my}`);
+      const hover = document.elementFromPoint(e.clientX, e.clientY);
+      if (lastTarget && lastTarget !== hover) lastTarget.classList.remove('hot');
+      if (hover && (hover.classList.contains('port') || hover.classList.contains('opt-port'))) { hover.classList.add('hot'); lastTarget = hover; }
+      else lastTarget = null;
+    };
+    const up = e => {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+      tempPath.remove();
+      if (lastTarget) lastTarget.classList.remove('hot');
+      const tgt = document.elementFromPoint(e.clientX, e.clientY);
+      if (tgt && (tgt.classList.contains('port') || tgt.classList.contains('opt-port'))) {
+        const tNodeEl = tgt.closest('.node');
+        const tid = tNodeEl.dataset.id;
+        if (tid !== n.id) {
+          if (sub && sub.kind === 'option') {
+            const opt = n.options.find(o => o.id === sub.id);
+            if (opt) opt.route = 'node:' + tid;
+          } else if (sub && sub.kind === 'threshold') {
+            const t = n.thresholds.find(x => x.id === sub.id);
+            if (t) t.route = 'node:' + tid;
+          } else if (!curFlow.edges.find(x => x.from === n.id && x.to === tid)) {
+            curFlow.edges.push({ id: uid('e_'), from: n.id, to: tid });
+          }
+        }
+        render();
+      } else {
+        // Dropped on empty canvas — open insert popover
+        const r = wrap.getBoundingClientRect();
+        const mx = (e.clientX - r.left - pan.x) / zoom;
+        const my = (e.clientY - r.top - pan.y) / zoom;
+        openInsertPopover(n, sub, mx, my, e.clientX, e.clientY);
+      }
+    };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  });
+}
+
+// =============================================================
+// Insert popover — create + connect a new node when port-drag drops on empty space
+// =============================================================
+function openInsertPopover(sourceNode, sub, canvasX, canvasY, screenX, screenY) {
+  const grid = document.getElementById('ip-grid');
+  grid.innerHTML = Object.entries(NTYPES).filter(([id]) => id !== 'trigger').map(([id, m]) => `
+    <div class="ip-card" data-type="${id}">
+      <div class="pic t-${id}">${m.icon}</div>
+      <div class="lbl">${m.label}</div>
+    </div>`).join('');
+  // Position popover near drop location (use screen coords if provided)
+  const x = screenX != null ? screenX + 10 : (canvasX * zoom + pan.x + wrap.getBoundingClientRect().left + 60);
+  const y = screenY != null ? screenY + 10 : (canvasY * zoom + pan.y + wrap.getBoundingClientRect().top);
+  insertPop.style.left = Math.min(x, window.innerWidth - 300) + 'px';
+  insertPop.style.top  = Math.min(y, window.innerHeight - 400) + 'px';
+  insertPop.style.display = 'block';
+
+  grid.querySelectorAll('.ip-card').forEach(c => {
+    c.onclick = () => {
+      const type = c.dataset.type;
+      const node = { id: uid('n_'), type, x: canvasX, y: canvasY - 30, label: NTYPES[type].label };
+      if (type === 'question') node.options = [{ id: uid('opt_'), text: 'Yes', route: '' }, { id: uid('opt_'), text: 'No', route: '' }];
+      if (type === 'rootcause') node.options = [{ id: uid('opt_'), text: 'Cause A', route: '' }, { id: uid('opt_'), text: 'Cause B', route: '' }];
+      if (type === 'sensor') {
+        node.sensorName = ''; node.unit = '';
+        node.thresholds = [
+          { id:'safe', label:'Safe', min:null, max:null, route:'' },
+          { id:'warn', label:'Warning', min:null, max:null, route:'' },
+          { id:'crit', label:'Critical', min:null, max:null, route:'' }
+        ];
+      }
+      curFlow.nodes.push(node);
+      // Wire source → new node
+      if (sub && sub.kind === 'option') {
+        const opt = sourceNode.options.find(o => o.id === sub.id);
+        if (opt) opt.route = 'node:' + node.id;
+      } else if (sub && sub.kind === 'threshold') {
+        const t = sourceNode.thresholds.find(x => x.id === sub.id);
+        if (t) t.route = 'node:' + node.id;
+      } else if (sourceNode) {
+        curFlow.edges.push({ id: uid('e_'), from: sourceNode.id, to: node.id });
+      }
+      insertPop.style.display = 'none';
+      selection = { kind: 'node', id: node.id };
+      openInspector();
+      render();
+    };
+  });
+}
+document.getElementById('ip-close').onclick = () => insertPop.style.display = 'none';
+document.addEventListener('click', e => {
+  if (insertPop.style.display === 'block' && !insertPop.contains(e.target)) insertPop.style.display = 'none';
+});
+
+// =============================================================
+// Pan / zoom
+// =============================================================
+wrap.addEventListener('mousedown', ev => {
+  if (viewMode === 'stepped') return; // no pan/zoom interactions in vertical view
+  if (ev.target.tagName === 'path') return;
+  if (ev.target.closest('.node') || ev.target.closest('.zoom-pill') || ev.target.closest('.quick-pill') || ev.target.closest('.canvas-top') || ev.target.closest('.saved-status')) return;
+  if (selection) closeInspector();
+  const start = { x: ev.clientX, y: ev.clientY, px: pan.x, py: pan.y };
+  const move = e => { pan.x = start.px + (e.clientX - start.x); pan.y = start.py + (e.clientY - start.y); applyTransform(); };
+  const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); };
+  document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+});
+wrap.addEventListener('wheel', ev => {
+  if (viewMode === 'stepped') return; // let native scroll work in vertical view
+  ev.preventDefault();
+  const r = wrap.getBoundingClientRect();
+  const mx = ev.clientX - r.left, my = ev.clientY - r.top;
+  const delta = ev.deltaY > 0 ? 0.9 : 1.1;
+  const nz = Math.max(0.2, Math.min(2, zoom * delta));
+  pan.x = mx - (mx - pan.x) * (nz / zoom);
+  pan.y = my - (my - pan.y) * (nz / zoom);
+  zoom = nz; applyTransform();
+}, { passive: false });
+document.getElementById('zoom-in').onclick = () => { zoom = Math.min(2, zoom * 1.15); applyTransform(); };
+document.getElementById('zoom-out').onclick = () => { zoom = Math.max(0.2, zoom / 1.15); applyTransform(); };
+document.getElementById('zoom-fit').onclick = fitView;
+document.getElementById('auto-layout-btn').onclick = () => { autoLayoutTopDown(); render(); fitView(); toast('Re-arranged top-down'); };
+
+function autoLayoutTopDown() {
+  // BFS from triggers; level → y, x distributed per level.
+  const triggers = curFlow.nodes.filter(n => n.type === 'trigger');
+  const start = triggers.length ? triggers : (curFlow.nodes[0] ? [curFlow.nodes[0]] : []);
+  const depth = {};
+  const queue = start.map(n => ({ id: n.id, d: 0 }));
+  while (queue.length) {
+    const { id, d } = queue.shift();
+    if (depth[id] != null && depth[id] >= d) continue;
+    depth[id] = d;
+    const n = curFlow.nodes.find(x => x.id === id);
+    if (!n) continue;
+    // Follow outgoing edges + option/threshold routes
+    curFlow.edges.filter(e => e.from === id).forEach(e => queue.push({ id: e.to, d: d + 1 }));
+    if (n.options) n.options.forEach(o => { if (o.route && o.route.startsWith('node:')) queue.push({ id: o.route.slice(5), d: d + 1 }); });
+    if (n.thresholds) n.thresholds.forEach(t => { if (t.route && t.route.startsWith('node:')) queue.push({ id: t.route.slice(5), d: d + 1 }); });
+  }
+  // Orphans → depth 0
+  curFlow.nodes.forEach(n => { if (depth[n.id] == null) depth[n.id] = 0; });
+  // Group by depth
+  const byDepth = {};
+  curFlow.nodes.forEach(n => { (byDepth[depth[n.id]] = byDepth[depth[n.id]] || []).push(n); });
+  const ROW_GAP = 60;   // vertical gap between rows
+  const COL_GAP = 60;   // horizontal gap between cards in same row
+  const CARD_W = 260, CARD_H_BASE = 130;
+  Object.keys(byDepth).map(Number).sort((a, b) => a - b).forEach((d, dIdx) => {
+    const nodesAtD = byDepth[d];
+    // y = sum of max heights of previous rows + gaps
+    let y = 60;
+    for (let i = 0; i < d; i++) {
+      const prev = byDepth[i] || [];
+      const maxH = Math.max(CARD_H_BASE, ...prev.map(n => estimateHeight(n)));
+      y += maxH + ROW_GAP;
+    }
+    // Total row width
+    const totalW = nodesAtD.length * CARD_W + (nodesAtD.length - 1) * COL_GAP;
+    let startX = 60;
+    // Try to center under parent if possible — simple: start at 60
+    nodesAtD.forEach((n, i) => {
+      n.x = startX + i * (CARD_W + COL_GAP);
+      n.y = y;
+    });
+  });
+}
+function estimateHeight(n) {
+  let h = 100;
+  if (n.options) h += n.options.length * 35 + 40;
+  if (n.thresholds) h += n.thresholds.length * 35 + 40;
+  return h;
+}
+function fitView() {
+  if (!curFlow.nodes.length) { pan = { x: 60, y: 60 }; zoom = 1; applyTransform(); return; }
+  const xs = curFlow.nodes.map(n => n.x), ys = curFlow.nodes.map(n => n.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs.map(x => x + 280));
+  const minY = Math.min(...ys), maxY = Math.max(...ys.map(y => y + 240));
+  const rect = wrap.getBoundingClientRect();
+  const zx = (rect.width - 100) / (maxX - minX);
+  const zy = (rect.height - 100) / (maxY - minY);
+  zoom = Math.min(1, Math.min(zx, zy));
+  pan.x = -minX * zoom + 50;
+  pan.y = -minY * zoom + 50;
+  applyTransform();
+}
+
+// =============================================================
+// Drop from palette
+// =============================================================
+wrap.addEventListener('dragover', e => e.preventDefault());
+wrap.addEventListener('drop', e => {
+  e.preventDefault();
+  const type = e.dataTransfer.getData('text/plain');
+  if (!type || !NTYPES[type]) return;
+  const r = wrap.getBoundingClientRect();
+  const x = (e.clientX - r.left - pan.x) / zoom;
+  const y = (e.clientY - r.top - pan.y) / zoom;
+  const node = { id: uid('n_'), type, x: x - 120, y: y - 30, label: NTYPES[type].label };
+  if (type === 'question') node.options = [{ id: uid('opt_'), text: 'Yes', route: '' }, { id: uid('opt_'), text: 'No', route: '' }];
+  if (type === 'rootcause') node.options = [{ id: uid('opt_'), text: 'Cause A', route: '' }, { id: uid('opt_'), text: 'Cause B', route: '' }];
+  if (type === 'sensor') {
+    node.sensorName = ''; node.unit = '';
+    node.thresholds = [
+      { id:'safe', label:'Safe', min:null, max:null, route:'' },
+      { id:'warn', label:'Warning', min:null, max:null, route:'' },
+      { id:'crit', label:'Critical', min:null, max:null, route:'' }
+    ];
+  }
+  curFlow.nodes.push(node);
+  selection = { kind: 'node', id: node.id };
+  openInspector();
+  render();
+});
+
+// =============================================================
+// Templates + Welcome
+// =============================================================
+document.getElementById('btn-templates').onclick = showTemplates;
+document.getElementById('btn-save-tpl').onclick = () => {
+  document.getElementById('tpl-save-name').value = curTree.name;
+  document.getElementById('tpl-save-emoji').value = '⭐';
+  document.getElementById('tpl-save-modal').style.display = 'flex';
+};
+document.getElementById('tpl-save-cancel').onclick = () => document.getElementById('tpl-save-modal').style.display = 'none';
+document.getElementById('tpl-save-confirm').onclick = () => {
+  const name = document.getElementById('tpl-save-name').value.trim() || curTree.name;
+  const em = document.getElementById('tpl-save-emoji').value.trim() || '⭐';
+  const list = loadTemplates();
+  list.push({ id: uid('tpl_'), name, emoji: em, tree: JSON.parse(JSON.stringify(curTree)) });
+  saveTemplates(list);
+  document.getElementById('tpl-save-modal').style.display = 'none';
+  toast('Template saved');
+};
+function showTemplates() {
+  const grid = document.getElementById('tpl-grid');
+  let h = '';
+  BUILTIN_TEMPLATES.forEach(t => h += `<div class="tpl-card" data-builtin="${t.id}"><span class="em">${t.emoji}</span><div class="nm">${escapeHtml(t.name)}</div><div class="mt">Built-in · ${escapeHtml(t.desc)}</div></div>`);
+  loadTemplates().forEach(t => h += `<div class="tpl-card" data-saved="${t.id}"><button class="del" data-del="${t.id}">×</button><span class="em">${t.emoji || '⭐'}</span><div class="nm">${escapeHtml(t.name)}</div><div class="mt">Saved · ${t.tree.flows.length} flow${t.tree.flows.length !== 1 ? 's' : ''}</div></div>`);
+  if (!h) h = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:20px">No templates yet.</div>';
+  grid.innerHTML = h;
+  grid.querySelectorAll('.tpl-card').forEach(c => {
+    c.onclick = ev => {
+      if (ev.target.classList.contains('del')) return;
+      if (c.dataset.builtin) {
+        const t = BUILTIN_TEMPLATES.find(x => x.id === c.dataset.builtin);
+        const nt = t.builder(); data.trees.push(nt); curTree = nt; curFlow = nt.flows[0];
+      } else if (c.dataset.saved) {
+        const sv = loadTemplates().find(x => x.id === c.dataset.saved);
+        if (sv) { const cl = JSON.parse(JSON.stringify(sv.tree)); cl.id = uid('tree_'); data.trees.push(cl); curTree = cl; curFlow = cl.flows[0]; }
+      }
+      document.getElementById('tpl-modal').style.display = 'none';
+      closeInspector(); fitView();
+    };
+  });
+  grid.querySelectorAll('.del').forEach(b => b.onclick = ev => {
+    ev.stopPropagation();
+    if (!confirm('Delete this saved template?')) return;
+    saveTemplates(loadTemplates().filter(t => t.id !== ev.target.dataset.del));
+    showTemplates();
+  });
+  document.getElementById('tpl-modal').style.display = 'flex';
+}
+document.getElementById('tpl-close').onclick = () => document.getElementById('tpl-modal').style.display = 'none';
+
+function applyTopDownToAllFlows(tree) {
+  tree.flows.forEach(f => { const save = curFlow; curFlow = f; autoLayoutTopDown(); curFlow = save; });
+}
+function showWelcome() {
+  const m = document.getElementById('welcome-modal');
+  m.style.display = 'flex';
+  m.querySelectorAll('.choice').forEach(c => {
+    c.onclick = () => {
+      m.style.display = 'none';
+      if (c.dataset.action === 'dummy') {
+        const t = buildLowDoTree(); data.trees = [t]; curTree = t; curFlow = t.flows[2];
+        applyTopDownToAllFlows(t);
+      } else if (c.dataset.action === 'template') {
+        data.trees = [{ id: uid('tree_'), name: 'My tree', flows: [{ id: uid('f_'), name: 'Flow 1', nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: 'New trigger' }], edges: [] }] }];
+        curTree = data.trees[0]; curFlow = curTree.flows[0];
+        setTimeout(showTemplates, 100);
+      } else {
+        data.trees = [{ id: uid('tree_'), name: 'My first tree', flows: [{ id: uid('f_'), name: 'Flow 1', nodes: [{ id: uid('n_'), type: 'trigger', x: 100, y: 140, label: 'Issue trigger' }], edges: [] }] }];
+        curTree = data.trees[0]; curFlow = curTree.flows[0];
+      }
+      render(); fitView();
+    };
+  });
+}
+
+// Quick add (⌘K) — opens insert popover at center of canvas
+document.getElementById('quick-add').onclick = () => {
+  const r = wrap.getBoundingClientRect();
+  openInsertPopover(null, null, (r.width/2 - pan.x)/zoom, (r.height/2 - pan.y)/zoom, r.left + r.width/2, r.top + r.height/2);
+};
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); document.getElementById('quick-add').click(); }
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selection) {
+    if (selection.kind === 'node') deleteNode(selection.id);
+    else if (selection.kind === 'edge') { curFlow.edges = curFlow.edges.filter(x => x.id !== selection.id); closeInspector(); }
+  }
+  if (e.key === 'Escape') { closeInspector(); insertPop.style.display = 'none'; }
+});
+
+function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2200); }
+
+// =============================================================
+// Init
+// =============================================================
+(function init() {
+  renderPalette();
+  pan = { x: 50, y: 50 }; zoom = 0.7;
+  if (!loadPersisted()) {
+    data.trees = [buildLowDoTree()];
+    curTree = data.trees[0]; curFlow = curTree.flows[2];
+    applyTopDownToAllFlows(data.trees[0]);
+    showWelcome();
+    render();
+  } else {
+    render(); fitView();
+  }
+})();
+</script>
+</body>
+</html>
