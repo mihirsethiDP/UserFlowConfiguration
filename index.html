@@ -453,10 +453,34 @@ function demoTree(){
   causes.forEach((nm,i)=>{
     const flowId = uid('flow_'); const rcId = uid('rc_');
     tree.rootCauses.push({ id:rcId, label:nm, sequence:i+1, flowId });
-    if(i===2) tree.flows.push(buildFlow3(flowId,rcId,nm));
+    if(i===0) tree.flows.push(buildFlow1(flowId,rcId,nm));
+    else if(i===2) tree.flows.push(buildFlow3(flowId,rcId,nm));
     else tree.flows.push({ id:flowId, name:nm, rootCauseId:rcId, nodes:[], edges:[] });
   });
   return tree;
+}
+// Fully wired, simulation-ready flow — every path reaches Done
+function buildFlow1(flowId,rcId,nm){
+  const id={}; ['aCheck','q1','aStart','aReset','aReasn','done1'].forEach(k=>id[k]=uid('n_'));
+  return { id:flowId, name:nm, rootCauseId:rcId,
+    nodes:[
+      { id:id.aCheck, type:'action', x:420, y:60, label:'Check blower status on the panel', actionType:'photo', options:[
+        {id:uid('o_'),text:'Blower is ON',      route:'node:'+id.q1},
+        {id:uid('o_'),text:'Blower is OFF',     route:'node:'+id.aStart},
+        {id:uid('o_'),text:'Blower is TRIPPED', route:'node:'+id.aReset} ]},
+      { id:id.q1, type:'question', x:120, y:380, label:'Is DO recovering after restart?', sequence:1, options:[
+        {id:uid('o_'),text:'Yes — DO rising',  route:'done'},
+        {id:uid('o_'),text:'No — still low',   route:'node:'+id.aReasn} ]},
+      { id:id.aStart, type:'action', x:470, y:380, label:'Start the blower', actionType:'custom', customAction:'Start blower' },
+      { id:id.aReset, type:'action', x:800, y:380, label:'Reset trip & notify maintenance', actionType:'escalate', role:'Maintenance' },
+      { id:id.aReasn, type:'reassign', x:120, y:680, label:'Reassign to Process Engineer', role:'Process Engineer' },
+      { id:id.done1, type:'done', x:480, y:720, label:'Confirm root cause: Blower was OFF' }
+    ],
+    edges:[
+      { id:uid('e_'), from:id.aStart,  to:id.done1 },
+      { id:uid('e_'), from:id.aReset,  to:id.done1 },
+      { id:uid('e_'), from:id.aReasn,  to:id.done1 }
+    ]};
 }
 function buildFlow3(flowId,rcId,nm){
   const id={}; ['q1','q2','aCall','aSkip','aDiff','sens','aRca','aReasn','done1'].forEach(k=>id[k]=uid('n_'));
