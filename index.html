@@ -78,6 +78,10 @@
   .bcrumb .seg.current { color: #fff; font-weight: 600; cursor: default; }
   .bcrumb .seg.current:hover { background: transparent; }
   .bcrumb .chev { color: #475569; }
+  .phase-toggle { display: inline-flex; margin-left: 8px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); padding: 2px; border-radius: 8px; gap: 2px; }
+  .phase-toggle button { background: transparent; border: none; color: #94a3b8; padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 600; cursor: pointer; }
+  .phase-toggle button:hover { color: #fff; }
+  .phase-toggle button.active { background: #fff; color: var(--header); }
   .spacer { flex: 1; }
   .hbtn { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); color: #e2e8f0; padding: 7px 13px; border-radius: 8px; font-size: 12.5px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all .12s; }
   .hbtn:hover { background: rgba(255,255,255,.13); }
@@ -136,9 +140,13 @@
   .rc-add { margin-top: 4px; padding: 8px; border: 1px dashed var(--muted2); border-radius: 8px; text-align: center; font-size: 12px; color: var(--muted); cursor: pointer; font-weight: 600; }
   .rc-add:hover { border-color: var(--brand2); color: var(--brand2); }
 
-  .flow-card { width: 230px; padding: 14px 16px; cursor: pointer; border-color: #fbcfe8; background: linear-gradient(180deg, #fdf4ff, #fff 60%); }
+  .flow-card { width: 230px; padding: 14px 16px; cursor: pointer; border-left: 4px solid transparent; }
+  .flow-card.diag { border-color: #c7d2fe; border-left-color: var(--s-action); background: linear-gradient(180deg, #eef2ff, #fff 62%); }
+  .flow-card.remedy { border-color: #a7f3d0; border-left-color: var(--s-trigger); background: linear-gradient(180deg, #ecfdf5, #fff 62%); }
   .flow-card .fc-top { display: flex; align-items: center; justify-content: space-between; }
-  .flow-card .fc-seq { font-size: 10px; color: var(--muted); font-weight: 700; }
+  .flow-card .fc-seq { font-size: 10px; font-weight: 800; letter-spacing: .04em; }
+  .flow-card.diag .fc-seq { color: var(--s-action); }
+  .flow-card.remedy .fc-seq { color: #059669; }
   .flow-card .fc-name { font-size: 13.5px; font-weight: 600; margin-top: 8px; line-height: 1.3; }
   .flow-card .fc-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
   .flow-card .fc-steps { font-size: 11px; color: var(--muted); }
@@ -199,7 +207,9 @@
   .node.t-done .nh { justify-content: center; padding-top: 14px; }
   .node.t-done .nic { background: rgba(255,255,255,.18); box-shadow: none; }
   .node.t-done .ntype { color: rgba(255,255,255,.7); }
-  .node.t-done .label { color: #fff; margin-bottom: 12px; }
+  .node.t-done .label { color: #fff; margin-bottom: 10px; }
+  .node.t-done .done-foot { margin: 0 14px 12px; padding: 7px 10px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.18); border-radius: 8px; color: #d1fae5; font-size: 11px; font-weight: 700; cursor: pointer; text-align: center; transition: background .12s; }
+  .node.t-done .done-foot:hover { background: rgba(52,211,153,.35); color: #fff; }
 
   .opts { margin: 11px 14px 0; padding-top: 10px; border-top: 1px dashed color-mix(in srgb, var(--accent,#3b82f6) 25%, var(--border)); display: flex; flex-direction: column; gap: 5px; }
   .opt { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: color-mix(in srgb, var(--accent,#3b82f6) 7%, var(--soft)); border-radius: 8px; }
@@ -460,7 +470,11 @@ const TAGS = [
 
 // ============================================================
 // DATA MODEL
-//  tree { id, name, trigger{id,label,desc}, rootCauses[{id,label,sequence,flowId}], flows[{id,name,rootCauseId,nodes,edges}] }
+//  tree { id, name, trigger{}, rootCauses[{id,label,sequence,flowId,remedyFlowId}], flows[{id,name,rootCauseId,kind,nodes,edges}] }
+//  Each root cause owns TWO flows:
+//    • diagnostic (kind:'diagnostic') — confirms the cause, ends at a Done node
+//    • remedial   (kind:'remedy')     — the fix procedure, ends at a Done node (= Resolved)
+//  A diagnostic Done hands off into that cause's remedial flow.
 // ============================================================
 let data = { trees: [] };
 let curTree, curFlow=null;
@@ -473,13 +487,15 @@ const KEY='fc-fable-v1', TKEY='fc-fable-templates';
 const cam = { map:{x:60,y:40,z:.8}, flow:{x:60,y:40,z:.85} };
 
 function persist(){ try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(_){} }
-function load(){ try{ const r=localStorage.getItem(KEY); if(!r) return false; const p=JSON.parse(r); if(!p.trees||!p.trees.length) return false; data=p; curTree=data.trees[0]; return true; }catch(_){ return false; } }
+function load(){ try{ const r=localStorage.getItem(KEY); if(!r) return false; const p=JSON.parse(r); if(!p.trees||!p.trees.length) return false; data=p; migrate(); persist(); curTree=data.trees[0]; return true; }catch(_){ return false; } }
 function loadTpl(){ try{ return JSON.parse(localStorage.getItem(TKEY)||'[]'); }catch(_){ return []; } }
 function saveTpl(l){ try{ localStorage.setItem(TKEY, JSON.stringify(l)); }catch(_){} }
 
 // ============================================================
 // DEMO TREE
 // ============================================================
+function emptyFlow(id,name,rcId,kind){ return { id, name, rootCauseId:rcId, kind:kind||'diagnostic', nodes:[], edges:[] }; }
+
 function demoTree(){
   const causes = [
     'Blower is OFF', 'Blower performance',
@@ -490,18 +506,41 @@ function demoTree(){
     trigger:{ id:uid('trg_'), label:'Low DO alarm in Aeration tank', desc:'DO reading dropped below setpoint' },
     rootCauses:[], flows:[] };
   causes.forEach((nm,i)=>{
-    const flowId = uid('flow_'); const rcId = uid('rc_');
-    tree.rootCauses.push({ id:rcId, label:nm, sequence:i+1, flowId });
+    const flowId = uid('flow_'), remedyId = uid('flow_'), rcId = uid('rc_');
+    tree.rootCauses.push({ id:rcId, label:nm, sequence:i+1, flowId, remedyFlowId:remedyId });
+    // diagnostic flow
     if(i===0) tree.flows.push(buildFlow1(flowId,rcId,nm));
     else if(i===2) tree.flows.push(buildFlow3(flowId,rcId,nm));
-    else tree.flows.push({ id:flowId, name:nm, rootCauseId:rcId, nodes:[], edges:[] });
+    else tree.flows.push(emptyFlow(flowId,nm,rcId,'diagnostic'));
+    // remedial flow
+    if(i===0) tree.flows.push(buildRemedy1(remedyId,rcId,nm));
+    else tree.flows.push(emptyFlow(remedyId,'Fix · '+nm,rcId,'remedy'));
   });
   return tree;
+}
+// Demo remedial flow for "Blower is OFF" — ends at a Resolved (done) node
+function buildRemedy1(flowId,rcId,nm){
+  const id={}; ['aPower','aRestart','q1','aCallMaint','done1'].forEach(k=>id[k]=uid('n_'));
+  return { id:flowId, name:'Fix · '+nm, rootCauseId:rcId, kind:'remedy',
+    nodes:[
+      { id:id.aPower, type:'action', x:420, y:60, label:'Confirm power supply to blower', actionType:'photo' },
+      { id:id.aRestart, type:'action', x:420, y:240, label:'Restart blower from panel', actionType:'custom', customAction:'Restart blower' },
+      { id:id.q1, type:'question', x:420, y:420, label:'Is the blower running steadily?', sequence:1, options:[
+        {id:uid('o_'),text:'Yes — running',      route:'done'},
+        {id:uid('o_'),text:'No — wont start',    route:'node:'+id.aCallMaint} ]},
+      { id:id.aCallMaint, type:'action', x:120, y:640, label:'Escalate to maintenance', actionType:'escalate', role:'Maintenance' },
+      { id:id.done1, type:'done', x:560, y:660, label:'Resolved — blower running' }
+    ],
+    edges:[
+      { id:uid('e_'), from:id.aPower, to:id.aRestart },
+      { id:uid('e_'), from:id.aRestart, to:id.q1 },
+      { id:uid('e_'), from:id.aCallMaint, to:id.done1 }
+    ]};
 }
 // Fully wired, simulation-ready flow — every path reaches Done
 function buildFlow1(flowId,rcId,nm){
   const id={}; ['aCheck','q1','aStart','aReset','aReasn','done1'].forEach(k=>id[k]=uid('n_'));
-  return { id:flowId, name:nm, rootCauseId:rcId,
+  return { id:flowId, name:nm, rootCauseId:rcId, kind:'diagnostic',
     nodes:[
       { id:id.aCheck, type:'action', x:420, y:60, label:'Check blower status on the panel', actionType:'photo', options:[
         {id:uid('o_'),text:'Blower is ON',      route:'node:'+id.q1},
@@ -523,7 +562,7 @@ function buildFlow1(flowId,rcId,nm){
 }
 function buildFlow3(flowId,rcId,nm){
   const id={}; ['q1','q2','aCall','aSkip','aDiff','sens','aRca','aReasn','done1'].forEach(k=>id[k]=uid('n_'));
-  return { id:flowId, name:nm, rootCauseId:rcId,
+  return { id:flowId, name:nm, rootCauseId:rcId, kind:'diagnostic',
     nodes:[
       { id:id.q1, type:'question', x:120, y:60, label:'Is aeration even across the tank?', sequence:1, options:[
         {id:uid('o_'),text:'Yes — bubbles normal',route:'node:'+id.q2},
@@ -556,12 +595,26 @@ function buildFlow3(flowId,rcId,nm){
 const BUILTINS = [
   { id:'b1', name:'Low DO Diagnostic', emoji:'🌊', desc:'6 causes · aeration tank', build:demoTree },
   { id:'b2', name:'Basic tree', emoji:'🧭', desc:'1 cause · starter', build:()=>{
-      const f=uid('flow_'), rc=uid('rc_');
+      const f=uid('flow_'), rf=uid('flow_'), rc=uid('rc_');
       return { id:uid('tree_'), name:'New diagnostic tree',
         trigger:{id:uid('trg_'),label:'Issue reported',desc:''},
-        rootCauses:[{id:rc,label:'Root cause 1',sequence:1,flowId:f}],
-        flows:[{id:f,name:'Root cause 1',rootCauseId:rc,nodes:[],edges:[]}] }; } }
+        rootCauses:[{id:rc,label:'Root cause 1',sequence:1,flowId:f,remedyFlowId:rf}],
+        flows:[ emptyFlow(f,'Root cause 1',rc,'diagnostic'), emptyFlow(rf,'Fix · Root cause 1',rc,'remedy') ] }; } }
 ];
+
+// Migrate older saved trees that predate remedial flows
+function migrate(){
+  (data.trees||[]).forEach(t=>{
+    (t.flows||[]).forEach(f=>{ if(!f.kind) f.kind='diagnostic'; });
+    (t.rootCauses||[]).forEach(rc=>{
+      if(!rc.remedyFlowId){
+        const rf=uid('flow_');
+        rc.remedyFlowId=rf;
+        t.flows.push(emptyFlow(rf,'Fix · '+rc.label,rc.id,'remedy'));
+      }
+    });
+  });
+}
 
 // ============================================================
 // DOM refs
@@ -608,14 +661,29 @@ function go(v){
   if(v==='flow') renderFlow();
   if(v==='sim') renderSim();
 }
+function rcOfFlow(flow){ return curTree.rootCauses.find(r=>r.flowId===flow.id||r.remedyFlowId===flow.id); }
 function renderCrumb(){
   const b=$('bcrumb');
   let h=`<span class="seg ${view==='map'?'current':''}" data-go="map">🌳 ${esc(curTree.name)}</span>`;
-  if(view==='flow' && curFlow){ const rc=curTree.rootCauses.find(r=>r.flowId===curFlow.id);
-    h+=`<span class="chev">›</span><span class="seg current">${esc(rc?('#'+rc.sequence+' '+rc.label):curFlow.name)}</span>`; }
+  if(view==='flow' && curFlow){
+    const rc=rcOfFlow(curFlow);
+    h+=`<span class="chev">›</span><span class="seg current">${esc(rc?('#'+rc.sequence+' '+rc.label):curFlow.name)}</span>`;
+    if(rc){
+      const isRemedy=curFlow.id===rc.remedyFlowId;
+      h+=`<span class="phase-toggle">
+        <button data-phase="diag" class="${!isRemedy?'active':''}">🔍 Diagnose</button>
+        <button data-phase="fix" class="${isRemedy?'active':''}">🛠 Fix</button>
+      </span>`;
+    }
+  }
   if(view==='sim'){ h+=`<span class="chev">›</span><span class="seg current">▶ Simulate</span>`; }
   b.innerHTML=h;
   b.querySelectorAll('[data-go]').forEach(s=>s.onclick=()=>go(s.dataset.go));
+  b.querySelectorAll('[data-phase]').forEach(s=>s.onclick=()=>{
+    const rc=rcOfFlow(curFlow); if(!rc) return;
+    const target = s.dataset.phase==='fix' ? rc.remedyFlowId : rc.flowId;
+    if(target && target!==curFlow.id){ curFlow=curTree.flows.find(f=>f.id===target); sel=null; closeInsp(); renderFlow(); fitView('flow'); renderCrumb(); }
+  });
 }
 
 // ============================================================
@@ -658,19 +726,31 @@ function renderMap(){
   const totalW = rcs.length*cardW + (rcs.length-1)*gap;
   let fx = CX - totalW/2;
   const flowPos={};
+  const remedyTop = flowTop + 168;  // second row
+  const remedyPos={};
+  const healthChip=(flow)=>{ const h=validateFlow(flow); const hc=h.errors?'err':h.warns?'warn':'ok'; const ht=h.errors?`${h.errors} issue${h.errors>1?'s':''}`:h.warns?`${h.warns} warning${h.warns>1?'s':''}`:(flow.nodes.length?'Valid':'Empty'); return {hc,ht}; };
   rcs.forEach((r,i)=>{
     const flow=curTree.flows.find(f=>f.id===r.flowId);
-    const health=validateFlow(flow);
-    const hc = health.errors? 'err' : health.warns? 'warn' : 'ok';
-    const ht = health.errors? `${health.errors} issue${health.errors>1?'s':''}` : health.warns? `${health.warns} warning${health.warns>1?'s':''}` : 'Valid';
+    const remedy=curTree.flows.find(f=>f.id===r.remedyFlowId);
     const x = fx + i*(cardW+gap);
     flowPos[r.id]={ x:x+cardW/2, y:flowTop };
-    const fEl=el(`<div class="card flow-card" data-open-flow="${r.flowId}" style="left:${x}px;top:${flowTop}px">
-      <div class="fc-top"><span class="fc-seq">FLOW ${r.sequence}</span><span class="health ${hc}">${hc==='ok'?'✓':hc==='warn'?'⚠':'✕'} ${ht}</span></div>
+    remedyPos[r.id]={ x:x+cardW/2, y:remedyTop };
+    const dH=healthChip(flow);
+    const fEl=el(`<div class="card flow-card diag" data-open-flow="${r.flowId}" style="left:${x}px;top:${flowTop}px">
+      <div class="fc-top"><span class="fc-seq">🔍 DIAGNOSE ${r.sequence}</span><span class="health ${dH.hc}">${dH.hc==='ok'?'✓':dH.hc==='warn'?'⚠':'✕'} ${dH.ht}</span></div>
       <div class="fc-name">${esc(flow.name||r.label)}</div>
       <div class="fc-foot"><span class="fc-steps">${flow.nodes.length} step${flow.nodes.length!==1?'s':''}</span><span class="fc-edit">Edit →</span></div>
     </div>`);
     mapScene.appendChild(fEl);
+    if(remedy){
+      const rH=healthChip(remedy);
+      const rEl=el(`<div class="card flow-card remedy" data-open-flow="${r.remedyFlowId}" style="left:${x}px;top:${remedyTop}px">
+        <div class="fc-top"><span class="fc-seq">🛠 FIX ${r.sequence}</span><span class="health ${rH.hc}">${rH.hc==='ok'?'✓':rH.hc==='warn'?'⚠':'✕'} ${rH.ht}</span></div>
+        <div class="fc-name">${esc(remedy.name||('Fix · '+r.label))}</div>
+        <div class="fc-foot"><span class="fc-steps">${remedy.nodes.length} step${remedy.nodes.length!==1?'s':''}</span><span class="fc-edit">Edit →</span></div>
+      </div>`);
+      mapScene.appendChild(rEl);
+    }
   });
 
   // Wires: trigger→rc card, rc ports→flow cards — drawn synchronously (deterministic).
@@ -695,6 +775,17 @@ function renderMap(){
     const [px,py]=toScene(pR.left+pR.width/2, pR.top+pR.height/2);
     const [fxC,fyC]=toScene(fR.left+fR.width/2, fR.top);
     wire(mapWires, px, py, fxC, fyC, '#c4b5fd');
+  });
+  // diagnostic card bottom → remedial card top ("on confirm →")
+  rcs.forEach(r=>{
+    const diagEl=mapScene.querySelector(`.flow-card[data-open-flow="${r.flowId}"]`);
+    const remEl=mapScene.querySelector(`.flow-card[data-open-flow="${r.remedyFlowId}"]`);
+    if(!diagEl||!remEl) return;
+    const dR=diagEl.getBoundingClientRect(), rR=remEl.getBoundingClientRect();
+    const [x1,y1]=toScene(dR.left+dR.width/2, dR.bottom);
+    const [x2,y2]=toScene(rR.left+rR.width/2, rR.top);
+    wire(mapWires, x1, y1, x2, y2, '#34d399');
+    wireText(mapWires, (x1+x2)/2, (y1+y2)/2+3, 'on confirm');
   });
   sizeWires(mapWires, mapScene);
 
@@ -731,8 +822,8 @@ function startRcRename(nameEl, rcId){
 }
 function deleteRootCause(rcId){
   const r=curTree.rootCauses.find(x=>x.id===rcId); if(!r) return;
-  if(!confirm(`Delete root cause "${r.label}" and its diagnostic flow?`)) return;
-  curTree.flows=curTree.flows.filter(f=>f.id!==r.flowId);
+  if(!confirm(`Delete root cause "${r.label}" and both its diagnostic + remedial flows?`)) return;
+  curTree.flows=curTree.flows.filter(f=>f.id!==r.flowId && f.id!==r.remedyFlowId);
   curTree.rootCauses=curTree.rootCauses.filter(x=>x.id!==rcId);
   // resequence
   curTree.rootCauses.sort((a,b)=>a.sequence-b.sequence).forEach((x,i)=>x.sequence=i+1);
@@ -741,9 +832,10 @@ function deleteRootCause(rcId){
 
 function addRootCause(){
   const seq = curTree.rootCauses.length+1;
-  const flowId=uid('flow_'), rcId=uid('rc_');
-  curTree.rootCauses.push({ id:rcId, label:'New root cause', sequence:seq, flowId });
-  curTree.flows.push({ id:flowId, name:'New root cause', rootCauseId:rcId, nodes:[], edges:[] });
+  const flowId=uid('flow_'), remedyId=uid('flow_'), rcId=uid('rc_');
+  curTree.rootCauses.push({ id:rcId, label:'New root cause', sequence:seq, flowId, remedyFlowId:remedyId });
+  curTree.flows.push(emptyFlow(flowId,'New root cause',rcId,'diagnostic'));
+  curTree.flows.push(emptyFlow(remedyId,'Fix · New root cause',rcId,'remedy'));
   persist(); renderMap();
 }
 
@@ -784,9 +876,16 @@ function renderNode(n){
   let sub=nodeSub(n);
   const branching = (n.type==='question'&&n.options) || (n.type==='action'&&n.options&&n.options.length);
   const sensor = n.type==='sensor'&&n.thresholds;
-  let body=`<div class="nh"><div class="nic">${m.icon}</div><div class="ntype">${m.label}</div>${seqChip}</div>
+  const isRemedyFlow = curFlow.kind==='remedy';
+  // Done node label adapts: diagnostic = "Cause confirmed", remedy = "Resolved"
+  const typeLabel = n.type==='done' ? (isRemedyFlow?'Resolved':'Cause confirmed') : m.label;
+  let body=`<div class="nh"><div class="nic">${m.icon}</div><div class="ntype">${typeLabel}</div>${seqChip}</div>
     <div class="label" contenteditable="true" spellcheck="false">${esc(n.label||'')}</div>
     ${sub?`<div class="sub">${esc(sub)}</div>`:''}`;
+  // Diagnostic Done → hands off to the remedial flow
+  if(n.type==='done' && !isRemedyFlow){
+    body+=`<div class="done-foot" data-open-remedy="1">🛠 Continue to remedial flow →</div>`;
+  }
   if(branching){
     const opts=[...n.options].map((o,i)=>({o,i})).sort((a,b)=>a.i-b.i);
     body+=`<div class="opts">`+opts.map(({o})=>{
@@ -827,6 +926,8 @@ function renderNode(n){
   }
   e.innerHTML=body;
   bindNode(e,n);
+  const rf=e.querySelector('[data-open-remedy]');
+  if(rf) rf.onclick=ev=>{ ev.stopPropagation(); const rc=rcOfFlow(curFlow); if(rc&&rc.remedyFlowId){ curFlow=curTree.flows.find(f=>f.id===rc.remedyFlowId); sel=null; closeInsp(); renderFlow(); fitView('flow'); renderCrumb(); } };
   return e;
 }
 function nodeSub(n){
@@ -1288,16 +1389,36 @@ function renderSim(){
   simWrap.appendChild(card);
   $('simStart').onclick=()=>{ const first=[...curTree.rootCauses].sort((a,b)=>a.sequence-b.sequence)[0]; if(!first){ toast('No root causes'); return; } freezeSim(); enterSimFlow(first.flowId); };
 }
+function simRcOf(flow){ return curTree.rootCauses.find(r=>r.flowId===flow.id||r.remedyFlowId===flow.id); }
 function enterSimFlow(flowId){
   const flow=curTree.flows.find(f=>f.id===flowId);
-  const rc=curTree.rootCauses.find(r=>r.flowId===flowId);
+  const rc=simRcOf(flow);
+  const isRemedy=flow.kind==='remedy';
   simState.flowId=flowId;
   const entry=(()=>{ const t=new Set(); flow.edges.forEach(e=>t.add(e.to)); flow.nodes.forEach(n=>{(n.options||[]).forEach(o=>{if(o.route&&o.route.startsWith('node:'))t.add(o.route.slice(5));});(n.thresholds||[]).forEach(th=>{if(th.route&&th.route.startsWith('node:'))t.add(th.route.slice(5));});}); return flow.nodes.find(n=>!t.has(n.id))||flow.nodes[0]; })();
-  const sec=document.createElement('div'); sec.className='sim-step'; sec.style.background='var(--brand-soft)'; sec.style.border='1px solid #c7d2fe';
-  sec.innerHTML=`<div class="badge b-rootcause">🌱 Testing cause #${rc?rc.sequence:'?'}</div><div class="q">${esc(rc?rc.label:flow.name)}</div>`;
+  const sec=document.createElement('div'); sec.className='sim-step';
+  if(isRemedy){ sec.style.background='var(--green-soft)'; sec.style.border='1px solid #a7f3d0';
+    sec.innerHTML=`<div class="badge b-trigger">🛠 Applying fix</div><div class="q">${esc(rc?rc.label:flow.name)}</div>`;
+  } else { sec.style.background='var(--brand-soft)'; sec.style.border='1px solid #c7d2fe';
+    sec.innerHTML=`<div class="badge b-rootcause">🌱 Testing cause #${rc?rc.sequence:'?'}</div><div class="q">${esc(rc?rc.label:flow.name)}</div>`;
+  }
   simWrap.appendChild(sec);
-  if(!entry){ simWrap.appendChild(simResult(rc, 'This flow has no steps yet.')); scrollSim(); return; }
+  if(!entry){ simWrap.appendChild(simResult(rc, isRemedy?'No remedial steps configured yet.':'This flow has no steps yet.', isRemedy)); scrollSim(); return; }
   simStep(flow, entry.id);
+}
+// Terminal handling: diagnostic Done → continue into remedy; remedy Done → final resolved.
+function simTerminal(flow, note){
+  freezeSim();
+  const rc=simRcOf(flow);
+  if(flow.kind!=='remedy' && rc && rc.remedyFlowId){
+    const d=document.createElement('div'); d.className='sim-step';
+    d.innerHTML=`<div class="sim-result" style="border-color:var(--brand2);background:linear-gradient(135deg,#eef2ff,#fff)"><div class="ico">🎯</div><div class="t">Root cause identified</div><div class="rc">${esc(rc.label)}</div><div class="sub2" style="margin-top:8px">${esc(note)} Now applying the remedial flow…</div></div>`;
+    simWrap.appendChild(d);
+    enterSimFlow(rc.remedyFlowId);
+    return;
+  }
+  simWrap.appendChild(simResult(rc, note, true));
+  scrollSim();
 }
 function simStep(flow, nodeId){
   const n=flow.nodes.find(x=>x.id===nodeId);
@@ -1306,8 +1427,8 @@ function simStep(flow, nodeId){
   const card=document.createElement('div'); card.className='sim-step';
   let h=`<div class="badge b-${n.type}">${m.icon} ${m.label}</div><div class="q">${esc(n.label)}</div>`;
   const sub=nodeSub(n); if(sub) h+=`<div class="sub2">${esc(sub)}</div>`;
-  if(n.type==='done'){ const rc=curTree.rootCauses.find(r=>r.flowId===flow.id); card.innerHTML=h; simWrap.appendChild(card); simWrap.appendChild(simResult(rc,'Diagnosis complete.')); scrollSim(); return; }
-  if(n.type==='skip_end'){ const rc=curTree.rootCauses.find(r=>r.flowId===flow.id); h+=`<div class="sub2" style="margin-top:8px">Operator skipped → Photo + RCA captured → Done.</div>`; card.innerHTML=h; simWrap.appendChild(card); simWrap.appendChild(simResult(rc,'Operator skipped to end.')); scrollSim(); return; }
+  if(n.type==='done'){ card.innerHTML=h; simWrap.appendChild(card); simTerminal(flow, flow.kind==='remedy'?'Fix applied.':'Diagnosis complete.'); scrollSim(); return; }
+  if(n.type==='skip_end'){ h+=`<div class="sub2" style="margin-top:8px">Operator skipped → Photo + RCA captured → Done.</div>`; card.innerHTML=h; simWrap.appendChild(card); simTerminal(flow, 'Operator skipped to end.'); scrollSim(); return; }
   if((n.type==='question'||n.type==='action')&&n.options&&n.options.length){
     h+=`<div class="sim-opts">`+n.options.map((o,i)=>`<div class="sim-opt" data-route="${esc(o.route||'')}" data-txt="${esc(o.text)}"><div class="sn">${i+1}</div>${esc(o.text)}</div>`).join('')+`</div>`;
     card.innerHTML=h; simWrap.appendChild(card);
@@ -1330,14 +1451,15 @@ function simStep(flow, nodeId){
 function simFollow(flow, route, trailNote){
   freezeSim();   // lock all prior steps so they can't be re-clicked
   simState.trail.push(trailNote);
-  if(!route){ const rc=curTree.rootCauses.find(r=>r.flowId===flow.id); simWrap.appendChild(simResult(rc,'Path ended without an explicit terminal.')); scrollSim(); return; }
-  if(route==='done'){ const rc=curTree.rootCauses.find(r=>r.flowId===flow.id); simWrap.appendChild(simResult(rc,'Diagnosis complete.')); scrollSim(); return; }
+  if(!route){ simTerminal(flow, 'Path ended without an explicit terminal.'); return; }
+  if(route==='done'){ simTerminal(flow, flow.kind==='remedy'?'Fix applied.':'Diagnosis complete.'); return; }
   if(route.startsWith('flow:')){ enterSimFlow(route.slice(5)); return; }
   if(route.startsWith('node:')){ simStep(flow, route.slice(5)); return; }
 }
-function simResult(rc, note){
+function simResult(rc, note, resolved){
   const d=document.createElement('div'); d.className='sim-step';
-  d.innerHTML=`<div class="sim-result"><div class="ico">🎯</div><div class="t">Root cause identified</div><div class="rc">${esc(rc?rc.label:'(unknown)')}</div>
+  const ico=resolved?'✅':'🎯', title=resolved?'Issue resolved':'Root cause identified';
+  d.innerHTML=`<div class="sim-result"><div class="ico">${ico}</div><div class="t">${title}</div><div class="rc">${esc(rc?rc.label:'(unknown)')}</div>
     <div class="sub2" style="margin-top:8px">${esc(note)}</div>
     ${simState.trail.length?`<div class="sim-trail"><b>Path taken:</b>${simState.trail.map(t=>`<div class="tr-step">→ ${esc(t)}</div>`).join('')}</div>`:''}
     <button class="sim-next" id="simRestart" style="margin-top:18px">↺ Restart simulation</button></div>`;
