@@ -634,22 +634,30 @@ function renderMap(){
     mapScene.appendChild(fEl);
   });
 
-  // Wires: trigger→rc card, rc ports→flow cards
-  requestAnimationFrame(()=>{
-    mapWires.innerHTML=wireDefs();
-    // trigger bottom → rc top
-    wire(mapWires, CX, 40+trgEl.offsetHeight, CX, rcTop, '#94a3b8');
-    // each rc port → its flow card top
-    rcs.forEach(r=>{
-      const portEl=rcEl.querySelector(`[data-rc-port="${r.id}"]`);
-      if(!portEl) return;
-      const px = rcX + portEl.offsetLeft + portEl.offsetWidth/2;
-      const py = rcTop + portEl.offsetTop + portEl.offsetHeight/2;
-      const fp = flowPos[r.id];
-      wire(mapWires, px, py, fp.x, fp.y, '#c4b5fd');
-    });
-    sizeWires(mapWires, mapScene);
+  // Wires: trigger→rc card, rc ports→flow cards — drawn synchronously (deterministic).
+  // Accessing offsetHeight below forces a layout flush so positions are accurate.
+  mapWires.innerHTML=wireDefs();
+  // Scene-space coords: elements live inside the same transformed group as the wires,
+  // so we convert client rects into untransformed scene coords via the scene origin + zoom.
+  const sceneRect=mapScene.getBoundingClientRect();
+  const z=cam.map.z;
+  const toScene=(clientX,clientY)=>[(clientX-sceneRect.left)/z, (clientY-sceneRect.top)/z];
+  // trigger bottom-center → rc card top-center
+  const trgR=trgEl.getBoundingClientRect();
+  const [tx1,ty1]=toScene(trgR.left+trgR.width/2, trgR.bottom);
+  const [tx2,ty2]=toScene(trgR.left+trgR.width/2, rcEl.getBoundingClientRect().top);
+  wire(mapWires, tx1, ty1, tx2, ty2, '#94a3b8');
+  // each rc port → its flow card top-center
+  rcs.forEach(r=>{
+    const portEl=rcEl.querySelector(`[data-rc-port="${r.id}"]`);
+    const flowEl=mapScene.querySelector(`.flow-card[data-open-flow="${r.flowId}"]`);
+    if(!portEl||!flowEl) return;
+    const pR=portEl.getBoundingClientRect(), fR=flowEl.getBoundingClientRect();
+    const [px,py]=toScene(pR.left+pR.width/2, pR.top+pR.height/2);
+    const [fxC,fyC]=toScene(fR.left+fR.width/2, fR.top);
+    wire(mapWires, px, py, fxC, fyC, '#c4b5fd');
   });
+  sizeWires(mapWires, mapScene);
 
   // events — open flow (name click, port click, flow card)
   mapScene.querySelectorAll('[data-open-flow]').forEach(e=>e.onclick=ev=>{
@@ -710,7 +718,10 @@ function openFlow(flowId){
 }
 function renderFlow(){
   $('viewToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.v===flowView));
-  if(flowView==='v'){ renderStepped(); flowWires.style.display='none'; flowScene.style.display='none'; return; }
+  const zp=flowSurface.querySelector('.zpill');
+  if(flowView==='v'){ renderStepped(); flowWires.style.display='none'; flowScene.style.display='none'; if(zp)zp.style.display='none'; $('flowEmpty').style.display='none'; renderTray(); if(sel) renderInsp(); return; }
+  if(zp)zp.style.display='flex';
+  const host=$('steppedHost'); if(host) host.style.display='none';
   flowWires.style.display=''; flowScene.style.display='';
   applyCam('flow');
   flowScene.innerHTML='';
@@ -1215,6 +1226,11 @@ function centerOn(n){ const r=flowSurface.getBoundingClientRect(); cam.flow.x=r.
 // ============================================================
 let simActive=null;
 let simState=null;
+// Freeze every interactive control already on screen so past steps can't be re-triggered.
+function freezeSim(){
+  simWrap.querySelectorAll('.sim-opt').forEach(o=>{ o.style.pointerEvents='none'; if(!o.style.opacity) o.style.opacity='.55'; });
+  simWrap.querySelectorAll('.sim-next').forEach(b=>{ b.disabled=true; b.style.opacity='.5'; b.style.pointerEvents='none'; });
+}
 function renderSim(){
   // start: pick sequence-1 root cause's flow, begin at entry
   simState={ trail:[], flowId:null, nodeId:null, done:false, result:null };
@@ -1226,7 +1242,7 @@ function renderSim(){
     <div class="sub2" style="margin-top:14px">The system walks possible root causes in sequence. Starting diagnosis…</div>
     <button class="sim-next" id="simStart">Begin diagnosis →</button>`;
   simWrap.appendChild(card);
-  $('simStart').onclick=()=>{ const first=[...curTree.rootCauses].sort((a,b)=>a.sequence-b.sequence)[0]; if(!first){ toast('No root causes'); return; } enterSimFlow(first.flowId); };
+  $('simStart').onclick=()=>{ const first=[...curTree.rootCauses].sort((a,b)=>a.sequence-b.sequence)[0]; if(!first){ toast('No root causes'); return; } freezeSim(); enterSimFlow(first.flowId); };
 }
 function enterSimFlow(flowId){
   const flow=curTree.flows.find(f=>f.id===flowId);
@@ -1268,6 +1284,7 @@ function simStep(flow, nodeId){
   scrollSim();
 }
 function simFollow(flow, route, trailNote){
+  freezeSim();   // lock all prior steps so they can't be re-clicked
   simState.trail.push(trailNote);
   if(!route){ const rc=curTree.rootCauses.find(r=>r.flowId===flow.id); simWrap.appendChild(simResult(rc,'Path ended without an explicit terminal.')); scrollSim(); return; }
   if(route==='done'){ const rc=curTree.rootCauses.find(r=>r.flowId===flow.id); simWrap.appendChild(simResult(rc,'Diagnosis complete.')); scrollSim(); return; }
