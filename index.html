@@ -69,11 +69,17 @@
   #app { display: grid; grid-template-rows: 56px 1fr; height: 100vh; }
 
   /* ============ HEADER ============ */
-  #header { background: var(--header); color: #fff; display: flex; align-items: center; padding: 0 18px; gap: 12px; z-index: 30; }
-  .logo { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 9px; }
+  #header { background: var(--header); color: #fff; display: flex; align-items: center; padding: 0 14px; gap: 10px; z-index: 30; }
+  .logo { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
   .logo .mark { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #6366f1, #ec4899); display: flex; align-items: center; justify-content: center; font-size: 15px; }
-  .bcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #94a3b8; }
-  .bcrumb .seg { cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all .12s; }
+  .bcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #94a3b8; min-width: 0; flex-shrink: 1; overflow: hidden; }
+  .bcrumb .seg { cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all .12s; white-space: nowrap; max-width: 190px; overflow: hidden; text-overflow: ellipsis; }
+  .hbtn, .seg-toggle, .phase-toggle { flex-shrink: 0; white-space: nowrap; }
+  @media (max-width: 1100px) {
+    .logo .lg-t, .hbtn .bt-t, .seg-toggle .bt-t { display: none; }
+    .bcrumb .seg { max-width: 130px; }
+    .hbtn { padding: 7px 10px; }
+  }
   .bcrumb .seg:hover { background: rgba(255,255,255,.08); color: #fff; }
   .bcrumb .seg.current { color: #fff; font-weight: 600; cursor: default; }
   .bcrumb .seg.current:hover { background: transparent; }
@@ -122,39 +128,39 @@
   .map-card .title { font-size: 14px; font-weight: 600; margin-top: 9px; }
   .map-card .meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
   .map-trigger { border-color: #86efac; background: linear-gradient(180deg, #f0fdf4, #fff 70%); }
-  .rc-card { width: 360px; padding: 16px 18px; border-color: #c4b5fd; background: linear-gradient(180deg, #faf5ff, #fff 60%); }
-  .rc-card .rc-list { margin-top: 12px; display: flex; flex-direction: column; gap: 16px; }
-  .rc-item { display: flex; align-items: center; gap: 9px; padding: 9px 11px; background: var(--soft); border: 1px solid var(--border2); border-radius: 9px; position: relative; transition: all .12s; }
-  .rc-item:hover { border-color: var(--brand2); background: var(--brand-soft); }
-  .rc-item .seq { width: 22px; height: 22px; flex-shrink: 0; border-radius: 6px; background: var(--c-rootcause-fg); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
-  .rc-item .rc-name { flex: 1; font-size: 12.5px; font-weight: 500; line-height: 1.3; cursor: pointer; outline: none; border-radius: 4px; padding: 2px 4px; margin-left: -4px; }
-  .rc-item .rc-name:hover { color: var(--brand); }
-  .rc-item .rc-name[contenteditable="true"] { background: #fff; box-shadow: 0 0 0 2px var(--brand2); cursor: text; color: var(--text); }
-  .rc-item .rc-act { width: 24px; height: 24px; flex-shrink: 0; border-radius: 6px; border: 1px solid var(--border); background: #fff; color: var(--muted); cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: all .12s; }
-  .rc-item .rc-act:hover { border-color: var(--brand2); color: var(--brand2); }
-  .rc-item .rc-act.del:hover { border-color: var(--red); color: var(--red); background: var(--red-soft); }
-  .rc-item .rc-port { position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2.5px solid var(--c-rootcause-fg); cursor: pointer; z-index: 3; transition: all .12s; box-shadow: var(--sh-sm); }
-  .rc-item .rc-port:hover { background: var(--c-rootcause-fg); transform: translateX(-50%) scale(1.25); }
-  .rc-item .rc-port::after { content: '↓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--c-rootcause-fg); }
-  .rc-item .rc-port:hover::after { color: #fff; }
-  .rc-add { margin-top: 4px; padding: 8px; border: 1px dashed var(--muted2); border-radius: 8px; text-align: center; font-size: 12px; color: var(--muted); cursor: pointer; font-weight: 600; }
-  .rc-add:hover { border-color: var(--brand2); color: var(--brand2); }
-
-  .flow-card { width: 230px; padding: 14px 16px; cursor: pointer; border-left: 4px solid transparent; }
-  .flow-card.diag { border-color: #c7d2fe; border-left-color: var(--s-action); background: linear-gradient(180deg, #eef2ff, #fff 62%); }
-  .flow-card.remedy { border-color: #a7f3d0; border-left-color: var(--s-trigger); background: linear-gradient(180deg, #ecfdf5, #fff 62%); }
-  .flow-card .fc-top { display: flex; align-items: center; justify-content: space-between; }
-  .flow-card .fc-seq { font-size: 10px; font-weight: 800; letter-spacing: .04em; }
-  .flow-card.diag .fc-seq { color: var(--s-action); }
-  .flow-card.remedy .fc-seq { color: #059669; }
-  .flow-card .fc-name { font-size: 13.5px; font-weight: 600; margin-top: 8px; line-height: 1.3; }
-  .flow-card .fc-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
-  .flow-card .fc-steps { font-size: 11px; color: var(--muted); }
-  .flow-card .fc-edit { font-size: 11px; color: var(--brand); font-weight: 600; }
-  .health { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+  /* One card per root cause: header (seq · name · edit/delete) + two phase rows (Diagnose / Fix) */
+  .cause-card { width: 252px; padding: 0; overflow: visible; }
+  .cause-head { display: flex; align-items: center; gap: 9px; padding: 13px 14px 9px; cursor: pointer; border-radius: var(--r) var(--r) 0 0; }
+  .cause-head:hover { background: var(--soft); }
+  .cause-head .seq { width: 24px; height: 24px; flex-shrink: 0; border-radius: 7px; background: var(--s-rootcause); color: #fff; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 8px color-mix(in srgb, var(--s-rootcause) 40%, transparent); }
+  .cause-head .rc-name { flex: 1; font-size: 13px; font-weight: 650; line-height: 1.25; outline: none; border-radius: 4px; padding: 2px 4px; margin-left: -4px; min-width: 0; }
+  .cause-head .rc-name[contenteditable="true"] { background: #fff; box-shadow: 0 0 0 2px var(--brand2); cursor: text; }
+  .rc-act { width: 24px; height: 24px; flex-shrink: 0; border-radius: 6px; border: 1px solid var(--border); background: #fff; color: var(--muted); cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: all .12s; }
+  .cause-card:hover .rc-act { opacity: 1; }
+  .rc-act:hover { border-color: var(--brand2); color: var(--brand2); }
+  .rc-act.del:hover { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+  .phase-rows { padding: 2px 10px 12px; display: flex; flex-direction: column; }
+  .phase-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; border: 1.5px solid; cursor: pointer; font-size: 12.5px; font-weight: 700; transition: all .12s; }
+  .phase-row.diag { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+  .phase-row.diag:hover { background: #e0e7ff; transform: translateY(-1px); }
+  .phase-row.fix { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+  .phase-row.fix:hover { background: #d1fae5; transform: translateY(-1px); }
+  .phase-row .pr-steps { margin-left: auto; font-weight: 500; font-size: 10.5px; color: var(--muted); }
+  .phase-link { text-align: center; font-size: 9.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted2); padding: 4px 0; }
+  .cause-add { width: 150px; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 2px dashed var(--muted2); background: transparent; box-shadow: none; color: var(--muted); font-size: 12.5px; font-weight: 700; cursor: pointer; text-align: center; }
+  .cause-add:hover { border-color: var(--brand2); color: var(--brand2); background: var(--brand-soft); box-shadow: none; }
+  .cause-add .plus { font-size: 26px; font-weight: 400; }
+  .health { display: inline-flex; align-items: center; gap: 4px; font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
   .health.ok { background: var(--green-soft); color: #047857; }
   .health.warn { background: var(--amber-soft); color: #b45309; }
   .health.err { background: var(--red-soft); color: #b91c1c; }
+  .health.na { background: var(--soft2); color: var(--muted2); }
+
+  /* orientation hint bar */
+  .map-hint { position: absolute; top: 14px; left: 14px; z-index: 6; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 12px; color: var(--muted); box-shadow: var(--sh-sm); display: flex; align-items: center; gap: 8px; max-width: 640px; }
+  .map-hint b { color: var(--text); }
+  .map-hint button { border: none; background: transparent; color: var(--muted2); font-size: 15px; cursor: pointer; padding: 0 2px; }
+  .map-hint button:hover { color: var(--text); }
 
   /* ============ FLOW EDITOR ============ */
   #flowStage { display: none; position: absolute; inset: 0; }
@@ -342,22 +348,29 @@
   .tpl:hover .del { opacity: 1; } .tpl .del:hover { background: var(--red); color: #fff; }
   .wire-label { fill: var(--text); font-size: 11px; font-weight: 600; }
   .wire-label-bg { fill: #fff; stroke: #fff; stroke-width: 5; paint-order: stroke; }
-  .empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; color: var(--muted2); font-size: 14px; }
+  .empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; z-index: 5; }
+  .eh-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 28px 34px; box-shadow: var(--sh-md); }
+  .eh-ico { font-size: 34px; }
+  .eh-t { font-size: 16px; font-weight: 700; margin-top: 10px; color: var(--text); }
+  .eh-s { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  .eh-btns { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
+  .eh-btns button { padding: 9px 16px; border: 1px solid var(--border); border-radius: 9px; background: var(--panel); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all .12s; }
+  .eh-btns button:hover { border-color: var(--brand2); color: var(--brand); background: var(--brand-soft); transform: translateY(-1px); }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="header">
-    <div class="logo"><div class="mark">⚡</div>FlowConfig</div>
+    <div class="logo"><div class="mark">⚡</div><span class="lg-t">FlowConfig</span></div>
     <div class="bcrumb" id="bcrumb"></div>
     <div class="spacer"></div>
     <div class="seg-toggle" id="viewToggle" style="display:none">
-      <button data-v="h" class="active">⬍ Top-down</button>
-      <button data-v="v">☰ Stepped</button>
+      <button data-v="h" class="active" title="Top-down canvas">⬍ <span class="bt-t">Top-down</span></button>
+      <button data-v="v" title="Stepped list">☰ <span class="bt-t">Stepped</span></button>
     </div>
-    <button class="hbtn" id="btnSimulate">▶ Simulate</button>
-    <button class="hbtn" id="btnTemplates">📚 Templates</button>
-    <button class="hbtn primary" id="btnSaveTpl">💾 Save tree</button>
+    <button class="hbtn" id="btnSimulate" title="Walk the tree as an operator">▶ <span class="bt-t">Simulate</span></button>
+    <button class="hbtn" id="btnTemplates" title="Template library">📚 <span class="bt-t">Templates</span></button>
+    <button class="hbtn primary" id="btnSaveTpl" title="Save this tree as a template">💾 <span class="bt-t">Save tree</span></button>
   </div>
 
   <div id="stage">
@@ -365,6 +378,7 @@
     <div class="surface active" id="mapSurface">
       <svg class="wires" id="mapWires"></svg>
       <div class="scene" id="mapScene"></div>
+      <div class="map-hint" id="mapHint"><b>How it works:</b> ⚠ a Trigger fires → causes are tested in order → 🔍 Diagnose confirms the cause → 🛠 Fix resolves it <button id="mapHintX" title="Dismiss">×</button></div>
       <div class="zpill">
         <button id="mz-out">−</button><span class="lv" id="mz-lv">100%</span><button id="mz-in">+</button>
         <span class="dv"></span><button id="mz-fit">⊡ Fit</button>
@@ -380,7 +394,18 @@
       <div class="surface active" id="flowSurface" style="position:relative">
         <svg class="wires" id="flowWires"></svg>
         <div class="scene" id="flowScene"></div>
-        <div class="empty-hint" id="flowEmpty" style="display:none">Drag a step from the left to begin building this flow.</div>
+        <div class="empty-hint" id="flowEmpty" style="display:none">
+          <div class="eh-card">
+            <div class="eh-ico">🧩</div>
+            <div class="eh-t">This flow is empty</div>
+            <div class="eh-s">Drag a step from the left panel — or start with one of these:</div>
+            <div class="eh-btns">
+              <button data-qs="question">? Question</button>
+              <button data-qs="action">✓ Action</button>
+              <button data-qs="sensor">📡 Sensor</button>
+            </div>
+          </div>
+        </div>
         <div class="zpill">
           <button id="fz-out">−</button><span class="lv" id="fz-lv">100%</span><button id="fz-in">+</button>
           <span class="dv"></span><button id="fz-layout">⤓ Tidy</button><button id="fz-fit">⊡ Fit</button>
@@ -415,7 +440,7 @@
 
 <div class="modal-bg" id="welcome"><div class="modal">
   <h2>Welcome to FlowConfig</h2>
-  <p>Design a diagnostic tree: Trigger → Possible Root Causes → a diagnostic flow per cause. Pick a starting point.</p>
+  <p>A diagnostic tree works like this: a <b>Trigger</b> fires an issue → the operator tests <b>possible root causes in order</b> → each cause has a <b>🔍 Diagnose</b> flow that confirms it and a <b>🛠 Fix</b> flow that resolves it. Pick a starting point:</p>
   <div class="tpl-grid">
     <div class="tpl" data-w="demo"><span class="em">🧪</span><div class="nm">Load demo</div><div class="mt">Low DO in Aeration Tank — 6 causes, Flow 3 fully built</div></div>
     <div class="tpl" data-w="scratch"><span class="em">✨</span><div class="nm">Start fresh</div><div class="mt">Blank tree with a Trigger and one root cause</div></div>
@@ -654,7 +679,7 @@ function go(v){
   flowStage.classList.toggle('active', v==='flow');
   simStage.classList.toggle('active', v==='sim');
   $('viewToggle').style.display = v==='flow' ? 'inline-flex' : 'none';
-  $('btnSimulate').textContent = v==='sim' ? '✕ Exit simulate' : '▶ Simulate';
+  $('btnSimulate').innerHTML = v==='sim' ? '✕ <span class="bt-t">Exit simulate</span>' : '▶ <span class="bt-t">Simulate</span>';
   if(v!=='flow') closeInsp();
   renderCrumb();
   if(v==='map') renderMap();
@@ -702,109 +727,67 @@ function renderMap(){
   mapScene.appendChild(trgEl);
   trgEl.onclick=()=>{ sel={kind:'trigger'}; openInspMap(); };
 
-  // Root cause container
+  // ONE card per root cause: header (seq · name · rename/delete) + Diagnose row + Fix row.
+  // This replaces the old triple-representation (rc list + diagnose card + fix card).
   const rcs=[...curTree.rootCauses].sort((a,b)=>a.sequence-b.sequence);
-  const rcTop=230, rcX=CX-180;
-  let rcHtml=`<div class="card rc-card" data-rc-card="1" style="left:${rcX}px;top:${rcTop}px">
-    <div class="badge b-rootcause">🌱 Possible Root Causes</div>
-    <div class="rc-list">`;
-  rcs.forEach(r=>{
-    rcHtml+=`<div class="rc-item" data-rc="${r.id}">
-      <div class="seq">${r.sequence}</div>
-      <div class="rc-name" data-open-flow="${r.flowId}" title="Open diagnostic flow">${esc(r.label)}</div>
-      <button class="rc-act" data-edit-rc="${r.id}" title="Rename">✎</button>
-      <button class="rc-act del" data-del-rc="${r.id}" title="Delete">🗑</button>
-      <div class="rc-port" data-rc-port="${r.id}" data-open-flow="${r.flowId}" title="Go to flow"></div>
-    </div>`;
-  });
-  rcHtml+=`<div class="rc-add" data-add-rc="1">+ Add root cause</div></div></div>`;
-  const rcEl=el(rcHtml); mapScene.appendChild(rcEl);
-
-  // Flow cards row
-  const flowTop = rcTop + rcEl.offsetHeight + 90;
-  const cardW=230, gap=34;
-  const totalW = rcs.length*cardW + (rcs.length-1)*gap;
-  let fx = CX - totalW/2;
-  const flowPos={};
-  const remedyTop = flowTop + 168;  // second row
-  const remedyPos={};
-  const healthChip=(flow)=>{ const h=validateFlow(flow); const hc=h.errors?'err':h.warns?'warn':'ok'; const ht=h.errors?`${h.errors} issue${h.errors>1?'s':''}`:h.warns?`${h.warns} warning${h.warns>1?'s':''}`:(flow.nodes.length?'Valid':'Empty'); return {hc,ht}; };
+  const cardW=252, gap=26, top=252, addW=150;
+  const rowW = rcs.length*(cardW+gap) + addW;
+  const x0 = CX - rowW/2;
+  const healthChip=(flow)=>{
+    if(!flow || !flow.nodes.length) return { hc:'na', icon:'·', ht:'Empty' };
+    const h=validateFlow(flow);
+    const hc=h.errors?'err':h.warns?'warn':'ok';
+    const ht=h.errors?`${h.errors} issue${h.errors>1?'s':''}`:h.warns?`${h.warns} warning${h.warns>1?'s':''}`:'Ready';
+    return { hc, icon: hc==='ok'?'✓':hc==='warn'?'⚠':'✕', ht };
+  };
   rcs.forEach((r,i)=>{
-    const flow=curTree.flows.find(f=>f.id===r.flowId);
-    const remedy=curTree.flows.find(f=>f.id===r.remedyFlowId);
-    const x = fx + i*(cardW+gap);
-    flowPos[r.id]={ x:x+cardW/2, y:flowTop };
-    remedyPos[r.id]={ x:x+cardW/2, y:remedyTop };
-    const dH=healthChip(flow);
-    const fEl=el(`<div class="card flow-card diag" data-open-flow="${r.flowId}" style="left:${x}px;top:${flowTop}px">
-      <div class="fc-top"><span class="fc-seq">🔍 DIAGNOSE ${r.sequence}</span><span class="health ${dH.hc}">${dH.hc==='ok'?'✓':dH.hc==='warn'?'⚠':'✕'} ${dH.ht}</span></div>
-      <div class="fc-name">${esc(flow.name||r.label)}</div>
-      <div class="fc-foot"><span class="fc-steps">${flow.nodes.length} step${flow.nodes.length!==1?'s':''}</span><span class="fc-edit">Edit →</span></div>
+    const diag=curTree.flows.find(f=>f.id===r.flowId)||{nodes:[]};
+    const fix=curTree.flows.find(f=>f.id===r.remedyFlowId)||{nodes:[]};
+    const dH=healthChip(diag), fH=healthChip(fix);
+    const x=x0+i*(cardW+gap);
+    const c=el(`<div class="card cause-card" data-rc="${r.id}" style="left:${x}px;top:${top}px">
+      <div class="cause-head" data-rc-insp="${r.id}" title="Click for details · double-click to rename">
+        <div class="seq">${r.sequence}</div>
+        <div class="rc-name">${esc(r.label)}</div>
+        <button class="rc-act" data-edit-rc="${r.id}" title="Rename">✎</button>
+        <button class="rc-act del" data-del-rc="${r.id}" title="Delete">🗑</button>
+      </div>
+      <div class="phase-rows">
+        <div class="phase-row diag" data-open-flow="${r.flowId}">🔍 Diagnose<span class="pr-steps">${diag.nodes.length} step${diag.nodes.length!==1?'s':''}</span><span class="health ${dH.hc}">${dH.icon} ${dH.ht}</span></div>
+        <div class="phase-link">↓ cause confirmed</div>
+        <div class="phase-row fix" data-open-flow="${r.remedyFlowId}">🛠 Fix<span class="pr-steps">${fix.nodes.length} step${fix.nodes.length!==1?'s':''}</span><span class="health ${fH.hc}">${fH.icon} ${fH.ht}</span></div>
+      </div>
     </div>`);
-    mapScene.appendChild(fEl);
-    if(remedy){
-      const rH=healthChip(remedy);
-      const rEl=el(`<div class="card flow-card remedy" data-open-flow="${r.remedyFlowId}" style="left:${x}px;top:${remedyTop}px">
-        <div class="fc-top"><span class="fc-seq">🛠 FIX ${r.sequence}</span><span class="health ${rH.hc}">${rH.hc==='ok'?'✓':rH.hc==='warn'?'⚠':'✕'} ${rH.ht}</span></div>
-        <div class="fc-name">${esc(remedy.name||('Fix · '+r.label))}</div>
-        <div class="fc-foot"><span class="fc-steps">${remedy.nodes.length} step${remedy.nodes.length!==1?'s':''}</span><span class="fc-edit">Edit →</span></div>
-      </div>`);
-      mapScene.appendChild(rEl);
-    }
+    mapScene.appendChild(c);
   });
+  const addEl=el(`<div class="card cause-add" data-add-rc="1" style="left:${x0+rcs.length*(cardW+gap)}px;top:${top}px"><span class="plus">＋</span>Add root cause</div>`);
+  mapScene.appendChild(addEl);
 
-  // Wires: trigger→rc card, rc ports→flow cards — drawn synchronously (deterministic).
-  // Accessing offsetHeight below forces a layout flush so positions are accurate.
+  // Wires: trigger bottom → each cause card top (synchronous, rect-based)
   mapWires.innerHTML=wireDefs();
-  // Scene-space coords: elements live inside the same transformed group as the wires,
-  // so we convert client rects into untransformed scene coords via the scene origin + zoom.
   const sceneRect=mapScene.getBoundingClientRect();
   const z=cam.map.z;
   const toScene=(clientX,clientY)=>[(clientX-sceneRect.left)/z, (clientY-sceneRect.top)/z];
-  // trigger bottom-center → rc card top-center
   const trgR=trgEl.getBoundingClientRect();
-  const [tx1,ty1]=toScene(trgR.left+trgR.width/2, trgR.bottom);
-  const [tx2,ty2]=toScene(trgR.left+trgR.width/2, rcEl.getBoundingClientRect().top);
-  wire(mapWires, tx1, ty1, tx2, ty2, '#94a3b8');
-  // each rc port → its flow card top-center
-  rcs.forEach(r=>{
-    const portEl=rcEl.querySelector(`[data-rc-port="${r.id}"]`);
-    const flowEl=mapScene.querySelector(`.flow-card[data-open-flow="${r.flowId}"]`);
-    if(!portEl||!flowEl) return;
-    const pR=portEl.getBoundingClientRect(), fR=flowEl.getBoundingClientRect();
-    const [px,py]=toScene(pR.left+pR.width/2, pR.top+pR.height/2);
-    const [fxC,fyC]=toScene(fR.left+fR.width/2, fR.top);
-    wire(mapWires, px, py, fxC, fyC, '#c4b5fd');
-  });
-  // diagnostic card bottom → remedial card top ("on confirm →")
-  rcs.forEach(r=>{
-    const diagEl=mapScene.querySelector(`.flow-card[data-open-flow="${r.flowId}"]`);
-    const remEl=mapScene.querySelector(`.flow-card[data-open-flow="${r.remedyFlowId}"]`);
-    if(!diagEl||!remEl) return;
-    const dR=diagEl.getBoundingClientRect(), rR=remEl.getBoundingClientRect();
-    const [x1,y1]=toScene(dR.left+dR.width/2, dR.bottom);
-    const [x2,y2]=toScene(rR.left+rR.width/2, rR.top);
-    wire(mapWires, x1, y1, x2, y2, '#34d399');
-    wireText(mapWires, (x1+x2)/2, (y1+y2)/2+3, 'on confirm');
+  const [tx,ty]=toScene(trgR.left+trgR.width/2, trgR.bottom);
+  mapScene.querySelectorAll('.cause-card').forEach(cc=>{
+    const b=cc.getBoundingClientRect();
+    const [cx2,cy2]=toScene(b.left+b.width/2, b.top);
+    wire(mapWires, tx, ty, cx2, cy2, '#c4b5fd');
   });
   sizeWires(mapWires, mapScene);
 
-  // events — open flow (name click, port click, flow card)
-  mapScene.querySelectorAll('[data-open-flow]').forEach(e=>e.onclick=ev=>{
-    ev.stopPropagation();
-    openFlow(e.dataset.openFlow);
+  // events
+  mapScene.querySelectorAll('[data-open-flow]').forEach(e=>e.onclick=ev=>{ ev.stopPropagation(); openFlow(e.dataset.openFlow); });
+  mapScene.querySelectorAll('[data-rc-insp]').forEach(h=>h.onclick=ev=>{
+    if(ev.target.closest('.rc-act')||ev.target.closest('.rc-name[contenteditable="true"]')) return;
+    sel={kind:'rc',id:h.dataset.rcInsp}; openInspMap();
   });
-  // rename
   mapScene.querySelectorAll('[data-edit-rc]').forEach(b=>b.onclick=ev=>{
     ev.stopPropagation();
-    const nameEl = b.parentElement.querySelector('.rc-name');
-    startRcRename(nameEl, b.dataset.editRc);
+    startRcRename(b.parentElement.querySelector('.rc-name'), b.dataset.editRc);
   });
-  // delete
-  mapScene.querySelectorAll('[data-del-rc]').forEach(b=>b.onclick=ev=>{
-    ev.stopPropagation();
-    deleteRootCause(b.dataset.delRc);
-  });
+  mapScene.querySelectorAll('[data-del-rc]').forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); deleteRootCause(b.dataset.delRc); });
   const addRc=mapScene.querySelector('[data-add-rc]');
   if(addRc) addRc.onclick=ev=>{ ev.stopPropagation(); addRootCause(); };
 }
@@ -846,6 +829,7 @@ function openFlow(flowId){
   curFlow=curTree.flows.find(f=>f.id===flowId);
   sel=null;
   go('flow');
+  if(flowView==='h' && curFlow.nodes.length) fitView('flow');
 }
 function renderFlow(){
   $('viewToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.v===flowView));
@@ -1187,10 +1171,10 @@ function renderInspMap(){
     $('iBody').innerHTML=`<div class="hint"><div>💡</div><div>A candidate root cause. Its diagnostic flow runs to confirm or rule it out.</div></div>
       <label>Name</label><input id="rc-l" value="${esc(r.label)}">
       <label>Sequence</label><input id="rc-s" type="number" min="1" value="${r.sequence}">
-      <button class="dangerb" id="rc-del">Delete root cause + flow</button>`;
+      <button class="dangerb" id="rc-del">Delete root cause + both flows</button>`;
     $('rc-l').oninput=e=>{ r.label=e.target.value; const f=curTree.flows.find(x=>x.id===r.flowId); if(f)f.name=e.target.value; persist(); renderMapSoft(); };
     $('rc-s').oninput=e=>{ r.sequence=+e.target.value||1; persist(); renderMapSoft(); };
-    $('rc-del').onclick=()=>{ if(!confirm('Delete this root cause and its flow?'))return; curTree.flows=curTree.flows.filter(f=>f.id!==r.flowId); curTree.rootCauses=curTree.rootCauses.filter(x=>x.id!==r.id); closeInsp(); };
+    $('rc-del').onclick=()=>{ if(!confirm('Delete this root cause and both its flows?'))return; curTree.flows=curTree.flows.filter(f=>f.id!==r.flowId&&f.id!==r.remedyFlowId); curTree.rootCauses=curTree.rootCauses.filter(x=>x.id!==r.id); curTree.rootCauses.sort((a,b)=>a.sequence-b.sequence).forEach((x,i)=>x.sequence=i+1); persist(); closeInsp(); };
   }
 }
 function renderMapSoft(){ if(view==='map') renderMap(); }
@@ -1506,7 +1490,14 @@ function fitView(which){
   else { curFlow.nodes.forEach(n=>{ const el=flowScene.querySelector(`[data-id="${n.id}"]`); const w=el?el.offsetWidth:244,hh=el?el.offsetHeight:120; minX=Math.min(minX,n.x);minY=Math.min(minY,n.y);maxX=Math.max(maxX,n.x+w);maxY=Math.max(maxY,n.y+hh); }); }
   const r=(which==='map'?mapSurface:flowSurface).getBoundingClientRect();
   const z=Math.min(1, Math.min((r.width-100)/(maxX-minX),(r.height-100)/(maxY-minY)));
-  c.z=Math.max(.25,z); c.x=-minX*c.z+50; c.y=-minY*c.z+50; applyCam(which);
+  // Map stays readable: never fit below 55% — horizontal panning beats unreadable cards.
+  c.z = which==='map' ? Math.max(.55, Math.min(.95, z)) : Math.max(.25, z);
+  c.x=-minX*c.z+50; c.y=-minY*c.z+50;
+  if(which==='map'){ // center horizontally if content narrower than viewport
+    const contentW=(maxX-minX)*c.z;
+    if(contentW < r.width-40) c.x=(r.width-contentW)/2 - minX*c.z;
+  }
+  applyCam(which);
 }
 // auto layout (top-down BFS)
 function tidyFlow(){
@@ -1592,6 +1583,19 @@ $('fz-out').onclick=()=>{cam.flow.z=Math.max(.25,cam.flow.z/1.15);applyCam('flow
 $('fz-fit').onclick=()=>fitView('flow');
 $('fz-layout').onclick=()=>{ tidyFlow(); renderFlow(); fitView('flow'); toast('Tidied top-down'); };
 $('palSearch').oninput=renderPal;
+// Quick-start buttons on the empty-flow panel
+function quickAddNode(type){
+  const n={ id:uid('n_'), type, x:180, y:120, label:NT[type].label };
+  if(type==='question') n.options=[{id:uid('o_'),text:'Yes',route:''},{id:uid('o_'),text:'No',route:''}];
+  if(type==='sensor'){ n.sensorTag=''; n.unit=''; n.thresholds=[{id:'safe',label:'Safe',min:null,max:null,route:''},{id:'warn',label:'Warning',min:null,max:null,route:''},{id:'crit',label:'Critical',min:null,max:null,route:''}]; }
+  curFlow.nodes.push(n);
+  sel={kind:'node',id:n.id};
+  renderFlow(); fitView('flow'); openInsp(); persist();
+}
+$('flowEmpty').querySelectorAll('[data-qs]').forEach(b=>b.onclick=()=>quickAddNode(b.dataset.qs));
+// Dismissible "how it works" hint
+if(localStorage.getItem('fc-hint-off')) $('mapHint').style.display='none';
+$('mapHintX').onclick=()=>{ $('mapHint').style.display='none'; try{localStorage.setItem('fc-hint-off','1');}catch(_){} };
 
 $('viewToggle').querySelectorAll('button').forEach(b=>b.onclick=()=>{ flowView=b.dataset.v; localStorage.setItem('fc-flowview',flowView); const host=$('steppedHost'); if(host)host.style.display='none'; renderFlow(); });
 
@@ -1628,7 +1632,7 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('click',e=>{ if(ipop.classList.contains('open')&&!ipop.contains(e.target)&&!e.target.closest('.padd')&&!e.target.closest('.port')) ipop.classList.remove('open'); });
 // make rc items selectable in inspector (map) — wire after map render via delegation
-mapScene.addEventListener('dblclick',e=>{ const item=e.target.closest('.rc-item'); if(item&&item.dataset.rc){ const nameEl=item.querySelector('.rc-name'); if(nameEl) startRcRename(nameEl, item.dataset.rc); } });
+mapScene.addEventListener('dblclick',e=>{ const item=e.target.closest('.cause-card'); if(item&&item.dataset.rc){ const nameEl=item.querySelector('.rc-name'); if(nameEl) startRcRename(nameEl, item.dataset.rc); } });
 
 // ============================================================
 // INIT
