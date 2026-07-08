@@ -359,8 +359,10 @@
 
   /* ============ STEPPED (outline) VIEW ============ */
   .sv-wrap { max-width: 620px; margin: 0 auto; }
-  .sv-hint { font-size: 12px; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; margin-bottom: 18px; line-height: 1.5; box-shadow: var(--sh-sm); }
+  .sv-hint { font-size: 12px; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; margin-bottom: 18px; line-height: 1.5; box-shadow: var(--sh-sm); display: flex; align-items: center; gap: 8px; }
   .sv-hint b { color: var(--text); }
+  .sv-mini { border: 1px solid var(--border); background: var(--panel); border-radius: 7px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .sv-mini:hover { border-color: var(--brand2); color: var(--brand); }
   .step-card { position: relative; background: var(--panel); border: 1px solid var(--border); border-radius: 13px; padding: 13px 15px; cursor: pointer; box-shadow: var(--sh-sm); transition: box-shadow .12s; }
   .step-card:hover { box-shadow: var(--sh-md); }
   .step-card .sc-head { display: flex; align-items: center; gap: 8px; }
@@ -374,7 +376,12 @@
   .sv-branch::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 2px; background: var(--rail); }
   .sv-branch:last-child::before { bottom: auto; height: 26px; }
   .sv-branch::after { content: ''; position: absolute; left: 0; top: 23px; width: 22px; height: 3px; border-radius: 2px; background: var(--rail); }
-  .sv-bhead { display: inline-flex; align-items: center; gap: 7px; background: var(--panel); border: 1.5px solid var(--railS); border-radius: 999px; padding: 3px 12px 3px 4px; font-size: 11.5px; font-weight: 700; margin: 10px 0 8px; box-shadow: var(--sh-sm); position: relative; z-index: 1; }
+  .sv-bhead { display: inline-flex; align-items: center; gap: 7px; background: var(--panel); border: 1.5px solid var(--railS); border-radius: 999px; padding: 3px 12px 3px 4px; font-size: 11.5px; font-weight: 700; margin: 10px 0 8px; box-shadow: var(--sh-sm); position: relative; z-index: 1; cursor: pointer; user-select: none; }
+  .sv-bhead:hover { background: var(--soft); }
+  .sv-bhead .cv { color: var(--railS); font-size: 10px; margin-left: 2px; }
+  .sv-branch.collapsed .sv-bbody { display: none; }
+  .sv-branch.collapsed::before { bottom: auto; height: 26px; }
+  .sv-hoff { display: inline-flex; align-items: center; gap: 6px; padding: 8px 15px; background: var(--soft); border: 1.5px solid #cbd5e1; color: var(--muted); border-radius: 999px; font-size: 12px; font-weight: 700; }
   .sv-bhead .bn { width: 19px; height: 19px; border-radius: 50%; background: var(--railS); color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
   .sv-bhead .bto { color: var(--muted2); font-weight: 600; }
   .sv-bbody { padding-bottom: 10px; }
@@ -500,9 +507,9 @@ const NT = {
   question: { label:'Question', icon:'?', help:'A decision step. Each option becomes its own bottom port and route.' },
   action:   { label:'Action', icon:'✓', help:'A task the operator performs. Pick an Action type; Message/Call/Escalate add a user selection.' },
   sensor:   { label:'Sensor', icon:'📡', help:'Read a sensor by tag; route by Safe / Warning / Critical band.' },
-  reassign: { label:'Reassign', icon:'↻', help:'Hand off to another role / user.' },
+  reassign: { label:'Reassign', icon:'↻', help:'Hands the diagnostic to another role / user and ENDS it here — the cause was not confirmed, so the Fix flow does not run.' },
   waiting:  { label:'Waiting', icon:'⏱', help:'Pause — by timer or until an event.' },
-  skip_end: { label:'Skip to end', icon:'⏭', help:'Operator bypass → Photo + RCA → Done.' },
+  skip_end: { label:'Skip to end', icon:'⏭', help:'Operator bypass: captures Photo + RCA and ENDS the diagnostic without confirming the cause — the Fix flow does not run.' },
   jump:     { label:'Jump to flow', icon:'↗', help:'Transition to another root-cause flow in this tree.' },
   done:     { label:'Done', icon:'■', help:'Terminal — confirms this flow\'s root cause and ends.' }
 };
@@ -611,8 +618,7 @@ function buildFlow1(flowId,rcId,nm){
     ],
     edges:[
       { id:uid('e_'), from:id.aStart,  to:id.done1 },
-      { id:uid('e_'), from:id.aReset,  to:id.done1 },
-      { id:uid('e_'), from:id.aReasn,  to:id.done1 }
+      { id:uid('e_'), from:id.aReset,  to:id.done1 }
     ]};
 }
 function buildFlow3(flowId,rcId,nm){
@@ -643,7 +649,6 @@ function buildFlow3(flowId,rcId,nm){
     edges:[
       { id:uid('e_'), from:id.aCall, to:id.aRca },
       { id:uid('e_'), from:id.aDiff, to:id.done1 },
-      { id:uid('e_'), from:id.aReasn, to:id.done1 },
       { id:uid('e_'), from:id.aRca, to:id.done1 }
     ]};
 }
@@ -660,7 +665,12 @@ const BUILTINS = [
 // Migrate older saved trees that predate remedial flows
 function migrate(){
   (data.trees||[]).forEach(t=>{
-    (t.flows||[]).forEach(f=>{ if(!f.kind) f.kind='diagnostic'; });
+    (t.flows||[]).forEach(f=>{
+      if(!f.kind) f.kind='diagnostic';
+      // reassign / skip_end are hand-off terminals now — strip any stale outgoing edges
+      const term=new Set((f.nodes||[]).filter(n=>n.type==='reassign'||n.type==='skip_end').map(n=>n.id));
+      if(term.size) f.edges=(f.edges||[]).filter(e=>!term.has(e.from));
+    });
     (t.rootCauses||[]).forEach(rc=>{
       if(!rc.remedyFlowId){
         const rf=uid('flow_');
@@ -935,7 +945,8 @@ function renderNode(n){
       const pct=((i+1)/(n.thresholds.length+1))*100;
       body+=`<div class="port out" data-out-thr="${t.id}" style="left:${pct}%"></div><div class="port-num ${t.id}" style="left:${pct}%">${t.id[0].toUpperCase()}</div>`;
     });
-  } else if(n.type!=='done'){
+  } else if(!['done','reassign','skip_end'].includes(n.type)){
+    // reassign / skip_end are hand-off terminals: the diagnostic ends there, so no outgoing port
     body+=`<div class="port out" data-out="1" style="left:50%"></div><button class="padd" data-padd="1">+</button>`;
   }
   e.innerHTML=body;
@@ -947,9 +958,9 @@ function renderNode(n){
 function nodeSub(n){
   if(n.type==='action'&&n.actionType){ const a=ACTIONS.find(x=>x.id===n.actionType); if(a) return '⚙ '+a.label+(a.user&&n.role?' → '+n.role+(n.user?' ('+n.user+')':''):''); }
   if(n.type==='sensor'){ const t=TAGS.find(x=>x.id===n.sensorTag); return t?'🏷 '+t.label+' · '+t.unit:(n.sensorName?'🏷 '+n.sensorName:'pick a sensor tag'); }
-  if(n.type==='reassign'&&n.role) return '👤 '+n.role+(n.user?' · '+n.user:'');
+  if(n.type==='reassign') return (n.role?'👤 '+n.role+(n.user?' · '+n.user:''):'👤 pick a role')+' — ends here, no fix flow';
   if(n.type==='waiting'){ if((n.waitMode||'time')==='time'&&n.waitVal!=null) return '⏱ '+n.waitVal+' '+(n.waitUnit||'min'); if(n.waitMode==='event'&&n.waitEvent) return '⚡ '+n.waitEvent; }
-  if(n.type==='skip_end') return '→ Photo + RCA → Done';
+  if(n.type==='skip_end') return '→ Photo + RCA → ends here, no fix flow';
   if(n.type==='jump'&&n.targetFlow){ const r=curTree.rootCauses.find(x=>x.flowId===n.targetFlow); return '↗ '+(r?r.label:'?'); }
   return n.sub||'';
 }
@@ -1087,6 +1098,8 @@ function renderFlowWires(){
 // STEPPED (vertical) VIEW
 // ============================================================
 const SV_RAILS=['#6366f1','#f59e0b','#14b8a6','#ec4899','#8b5cf6'];
+const svCollapsed=new Set();   // collapsed branch keys (nodeId|optionId), session-scoped
+let svAllKeys=[];              // every branch key seen in the last stepped render
 function renderStepped(){
   flowScene.style.display='none'; flowWires.style.display='none';
   let host=$('steppedHost');
@@ -1100,9 +1113,11 @@ function renderStepped(){
     return;
   }
   const seen=new Set(), counter={n:0};
+  svAllKeys=[];
   const body=stepTree(entry,seen,counter,0);
   let h=`<div class="sv-wrap">
-    <div class="sv-hint">🧭 Read top-to-bottom. Each colored rail is one <b>branch</b> — the chip names the answer that takes it. <b>↩</b> means the path re-joins an earlier step.</div>
+    <div class="sv-hint"><span style="flex:1">🧭 Read top-to-bottom. Each colored rail is one <b>branch</b> — click its chip to collapse it. <b>↩</b> = re-joins an earlier step.</span>
+      <button class="sv-mini" id="svExpAll">Expand all</button><button class="sv-mini" id="svColAll">Collapse all</button></div>
     ${body}`;
   const orphans=curFlow.nodes.filter(n=>!seen.has(n.id));
   if(orphans.length){
@@ -1124,9 +1139,10 @@ function stepEntry(){
 }
 function branchesOf(n){
   const br=[];
-  if((n.type==='question'||n.type==='action')&&n.options&&n.options.length) n.options.forEach((o,i)=>br.push({label:o.text,route:o.route,seq:i+1}));
-  else if(n.type==='sensor'&&n.thresholds) n.thresholds.forEach(t=>br.push({label:t.label,route:t.route,band:t.id}));
-  else curFlow.edges.filter(e=>e.from===n.id).forEach(e=>br.push({label:'',route:'node:'+e.to}));
+  if(n.type==='reassign'||n.type==='skip_end') return br; // hand-off terminals — nothing follows
+  if((n.type==='question'||n.type==='action')&&n.options&&n.options.length) n.options.forEach((o,i)=>br.push({id:o.id,label:o.text,route:o.route,seq:i+1}));
+  else if(n.type==='sensor'&&n.thresholds) n.thresholds.forEach(t=>br.push({id:t.id,label:t.label,route:t.route,band:t.id}));
+  else curFlow.edges.filter(e=>e.from===n.id).forEach(e=>br.push({id:e.to,label:'',route:'node:'+e.to}));
   return br;
 }
 function stepCardHTML(n,num){
@@ -1144,6 +1160,9 @@ function stepTree(node,seen,counter,depth){
   if(seen.has(node.id)) return `<div class="sv-goto">↩ continues at step ${node._stepNo||'?'} · ${esc(trunc(node.label,30))}</div>`;
   seen.add(node.id); counter.n++; node._stepNo=counter.n;
   let h=stepCardHTML(node,counter.n);
+  // Hand-off terminals: make the "ends here, no fix" outcome explicit in the outline
+  if(node.type==='reassign') return h+`<div class="sv-hoff" style="margin-top:8px">🤝 Handed off — diagnostic ends, no fix flow</div>`;
+  if(node.type==='skip_end') return h+`<div class="sv-hoff" style="margin-top:8px">⏭ Skipped — ends without confirming, no fix flow</div>`;
   const br=branchesOf(node);
   if(!br.length) return h;
   // Single unconditional next step → straight connector, same depth
@@ -1155,15 +1174,18 @@ function stepTree(node,seen,counter,depth){
     }
     return h;
   }
-  // Branching → one rail per option, colored by depth
+  // Branching → one rail per option, colored by depth; each branch is collapsible
   const rail=SV_RAILS[depth%SV_RAILS.length];
   h+=`<div class="sv-branches">`;
   br.forEach((b,i)=>{
     const seq=b.seq||i+1;
     const label=b.label||('path '+seq);
     const bnStyle=b.band?` style="background:${b.band==='safe'?'var(--green)':b.band==='warn'?'var(--amber)':'var(--red)'}"`:'';
-    h+=`<div class="sv-branch" style="--rail:${rail}55;--railS:${rail}">`;
-    h+=`<div class="sv-bhead"><span class="bn"${bnStyle}>${b.band?b.band[0].toUpperCase():seq}</span>${esc(trunc(label,44))}<span class="bto">→</span></div>`;
+    const key=node.id+'|'+(b.id||i);
+    svAllKeys.push(key);
+    const col=svCollapsed.has(key);
+    h+=`<div class="sv-branch${col?' collapsed':''}" style="--rail:${rail}55;--railS:${rail}">`;
+    h+=`<div class="sv-bhead" data-collapse="${esc(key)}" title="Click to ${col?'expand':'collapse'}"><span class="bn"${bnStyle}>${b.band?b.band[0].toUpperCase():seq}</span>${esc(trunc(label,44))}<span class="bto">${col?'…':'→'}</span><span class="cv">${col?'▸':'▾'}</span></div>`;
     h+=`<div class="sv-bbody">`;
     if(!b.route){
       h+=`<div class="sv-unrouted">⚠ no destination — set it in the inspector</div>`;
@@ -1194,6 +1216,16 @@ function bindStepped(host){
     lbl.addEventListener('blur',()=>renderStepped());
   });
   host.querySelectorAll('[data-jump]').forEach(j=>j.addEventListener('click',ev=>{ ev.stopPropagation(); openFlow(j.dataset.jump); }));
+  // collapse / expand
+  host.querySelectorAll('[data-collapse]').forEach(ch=>ch.addEventListener('click',ev=>{
+    ev.stopPropagation();
+    const k=ch.dataset.collapse;
+    if(svCollapsed.has(k)) svCollapsed.delete(k); else svCollapsed.add(k);
+    renderStepped();
+  }));
+  const ea=host.querySelector('#svExpAll'), ca=host.querySelector('#svColAll');
+  if(ea) ea.onclick=()=>{ svCollapsed.clear(); renderStepped(); };
+  if(ca) ca.onclick=()=>{ svAllKeys.forEach(k=>svCollapsed.add(k)); renderStepped(); };
 }
 
 // ============================================================
@@ -1380,8 +1412,8 @@ function validateFlow(flow){
     if(n.type==='jump'&&!n.targetFlow){ issues.push({sev:'err',node:n.id,title:'Jump has no target',desc:`"${trunc(n.label,24)}" doesn't point to a flow`}); errors++; }
     if(!reach.has(n.id)&&n!==entry){ issues.push({sev:'warn',node:n.id,title:'Unreachable step',desc:`"${trunc(n.label,24)}" can't be reached from the entry`}); warns++; }
   });
-  const hasTerminal = flow.nodes.some(n=>n.type==='done') || flow.nodes.some(n=>(n.options||[]).some(o=>o.route==='done')||(n.thresholds||[]).some(t=>t.route==='done'));
-  if(flow.nodes.length && !hasTerminal){ issues.push({sev:'warn',title:'No terminal',desc:'Flow never reaches Done'}); warns++; }
+  const hasTerminal = flow.nodes.some(n=>n.type==='done'||n.type==='reassign'||n.type==='skip_end') || flow.nodes.some(n=>(n.options||[]).some(o=>o.route==='done')||(n.thresholds||[]).some(t=>t.route==='done'));
+  if(flow.nodes.length && !hasTerminal){ issues.push({sev:'warn',title:'No terminal',desc:'Flow never reaches Done, Reassign or Skip'}); warns++; }
   return { issues, errors, warns };
 }
 function renderTray(){
@@ -1439,13 +1471,22 @@ function enterSimFlow(flowId){
     sec.innerHTML=`<div class="badge b-rootcause">🌱 Testing cause #${rc?rc.sequence:'?'}</div><div class="q">${esc(rc?rc.label:flow.name)}</div>`;
   }
   simWrap.appendChild(sec);
-  if(!entry){ simWrap.appendChild(simResult(rc, isRemedy?'No remedial steps configured yet.':'This flow has no steps yet.', isRemedy)); scrollSim(); return; }
+  if(!entry){
+    if(isRemedy) simWrap.appendChild(simResult(rc, 'No remedial steps configured yet.', true));
+    else simWrap.appendChild(simEnded(rc, 'This diagnostic has no steps yet — nothing to test.'));
+    scrollSim(); return;
+  }
   simStep(flow, entry.id);
 }
-// Terminal handling: diagnostic Done → continue into remedy; remedy Done → final resolved.
-function simTerminal(flow, note){
+// Terminal handling. The Fix flow runs ONLY when the cause was actually confirmed
+// (a Done node / 'done' route). Reassign, Skip-to-end and dead ends do NOT trigger it.
+function simTerminal(flow, note, confirmed){
   freezeSim();
   const rc=simRcOf(flow);
+  if(flow.kind!=='remedy' && !confirmed){
+    simWrap.appendChild(simEnded(rc, note));
+    scrollSim(); return;
+  }
   if(flow.kind!=='remedy' && rc && rc.remedyFlowId){
     const d=document.createElement('div'); d.className='sim-step';
     d.innerHTML=`<div class="sim-result" style="border-color:var(--brand2);background:linear-gradient(135deg,#eef2ff,#fff)"><div class="ico">🎯</div><div class="t">Root cause identified</div><div class="rc">${esc(rc.label)}</div><div class="sub2" style="margin-top:8px">${esc(note)} Now applying the remedial flow…</div></div>`;
@@ -1456,6 +1497,18 @@ function simTerminal(flow, note){
   simWrap.appendChild(simResult(rc, note, true));
   scrollSim();
 }
+// Neutral end card — diagnostic stopped without confirming the cause (no fix flow).
+function simEnded(rc, note, icon, title){
+  const d=document.createElement('div'); d.className='sim-step';
+  d.innerHTML=`<div class="sim-result" style="border-color:#94a3b8;background:linear-gradient(135deg,#f8fafc,#fff)">
+    <div class="ico">${icon||'⏹'}</div><div class="t">${title||'Diagnosis ended — cause not confirmed'}</div>
+    ${rc?`<div class="rc" style="color:var(--muted)">while testing: ${esc(rc.label)}</div>`:''}
+    <div class="sub2" style="margin-top:8px">${esc(note)}</div>
+    ${simState.trail.length?`<div class="sim-trail"><b>Path taken:</b>${simState.trail.map(t=>`<div class="tr-step">→ ${esc(t)}</div>`).join('')}</div>`:''}
+    <button class="sim-next sv-restart" style="margin-top:18px">↺ Restart simulation</button></div>`;
+  setTimeout(()=>{ const b=d.querySelector('.sv-restart'); if(b)b.onclick=()=>renderSim(); },0);
+  return d;
+}
 function simStep(flow, nodeId){
   const n=flow.nodes.find(x=>x.id===nodeId);
   if(!n){ scrollSim(); return; }
@@ -1463,8 +1516,15 @@ function simStep(flow, nodeId){
   const card=document.createElement('div'); card.className='sim-step';
   let h=`<div class="badge b-${n.type}">${m.icon} ${m.label}</div><div class="q">${esc(n.label)}</div>`;
   const sub=nodeSub(n); if(sub) h+=`<div class="sub2">${esc(sub)}</div>`;
-  if(n.type==='done'){ card.innerHTML=h; simWrap.appendChild(card); simTerminal(flow, flow.kind==='remedy'?'Fix applied.':'Diagnosis complete.'); scrollSim(); return; }
-  if(n.type==='skip_end'){ h+=`<div class="sub2" style="margin-top:8px">Operator skipped → Photo + RCA captured → Done.</div>`; card.innerHTML=h; simWrap.appendChild(card); simTerminal(flow, 'Operator skipped to end.'); scrollSim(); return; }
+  if(n.type==='done'){ card.innerHTML=h; simWrap.appendChild(card); simTerminal(flow, flow.kind==='remedy'?'Fix applied.':'Diagnosis complete.', true); scrollSim(); return; }
+  if(n.type==='skip_end'){ h+=`<div class="sub2" style="margin-top:8px">Operator skipped — Photo + RCA captured.</div>`; card.innerHTML=h; simWrap.appendChild(card); simTerminal(flow, 'The operator skipped to the end, so the cause was not confirmed. The fix flow does not run.', false); scrollSim(); return; }
+  if(n.type==='reassign'){
+    card.innerHTML=h; simWrap.appendChild(card); freezeSim();
+    const rc=simRcOf(flow);
+    const who=n.role? n.role+(n.user?' ('+n.user+')':'') : 'another operator';
+    simWrap.appendChild(simEnded(rc, 'Handed off to '+who+'. This diagnostic ends here — the fix flow only runs after the cause is confirmed.', '🤝', 'Reassigned — handed off'));
+    scrollSim(); return;
+  }
   if((n.type==='question'||n.type==='action')&&n.options&&n.options.length){
     h+=`<div class="sim-opts">`+n.options.map((o,i)=>`<div class="sim-opt" data-route="${esc(o.route||'')}" data-txt="${esc(o.text)}"><div class="sn">${i+1}</div>${esc(o.text)}</div>`).join('')+`</div>`;
     card.innerHTML=h; simWrap.appendChild(card);
@@ -1487,8 +1547,8 @@ function simStep(flow, nodeId){
 function simFollow(flow, route, trailNote){
   freezeSim();   // lock all prior steps so they can't be re-clicked
   simState.trail.push(trailNote);
-  if(!route){ simTerminal(flow, 'Path ended without an explicit terminal.'); return; }
-  if(route==='done'){ simTerminal(flow, flow.kind==='remedy'?'Fix applied.':'Diagnosis complete.'); return; }
+  if(!route){ simTerminal(flow, 'The path ended without an explicit terminal, so the cause was not confirmed.', false); return; }
+  if(route==='done'){ simTerminal(flow, flow.kind==='remedy'?'Fix applied.':'Diagnosis complete.', true); return; }
   if(route.startsWith('flow:')){ enterSimFlow(route.slice(5)); return; }
   if(route.startsWith('node:')){ simStep(flow, route.slice(5)); return; }
 }
