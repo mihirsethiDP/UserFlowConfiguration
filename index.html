@@ -356,6 +356,36 @@
   .eh-btns { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
   .eh-btns button { padding: 9px 16px; border: 1px solid var(--border); border-radius: 9px; background: var(--panel); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all .12s; }
   .eh-btns button:hover { border-color: var(--brand2); color: var(--brand); background: var(--brand-soft); transform: translateY(-1px); }
+
+  /* ============ STEPPED (outline) VIEW ============ */
+  .sv-wrap { max-width: 620px; margin: 0 auto; }
+  .sv-hint { font-size: 12px; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; margin-bottom: 18px; line-height: 1.5; box-shadow: var(--sh-sm); }
+  .sv-hint b { color: var(--text); }
+  .step-card { position: relative; background: var(--panel); border: 1px solid var(--border); border-radius: 13px; padding: 13px 15px; cursor: pointer; box-shadow: var(--sh-sm); transition: box-shadow .12s; }
+  .step-card:hover { box-shadow: var(--sh-md); }
+  .step-card .sc-head { display: flex; align-items: center; gap: 8px; }
+  .step-card .sc-num { width: 24px; height: 24px; border-radius: 50%; background: var(--header); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-card .label { font-size: 14px; font-weight: 650; margin-top: 8px; outline: none; border-radius: 4px; padding: 1px 3px; cursor: text; }
+  .step-card .label:focus { background: var(--brand-soft); box-shadow: 0 0 0 2px var(--brand2); }
+  .step-card .sc-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .sv-line { width: 2.5px; height: 20px; background: #cbd5e1; margin: 0 auto; border-radius: 2px; }
+  .sv-branches { margin-top: 4px; padding-bottom: 4px; }
+  .sv-branch { position: relative; padding-left: 28px; margin-left: 14px; }
+  .sv-branch::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 2px; background: var(--rail); }
+  .sv-branch:last-child::before { bottom: auto; height: 26px; }
+  .sv-branch::after { content: ''; position: absolute; left: 0; top: 23px; width: 22px; height: 3px; border-radius: 2px; background: var(--rail); }
+  .sv-bhead { display: inline-flex; align-items: center; gap: 7px; background: var(--panel); border: 1.5px solid var(--railS); border-radius: 999px; padding: 3px 12px 3px 4px; font-size: 11.5px; font-weight: 700; margin: 10px 0 8px; box-shadow: var(--sh-sm); position: relative; z-index: 1; }
+  .sv-bhead .bn { width: 19px; height: 19px; border-radius: 50%; background: var(--railS); color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .sv-bhead .bto { color: var(--muted2); font-weight: 600; }
+  .sv-bbody { padding-bottom: 10px; }
+  .sv-goto { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--muted); background: var(--soft); border: 1.5px dashed var(--muted2); border-radius: 999px; padding: 6px 13px; }
+  .sv-done { display: inline-flex; align-items: center; gap: 6px; padding: 8px 15px; background: linear-gradient(135deg, var(--s-done), #334155); color: #fff; border-radius: 999px; font-size: 12px; font-weight: 700; }
+  .sv-flow { display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #fdf4ff, #fff); border: 1.5px solid #f0abfc; border-radius: 11px; padding: 9px 14px; cursor: pointer; transition: all .12s; }
+  .sv-flow:hover { border-color: var(--s-jump); box-shadow: var(--sh-sm); transform: translateY(-1px); }
+  .sv-flow .fl-t { font-size: 9.5px; font-weight: 800; color: var(--c-jump-fg); text-transform: uppercase; letter-spacing: .05em; }
+  .sv-flow .fl-n { font-size: 12.5px; font-weight: 650; }
+  .sv-unrouted { display: inline-flex; font-size: 11.5px; color: #b45309; background: var(--amber-soft); border: 1.5px dashed #fbbf24; padding: 6px 13px; border-radius: 999px; font-weight: 600; }
+  .sv-orphans { margin-top: 26px; padding-top: 12px; border-top: 1px dashed var(--border); font-size: 10.5px; font-weight: 800; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
 </style>
 </head>
 <body>
@@ -1056,16 +1086,30 @@ function renderFlowWires(){
 // ============================================================
 // STEPPED (vertical) VIEW
 // ============================================================
+const SV_RAILS=['#6366f1','#f59e0b','#14b8a6','#ec4899','#8b5cf6'];
 function renderStepped(){
   flowScene.style.display='none'; flowWires.style.display='none';
   let host=$('steppedHost');
-  if(!host){ host=document.createElement('div'); host.id='steppedHost'; host.style.cssText='position:absolute;inset:0;overflow-y:auto;padding:30px 20px 90px'; flowSurface.appendChild(host); }
+  if(!host){ host=document.createElement('div'); host.id='steppedHost'; host.style.cssText='position:absolute;inset:0;overflow-y:auto;padding:26px 20px 90px'; flowSurface.appendChild(host); }
   host.style.display='block';
   $('flowEmpty').style.display='none';
   const entry = stepEntry();
-  if(!entry){ host.innerHTML=`<div style="max-width:560px;margin:40px auto;text-align:center;color:var(--muted)">No steps yet. Switch to Top-down and drag a step in, or <button class="addb" id="stAdd" style="max-width:200px;margin:14px auto 0">+ Add first step</button></div>`; const b=$('stAdd'); if(b)b.onclick=()=>openIpop(null,null,window.innerWidth/2,260); return; }
+  if(!entry){
+    host.innerHTML=`<div class="sv-wrap"><div class="eh-card" style="text-align:center;margin-top:40px"><div class="eh-ico">🧩</div><div class="eh-t">This flow is empty</div><div class="eh-s">Start with one of these:</div><div class="eh-btns"><button data-qs="question">? Question</button><button data-qs="action">✓ Action</button><button data-qs="sensor">📡 Sensor</button></div></div></div>`;
+    host.querySelectorAll('[data-qs]').forEach(b=>b.onclick=()=>quickAddNode(b.dataset.qs));
+    return;
+  }
   const seen=new Set(), counter={n:0};
-  let h=`<div style="max-width:560px;margin:0 auto">`+stepTree(entry,seen,counter)+`</div>`;
+  const body=stepTree(entry,seen,counter,0);
+  let h=`<div class="sv-wrap">
+    <div class="sv-hint">🧭 Read top-to-bottom. Each colored rail is one <b>branch</b> — the chip names the answer that takes it. <b>↩</b> means the path re-joins an earlier step.</div>
+    ${body}`;
+  const orphans=curFlow.nodes.filter(n=>!seen.has(n.id));
+  if(orphans.length){
+    h+=`<div class="sv-orphans">Not connected yet</div>`;
+    orphans.forEach(n=>{ seen.add(n.id); counter.n++; n._stepNo=counter.n; h+=`<div style="margin-top:10px">${stepCardHTML(n,counter.n)}</div>`; });
+  }
+  h+=`</div>`;
   host.innerHTML=h;
   bindStepped(host);
 }
@@ -1085,51 +1129,59 @@ function branchesOf(n){
   else curFlow.edges.filter(e=>e.from===n.id).forEach(e=>br.push({label:'',route:'node:'+e.to}));
   return br;
 }
-function stepTree(node,seen,counter){
-  if(seen.has(node.id)) return `<div class="step-loop" style="font-size:11.5px;color:var(--muted);font-style:italic;padding:8px 12px;background:var(--soft);border-radius:8px;margin:6px 0">↑ loops to "${esc(node.label)}"</div>`;
-  seen.add(node.id); counter.n++;
-  const m=NT[node.type];
-  let h=`<div class="card sim-step-card step-card" data-id="${node.id}" style="position:relative;margin:0;border:1px solid var(--border);cursor:pointer;padding:14px 16px;border-radius:13px">
-    <div style="display:flex;align-items:center;gap:8px"><div style="width:24px;height:24px;border-radius:50%;background:var(--header);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">${counter.n}</div>
-    <div class="badge b-${node.type}">${m.icon} ${m.label}</div></div>
-    <div class="label" contenteditable="true" spellcheck="false" style="font-size:14px;font-weight:600;margin-top:8px;outline:none">${esc(node.label)}</div>`;
-  const sub=nodeSub(node); if(sub) h+=`<div style="font-size:12px;color:var(--muted);margin-top:4px">${esc(sub)}</div>`;
-  h+=`</div>`;
+function stepCardHTML(n,num){
+  const m=NT[n.type];
+  const tl = n.type==='done' ? (curFlow.kind==='remedy'?'Resolved':'Cause confirmed') : m.label;
+  const sub=nodeSub(n);
+  const seq=n.type==='question'&&n.sequence?`<span class="seqchip" style="margin-left:auto">#${n.sequence}</span>`:'';
+  return `<div class="card step-card" data-id="${n.id}" style="border-left:4px solid ${nodeAccent(n)}">
+    <div class="sc-head"><div class="sc-num">${num}</div><div class="badge b-${n.type}">${m.icon} ${tl}</div>${seq}</div>
+    <div class="label" contenteditable="true" spellcheck="false">${esc(n.label)}</div>
+    ${sub?`<div class="sc-sub">${esc(sub)}</div>`:''}
+  </div>`;
+}
+function stepTree(node,seen,counter,depth){
+  if(seen.has(node.id)) return `<div class="sv-goto">↩ continues at step ${node._stepNo||'?'} · ${esc(trunc(node.label,30))}</div>`;
+  seen.add(node.id); counter.n++; node._stepNo=counter.n;
+  let h=stepCardHTML(node,counter.n);
   const br=branchesOf(node);
   if(!br.length) return h;
-  if(br.length===1 && !br[0].band && br[0].route&&br[0].route.startsWith('node:')){
-    h+=`<div style="text-align:center;color:var(--muted2);font-size:16px;padding:5px">↓</div>`;
-    h+=stepTreeRoute(br[0].route,seen,counter);
+  // Single unconditional next step → straight connector, same depth
+  if(br.length===1 && !br[0].band && br[0].route && br[0].route.startsWith('node:')){
+    const t=curFlow.nodes.find(n=>n.id===br[0].route.slice(5));
+    if(t){
+      if(seen.has(t.id)) return h+`<div class="sv-line"></div>`+stepTree(t,seen,counter,depth);
+      return h+`<div class="sv-line"></div>`+stepTree(t,seen,counter,depth);
+    }
     return h;
   }
-  // branch fan
-  const allFlow = br.length>1 && br.every(b=>b.route&&b.route.startsWith('flow:'));
-  h+=`<div style="display:${allFlow?'flex':'block'};${allFlow?'gap:10px;justify-content:center;flex-wrap:wrap;':''}margin-top:10px;padding-top:8px;border-top:2px dashed var(--border)">`;
+  // Branching → one rail per option, colored by depth
+  const rail=SV_RAILS[depth%SV_RAILS.length];
+  h+=`<div class="sv-branches">`;
   br.forEach((b,i)=>{
     const seq=b.seq||i+1;
-    if(b.route&&b.route.startsWith('flow:')){
-      const rc=curTree.rootCauses.find(r=>r.flowId===b.route.slice(5));
-      h+=`<div style="${allFlow?'flex:1;min-width:150px;max-width:200px':'margin:8px 0'}">
-        <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:5px">${seq}. ${esc(b.label||'')}</div>
-        <div class="card" data-jump="${b.route.slice(5)}" style="position:relative;cursor:pointer;padding:11px 13px;background:linear-gradient(135deg,#fdf4ff,#fff);border-color:#fbcfe8;border-radius:11px">
-          <div style="font-size:10px;font-weight:700;color:var(--c-jump-fg);text-transform:uppercase;letter-spacing:.05em">↗ Diagnostic flow</div>
-          <div style="font-size:13px;font-weight:600;margin-top:3px">${esc(rc?rc.label:'?')}</div></div></div>`;
+    const label=b.label||('path '+seq);
+    const bnStyle=b.band?` style="background:${b.band==='safe'?'var(--green)':b.band==='warn'?'var(--amber)':'var(--red)'}"`:'';
+    h+=`<div class="sv-branch" style="--rail:${rail}55;--railS:${rail}">`;
+    h+=`<div class="sv-bhead"><span class="bn"${bnStyle}>${b.band?b.band[0].toUpperCase():seq}</span>${esc(trunc(label,44))}<span class="bto">→</span></div>`;
+    h+=`<div class="sv-bbody">`;
+    if(!b.route){
+      h+=`<div class="sv-unrouted">⚠ no destination — set it in the inspector</div>`;
     } else if(b.route==='done'){
-      h+=`<div style="margin:8px 0"><div style="font-size:11px;font-weight:600;margin-bottom:5px">${seq}. ${esc(b.label||'')}</div><span style="display:inline-flex;padding:7px 13px;background:var(--c-done);color:var(--c-done-fg);border-radius:999px;font-size:12px;font-weight:600">■ Done</span></div>`;
-    } else if(b.route&&b.route.startsWith('node:')){
-      h+=`<div style="padding-left:18px;border-left:2px dashed var(--border);margin:8px 0 8px 16px">
-        <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:6px"><span style="background:var(--brand2);color:#fff;padding:2px 7px;border-radius:999px;font-size:9px;margin-right:6px">${seq}</span>${esc(b.label||'')}</div>${stepTreeRoute(b.route,seen,counter)}</div>`;
-    } else {
-      h+=`<div style="margin:8px 0"><div style="font-size:11px;font-weight:600;margin-bottom:5px">${seq}. ${esc(b.label||'')}</div><span style="font-size:11.5px;color:var(--amber);background:var(--amber-soft);padding:6px 11px;border-radius:8px">⚠ no route set</span></div>`;
+      h+=`<div class="sv-done">■ ${curFlow.kind==='remedy'?'Resolved':'Cause confirmed'}</div>`;
+    } else if(b.route.startsWith('flow:')){
+      const fid=b.route.slice(5);
+      const f2=curTree.flows.find(f=>f.id===fid);
+      const rc2=curTree.rootCauses.find(r=>r.flowId===fid||r.remedyFlowId===fid);
+      h+=`<div class="sv-flow" data-jump="${fid}"><div style="font-size:16px">↗</div><div><div class="fl-t">${f2&&f2.kind==='remedy'?'Fix flow':'Diagnostic flow'}</div><div class="fl-n">${esc(rc2?rc2.label:(f2?f2.name:'?'))}</div></div></div>`;
+    } else if(b.route.startsWith('node:')){
+      const t=curFlow.nodes.find(n=>n.id===b.route.slice(5));
+      h+= t? stepTree(t,seen,counter,depth+1) : `<div class="sv-unrouted">⚠ missing target step</div>`;
     }
+    h+=`</div></div>`;
   });
   h+=`</div>`;
   return h;
-}
-function stepTreeRoute(route,seen,counter){
-  if(route==='done') return `<span style="display:inline-flex;padding:7px 13px;background:var(--c-done);color:var(--c-done-fg);border-radius:999px;font-size:12px;font-weight:600">■ Done</span>`;
-  if(route.startsWith('node:')){ const t=curFlow.nodes.find(n=>n.id===route.slice(5)); return t?stepTree(t,seen,counter):''; }
-  return '';
 }
 function bindStepped(host){
   host.querySelectorAll('.step-card').forEach(c=>{
