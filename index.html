@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>FlowConfig — Diagnostic Tree Designer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f1f3f7;
@@ -430,6 +431,169 @@
   .sm-foot .del { border: 1px solid #fecaca; color: var(--red); background: #fff; }
   .sm-foot .del:hover { background: var(--red); color: #fff; }
   .sm-foot .spacer { flex: 1; }
+
+  /* ==========================================================
+     THEME — DigitalPaani glass (from diagnostic-config artifact)
+     Override layer: same selectors, new visual language.
+     ========================================================== */
+  :root{
+    --ink:#20224A; --ink2:#43466E; --faint:#A6A9CC;
+    --text:#20224A; --muted:#767AA6; --muted2:#A6A9CC;
+    --bg:#F4F4FC; --canvas:#FBFBFF; --panel:#FFFFFF; --soft:#F6F6FD; --soft2:#EFF0FA;
+    --border:#E5E6F5; --border2:#EFF0FA;
+    --brand:#4F46E5; --brand2:#6366F1; --brand-soft:#EEEFFE; --accent-line:#D9DBFC;
+    --grad:linear-gradient(135deg,#6366F1,#8B5CF6);
+    --green:#16A34A; --green-soft:#DFF7E7; --green-line:#BBEBCD;
+    --red:#DC4A4A; --red-soft:#FDEAEA; --red-line:#F7CACA;
+    --amber:#B45309; --amber-soft:#FCF1DE;
+    --header:#20224A;
+    --s-rootcause:#7C3AED; --s-done:#20224A;
+    --sh-sm:0 1px 2px rgba(40,40,120,.05),0 8px 26px rgba(80,70,220,.07);
+    --sh-md:0 2px 10px rgba(40,40,120,.07),0 10px 30px rgba(80,70,220,.09);
+    --sh-lg:0 30px 80px rgba(38,34,120,.25),0 6px 18px rgba(38,34,120,.10);
+  }
+  html, body { font-family:'Inter',-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink);
+    background:
+      radial-gradient(1100px 700px at 88% -12%, rgba(196,181,253,.5), transparent 60%),
+      radial-gradient(900px 650px at -8% 112%, rgba(165,215,255,.45), transparent 60%),
+      linear-gradient(180deg,#F6F6FE 0%,#F1F0FB 100%);
+    background-attachment: fixed; }
+  #app { background: transparent; }
+
+  /* Header: dark navy → light glass */
+  #header { background: rgba(255,255,255,.6); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    color: var(--ink); border-bottom: 1px solid rgba(229,230,245,.9); }
+  .logo { color: var(--ink); }
+  .logo .mark { box-shadow: 0 6px 16px rgba(99,102,241,.35); }
+  .bcrumb { color: var(--muted); }
+  .bcrumb .seg:hover { background: var(--soft); color: var(--ink); }
+  .bcrumb .seg.current { color: var(--ink); font-weight: 800; }
+  .bcrumb .chev { color: var(--faint); }
+  .hbtn { background: rgba(255,255,255,.78); border: 1px solid var(--border); color: var(--ink2); box-shadow: var(--sh-sm); border-radius: 11px; }
+  .hbtn:hover { background: #fff; }
+  .hbtn.primary { background: var(--grad); color: #fff; border: none; box-shadow: 0 6px 18px rgba(99,102,241,.38); }
+  .hbtn.primary:hover { background: var(--grad); filter: brightness(1.06); }
+  .seg-toggle { background: rgba(228,229,246,.7); border: none; box-shadow: inset 0 1px 2px rgba(40,40,120,.05); border-radius: 12px; }
+  .seg-toggle button { color: var(--muted); font-weight: 700; }
+  .seg-toggle button:hover { color: var(--ink); }
+  .seg-toggle button.active { background: #fff; color: var(--brand); box-shadow: 0 2px 6px rgba(40,40,120,.12); }
+  .phase-toggle { background: rgba(228,229,246,.7); border: none; box-shadow: inset 0 1px 2px rgba(40,40,120,.05); }
+  .phase-toggle button { color: var(--muted); }
+  .phase-toggle button:hover { color: var(--ink); }
+  .phase-toggle button.active { background: #fff; color: var(--brand); box-shadow: 0 2px 6px rgba(40,40,120,.12); }
+
+  /* Surfaces + cards */
+  .surface { background-color: var(--canvas); background-image: radial-gradient(#DBDDF0 1.1px, transparent 1.1px); background-size: 22px 22px; }
+  .card { border-radius: 16px; box-shadow: var(--sh-sm); }
+  .card:hover { box-shadow: 0 8px 24px rgba(80,70,220,.14); }
+  .map-trigger { border-color: var(--accent-line); background: linear-gradient(135deg,#F0F1FF,#F8F4FF); }
+  .cause-card { background: rgba(255,255,255,.85); backdrop-filter: blur(10px); }
+  .cause-head .seq { border-radius: 8px; box-shadow: 0 3px 10px rgba(124,58,237,.3); }
+  .phase-row { border-radius: 11px; font-weight: 700; }
+  .phase-row.diag { background: var(--brand-soft); border-color: var(--accent-line); color: var(--brand); }
+  .phase-row.diag:hover { background: #E3E5FD; }
+  .phase-row.fix { background: var(--green-soft); border-color: var(--green-line); color: var(--green); }
+  .phase-row.fix:hover { background: #CFF2DC; }
+  .map-hint { background: rgba(255,255,255,.8); backdrop-filter: blur(8px); border-radius: 12px; }
+
+  /* Flow nodes: clean white, small-caps type, indigo hover glow */
+  .node { background: #fff; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 3px 14px rgba(40,40,120,.09); }
+  .node::before { display: none; }
+  .node:hover { box-shadow: 0 8px 24px rgba(80,70,220,.16); border-color: var(--accent-line); transform: none; }
+  .node.sel { border-color: var(--brand2) !important; box-shadow: 0 0 0 3px var(--brand-soft), 0 8px 24px rgba(80,70,220,.16); }
+  .node .ntype { color: var(--faint); letter-spacing: .09em; }
+  .node .nic { border-radius: 9px; box-shadow: 0 3px 8px color-mix(in srgb, var(--accent,#6366F1) 32%, transparent); }
+  .node .label { font-weight: 700; }
+  .node .opt { background: var(--soft); border-radius: 9px; }
+  .node .opt .on { border-radius: 20px; font-size: 9px; letter-spacing: .04em; width: auto; min-width: 18px; padding: 0 5px; }
+  .node .opt .on.on-y { background: var(--green-soft); color: var(--green); border: 1px solid var(--green-line); }
+  .node .opt .on.on-n { background: var(--red-soft); color: var(--red); border: 1px solid var(--red-line); }
+  .node .opt .ort { border-radius: 20px; }
+  .port-num { border-radius: 20px; box-shadow: 0 1px 4px rgba(40,40,120,.10); }
+  .port-num.yn-y { background: var(--green-soft); color: var(--green); border: 1px solid var(--green-line); }
+  .port-num.yn-n { background: var(--red-soft); color: var(--red); border: 1px solid var(--red-line); }
+  .node.t-done { background: linear-gradient(180deg,#FDFCFF,#F8F6FF); border-color: #DCD6FD; }
+  .node.t-done .label { color: var(--ink); }
+  .node.t-done .ntype { color: var(--s-rootcause); }
+  .node.t-done .nic { background: var(--s-rootcause); }
+  .node.t-done .done-foot { background: var(--brand-soft); border: 1px solid var(--accent-line); color: var(--brand); }
+  .node.t-done .done-foot:hover { background: #E3E5FD; color: var(--brand); }
+  .node.t-reassign { background: linear-gradient(180deg,#FFF7F7,#FDEEEE); border-color: var(--red-line); }
+
+  /* Zoom pill: navy → glass */
+  .zpill { background: rgba(255,255,255,.88); backdrop-filter: blur(10px); color: var(--ink2); border: 1px solid var(--border); box-shadow: var(--sh-md); }
+  .zpill button { color: var(--ink2); }
+  .zpill button:hover { background: var(--soft); }
+  .zpill .lv { color: var(--muted); }
+  .zpill .dv { background: var(--border); }
+  .tray-fab { border-radius: 20px; }
+
+  /* Palette + inspector glass */
+  #palette { background: rgba(255,255,255,.7); backdrop-filter: blur(14px); }
+  .pc { border-radius: 13px; }
+  .pc:hover { border-color: var(--accent-line); background: var(--brand-soft); }
+  #insp { background: rgba(255,255,255,.9); backdrop-filter: blur(14px); }
+
+  /* Modal — artifact structure */
+  .modal { border-radius: 20px; box-shadow: var(--sh-lg); }
+  #stepModal .modal { width: 620px; }
+  #smBody input, #smBody select { border-radius: 10px; font-weight: 500; }
+  #smBody input:focus, #smBody select:focus { border-color: var(--brand2); box-shadow: 0 0 0 3px var(--brand-soft); }
+  .sm-l { color: var(--faint); }
+  .sm-dest { background: #FAFAFE; border: 1px solid var(--border); border-radius: 13px; }
+  .sm-dest.yes, .sm-dest.no { border-color: var(--border); background: #FAFAFE; }
+  .sm-dest .dl { padding: 2px 9px; border-radius: 20px; font-size: 10px; letter-spacing: .04em; width: fit-content; }
+  .sm-dest.yes .dl { background: var(--green-soft); color: var(--green); border: 1px solid var(--green-line); }
+  .sm-dest.no .dl { background: var(--red-soft); color: var(--red); border: 1px solid var(--red-line); }
+  .sm-note { border-radius: 11px; }
+  .sm-foot .del { border: none; background: none; color: var(--red); font-weight: 700; padding: 8px 4px; }
+  .sm-foot .del:hover { background: none; color: var(--red); text-decoration: underline; }
+  .modal button { border-radius: 11px; }
+  .modal button.primary { background: var(--grad); box-shadow: 0 6px 18px rgba(99,102,241,.38); }
+  /* answer-type cards */
+  .atypes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .atype { border: 1px solid var(--border); border-radius: 12px; padding: 10px 11px; cursor: pointer; background: #fff; transition: all .1s; }
+  .atype:hover { background: var(--soft); }
+  .atype.on { border-color: var(--brand2); background: var(--brand-soft); box-shadow: 0 0 0 1px var(--brand2); }
+  .atype .ai { font-size: 16px; }
+  .atype .an { font-size: 12px; font-weight: 800; margin-top: 5px; }
+  .atype .ad { font-size: 10.5px; color: var(--muted); margin-top: 2px; line-height: 1.35; font-weight: 500; }
+  /* evidence toggle chips */
+  .tgl-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tgl { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); border-radius: 11px; padding: 8px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: #fff; color: var(--muted); font-family: inherit; }
+  .tgl.on { border-color: var(--brand2); background: var(--brand-soft); color: var(--brand); box-shadow: 0 0 0 1px var(--brand2); }
+  .tgl.req { box-shadow: 0 0 0 1px var(--brand); border-color: var(--brand); }
+  .tgl .box { width: 15px; height: 15px; border-radius: 5px; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; flex-shrink: 0; }
+  .tgl.on .box { background: var(--brand2); border-color: var(--brand2); }
+  .tgl .tstate { font-size: 9.5px; color: var(--faint); font-weight: 800; text-transform: uppercase; letter-spacing: .05em; margin-left: 2px; }
+  .tgl.on .tstate { color: var(--brand); }
+  .sm-hint { font-size: 11.5px; color: var(--faint); margin-top: 8px; font-weight: 500; }
+
+  /* Simulate */
+  .sim-head { background: rgba(255,255,255,.78); backdrop-filter: blur(18px); border-radius: 16px; border: 1px solid rgba(229,230,245,.95); }
+  .sim-step { border-radius: 16px; box-shadow: var(--sh-sm); border: 1px solid var(--border); }
+  .sim-next { background: var(--grad); border-radius: 11px; box-shadow: 0 6px 18px rgba(99,102,241,.3); font-weight: 700; }
+  .sim-next:hover { background: var(--grad); filter: brightness(1.06); }
+  .sim-opt { border-radius: 12px; font-weight: 600; }
+  .sim-opt:hover { border-color: var(--brand2); background: var(--brand-soft); }
+  .sim-opt .sn { border-radius: 8px; }
+  .cap-box { border-radius: 13px; background: #FAFAFE; }
+  .cap-chip { border-radius: 11px; }
+  .cap-chip.done { border-color: var(--green-line); }
+  .sim-result { border-radius: 18px; }
+  .sh-btn { border-radius: 10px; }
+
+  /* Stepped view */
+  .sv-hint { border-radius: 12px; background: rgba(255,255,255,.85); }
+  .step-card { border-radius: 14px; box-shadow: 0 3px 14px rgba(40,40,120,.08); }
+  .sv-done { background: var(--grad); }
+  .sv-flow { border-color: #DCD6FD; background: linear-gradient(180deg,#FDFCFF,#F8F6FF); }
+  .sv-flow .fl-t { color: var(--s-rootcause); }
+
+  /* Modals + templates */
+  .tpl { border-radius: 14px; }
+  .tpl:hover { border-color: var(--brand2); background: var(--brand-soft); }
+  .toast { background: var(--ink); border-radius: 20px; }
 </style>
 </head>
 <body>
@@ -943,9 +1107,9 @@ function renderNode(n){
     body+=`<div class="opts">`+opts.map(({o,i})=>{
       const rt=routeLabel(o.route), cls=o.route&&o.route.startsWith('flow:')?'flow':o.route==='done'?'done':'';
       const yn = isBool ? (i===0?'✓':'✗') : (n.options.indexOf(o)+1);
-      const ynBg = isBool ? (i===0?'var(--green)':'var(--red)') : '';
+      const ynCls = isBool ? (i===0?' on-y':' on-n') : '';
       return `<div class="opt" data-opt="${o.id}">
-        <div class="on"${ynBg?` style="background:${ynBg}"`:''}>${yn}</div>
+        <div class="on${ynCls}">${yn}</div>
         <div class="ot"${isBool?' style="cursor:default;font-weight:650"':' contenteditable="true" spellcheck="false"'} data-edit-opt="${o.id}">${esc(o.text)}</div>
         <div class="ort ${cls}" data-pick="${o.id}" ${cls==='flow'?`data-jump="${o.route.slice(5)}"`:''}>${esc(rt)}</div>
       </div>`;
@@ -970,8 +1134,8 @@ function renderNode(n){
     opts.forEach((o,i)=>{
       const pct=((i+1)/(opts.length+1))*100;
       const lbl = isBool ? (i===0?'YES':'NO') : (i+1);
-      const st = isBool ? `;background:${i===0?'var(--green)':'var(--red)'}` : '';
-      body+=`<div class="port out" data-out-opt="${o.id}" style="left:${pct}%"></div><div class="port-num" style="left:${pct}%${st}">${lbl}</div>`;
+      const cls = isBool ? (i===0?' yn-y':' yn-n') : '';
+      body+=`<div class="port out" data-out-opt="${o.id}" style="left:${pct}%"></div><div class="port-num${cls}" style="left:${pct}%">${lbl}</div>`;
     });
   } else if(sensor){
     n.thresholds.forEach((t,i)=>{
@@ -1465,9 +1629,11 @@ function smResolve(val, src, slot, edgeMode){
 }
 function smMediaSection(){
   const m=smTemp.media||{};
-  return `<label class="sm-l">Evidence the operator must capture here</label>`+
-    MEDIA_KINDS.map(k=>`<div class="sm-media"><span>${k.icon} ${k.label}</span>
-      <select data-media="${k.id}">${['off','optional','required'].map(v=>`<option value="${v}" ${(m[k.id]||'off')===v?'selected':''}>${v==='off'?'Not asked':v==='optional'?'Optional':'Required'}</option>`).join('')}</select></div>`).join('');
+  const lab={off:'Not asked',optional:'Optional',required:'Required'};
+  return `<label class="sm-l">Evidence the operator must capture here</label><div class="tgl-row">`+
+    MEDIA_KINDS.map(k=>{ const v=m[k.id]||'off';
+      return `<button type="button" class="tgl ${v!=='off'?'on':''}${v==='required'?' req':''}" data-media="${k.id}"><span class="box">${v!=='off'?'✓':''}</span>${k.icon} ${k.label}<span class="tstate">${lab[v]}</span></button>`; }).join('')+
+    `</div><div class="sm-hint">Tap to cycle: Not asked → Optional → Required</div>`;
 }
 function openStepModal(n){
   smNode=n;
@@ -1492,7 +1658,7 @@ function renderSmBody(){
   let h='';
   if(n.type==='question'){
     h+=`<label class="sm-l">Question the operator answers (Yes / No)</label><input id="sm-label" value="${esc(smTemp.label)}" placeholder="e.g. Is the blower running?">`;
-    h+=`<label class="sm-l">How is it answered?</label><select id="sm-method">${METHODS.map(x=>`<option value="${x.id}" ${smTemp.method===x.id?'selected':''}>${x.icon} ${x.label}</option>`).join('')}</select>`;
+    h+=`<label class="sm-l">How is it answered?</label><div class="atypes">${METHODS.map(x=>`<div class="atype ${smTemp.method===x.id?'on':''}" data-mth="${x.id}"><div class="ai">${x.icon}</div><div class="an">${x.label}</div><div class="ad">${x.id==='sensor'?'Read a live instrument tag':x.id==='physical'?'Operator observes on-site':'Field kit / hand test'}</div></div>`).join('')}</div>`;
     if(smTemp.method==='sensor'){
       h+=`<label class="sm-l">Which sensor?</label><select id="sm-tag"><option value="">— pick tag —</option>${TAGS.map(t=>`<option value="${t.id}" ${smTemp.sensorTag===t.id?'selected':''}>${t.label} · ${t.unit}</option>`).join('')}</select>`;
     }
@@ -1528,7 +1694,7 @@ function renderSmBody(){
   // live bindings into smTemp
   const g=id=>$(id);
   if(g('sm-label')) g('sm-label').oninput=e=>smTemp.label=e.target.value;
-  if(g('sm-method')) g('sm-method').onchange=e=>{ smTemp.method=e.target.value; renderSmBody(); };
+  document.querySelectorAll('#smBody .atype').forEach(c=>c.onclick=()=>{ smTemp.method=c.dataset.mth; renderSmBody(); });
   if(g('sm-tag')) g('sm-tag').onchange=e=>smTemp.sensorTag=e.target.value;
   if(g('sm-yes')) g('sm-yes').onchange=e=>smTemp.yes=e.target.value;
   if(g('sm-no')) g('sm-no').onchange=e=>smTemp.no=e.target.value;
@@ -1536,7 +1702,7 @@ function renderSmBody(){
   if(g('sm-role')) g('sm-role').onchange=e=>smTemp.role=e.target.value;
   if(g('sm-user')) g('sm-user').oninput=e=>smTemp.user=e.target.value;
   if(g('sm-next')) g('sm-next').onchange=e=>smTemp.next=e.target.value;
-  document.querySelectorAll('#smBody [data-media]').forEach(s=>s.onchange=e=>{ smTemp.media[e.target.dataset.media]=e.target.value; });
+  document.querySelectorAll('#smBody .tgl[data-media]').forEach(t=>t.onclick=()=>{ const k=t.dataset.media; const cur=smTemp.media[k]||'off'; smTemp.media[k]=cur==='off'?'optional':cur==='optional'?'required':'off'; renderSmBody(); });
 }
 function closeStepModal(){ stepModal.classList.remove('open'); smNode=null; smTemp=null; }
 $('smCancel').onclick=closeStepModal;
