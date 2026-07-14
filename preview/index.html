@@ -300,7 +300,26 @@
   /* ============ SIMULATE ============ */
   #simStage { display: none; position: absolute; inset: 0; background: var(--canvas); overflow-y: auto; }
   #simStage.active { display: block; }
-  .sim-wrap { max-width: 600px; margin: 30px auto; padding: 0 20px 80px; }
+  .sim-wrap { max-width: 600px; margin: 0 auto; padding: 14px 20px 80px; }
+  .sim-head { position: sticky; top: 10px; z-index: 20; display: flex; align-items: center; gap: 9px; background: rgba(255,255,255,.92); backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: 13px; padding: 10px 14px; margin-bottom: 16px; box-shadow: var(--sh-md); }
+  .sim-head .sh-info { flex: 1; min-width: 0; }
+  .sim-head .sh-t { font-size: 12.5px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sim-head .sh-s { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sh-phase { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+  .sh-phase.diag { background: var(--brand-soft); color: var(--brand); }
+  .sh-phase.fix { background: var(--green-soft); color: #047857; }
+  .sh-btn { border: 1px solid var(--border); background: #fff; border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--muted); white-space: nowrap; }
+  .sh-btn:hover { border-color: var(--brand2); color: var(--brand); }
+  .sh-btn.stuck { border-color: #fecaca; color: var(--red); background: #fff5f5; }
+  .sh-btn.stuck:hover { background: var(--red); color: #fff; }
+  .cap-box { margin-top: 14px; padding: 12px; background: var(--soft); border: 1.5px dashed var(--muted2); border-radius: 11px; display: flex; flex-direction: column; gap: 8px; }
+  .cap-t { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .cap-chip { border: 1.5px solid var(--border); background: #fff; border-radius: 9px; padding: 9px 13px; font-size: 12.5px; font-weight: 650; cursor: pointer; text-align: left; transition: all .12s; }
+  .cap-chip:hover { border-color: var(--brand2); }
+  .cap-chip.done { border-color: var(--green); background: var(--green-soft); color: #047857; }
+  .cap-comment { border: 1.5px solid var(--border); border-radius: 9px; padding: 9px 12px; font-size: 12.5px; font-family: inherit; min-height: 56px; resize: vertical; }
+  .cap-comment:focus { outline: none; border-color: var(--brand2); box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+  .cap-go:disabled { opacity: .45; cursor: not-allowed; }
   .sim-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
   .sim-step { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; box-shadow: var(--sh-sm); margin-bottom: 12px; animation: slidein .25s; }
   @keyframes slidein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -1393,7 +1412,7 @@ function delNode(id){
 // text, answer method, Yes/No destinations, evidence capture.
 // ============================================================
 const MODAL_TYPES=['question','action','done','reassign'];
-let smNode=null, smTemp=null;
+let smNode=null, smTemp=null, smCreated=[];
 const stepModal=$('stepModal');
 
 function smDestOptions(excludeId, selected, edgeMode){
@@ -1425,7 +1444,7 @@ function smResolve(val, src, slot, edgeMode){
   const py = src.y + 300;
   if(val==='done'){
     let d=curFlow.nodes.find(x=>x.type==='done');
-    if(!d){ d={id:uid('n_'),type:'done',x:px,y:py,label:curFlow.kind==='remedy'?'Closure — resolved':'Root cause identified',media:{photo:'required',video:'off',comment:'optional'}}; curFlow.nodes.push(d); }
+    if(!d){ d={id:uid('n_'),type:'done',x:px,y:py,label:curFlow.kind==='remedy'?'Closure — resolved':'Root cause identified',media:{photo:'required',video:'off',comment:'optional'}}; curFlow.nodes.push(d); smCreated.push(d.id); }
     return 'node:'+d.id;
   }
   if(val.startsWith('new:')){
@@ -1433,7 +1452,7 @@ function smResolve(val, src, slot, edgeMode){
     const nn={ id:uid('n_'), type:t, x:px, y:py, label: t==='question'?'New Yes/No step': t==='action'?'New task':'Escalate — beyond operator skill' };
     if(t==='question'){ nn.method='physical'; nn.options=[{id:uid('o_'),text:'Yes',route:''},{id:uid('o_'),text:'No',route:''}]; }
     if(t==='reassign'){ nn.role=''; nn.media={photo:'off',video:'off',comment:'required'}; }
-    curFlow.nodes.push(nn);
+    curFlow.nodes.push(nn); smCreated.push(nn.id);
     return 'node:'+nn.id;
   }
   if(edgeMode && val.startsWith('flow:')){
@@ -1524,6 +1543,7 @@ $('smCancel').onclick=closeStepModal;
 $('smDelete').onclick=()=>{ if(!smNode) return; const id=smNode.id; closeStepModal(); delNode(id); persist(); };
 $('smSave').onclick=()=>{
   const n=smNode; if(!n){ closeStepModal(); return; }
+  smCreated=[];
   n.label=smTemp.label.trim()||n.label;
   if(n.type==='question'){
     n.method=smTemp.method;
@@ -1545,9 +1565,12 @@ $('smSave').onclick=()=>{
   persist();
   closeStepModal();
   renderFlow();
-  toast('Step saved');
+  const nxt=smCreated.map(id=>curFlow.nodes.find(x=>x.id===id)).find(x=>x&&MODAL_TYPES.includes(x.type));
+  if(nxt){ toast('Saved — now configure the step you just created'); openStepModal(nxt); }
+  else toast('Step saved');
 };
 stepModal.addEventListener('mousedown',e=>{ if(e.target===stepModal) closeStepModal(); });
+stepModal.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.tagName!=='TEXTAREA'){ e.preventDefault(); $('smSave').click(); } });
 
 // inline route picker (overlay select)
 function inlineRoutePicker(anchor, cb, current){
@@ -1637,16 +1660,42 @@ function freezeSim(){
 }
 function renderSim(){
   // start: pick sequence-1 root cause's flow, begin at entry
-  simState={ trail:[], flowId:null, nodeId:null, done:false, result:null };
+  simState={ trail:[], flowId:null, curRc:null, phase:null };
   simWrap.innerHTML='';
-  // Step 0: show trigger + root cause sequencing
+  // Sticky operator header: where am I + help/restart/exit
+  const head=document.createElement('div');
+  head.className='sim-head'; head.id='simHead';
+  head.innerHTML=`<div class="sh-info"><div class="sh-t">${esc(curTree.name)}</div><div class="sh-s" id="shStatus">Ready to start</div></div>
+    <span class="sh-phase" id="shPhase" style="display:none"></span>
+    <button class="sh-btn stuck" id="shStuck" title="Get help — escalate to supervisor" style="display:none">🆘 I'm stuck</button>
+    <button class="sh-btn" id="shRestart" title="Start over">↺</button>
+    <button class="sh-btn" id="shExit" title="Exit simulation">✕</button>`;
+  simWrap.appendChild(head);
+  $('shRestart').onclick=()=>renderSim();
+  $('shExit').onclick=()=>go('map');
+  $('shStuck').onclick=()=>{
+    freezeSim();
+    simWrap.appendChild(simEnded(simState.curRc, 'The operator requested help mid-procedure. The issue is escalated to a supervisor with the path taken so far.', '🆘', 'Stuck — escalated to supervisor'));
+    $('shStuck').style.display='none';
+    scrollSim();
+  };
+  // Step 0: trigger card
   const card=document.createElement('div');
   card.className='sim-step';
   card.innerHTML=`<div class="badge b-trigger">⚠ Trigger</div><div class="q">${esc(curTree.trigger.label)}</div>${curTree.trigger.desc?`<div class="sub2">${esc(curTree.trigger.desc)}</div>`:''}
-    <div class="sub2" style="margin-top:14px">The system walks possible root causes in sequence. Starting diagnosis…</div>
+    <div class="sub2" style="margin-top:14px">Possible causes are tested in sequence until the root cause is found.</div>
     <button class="sim-next" id="simStart">Begin diagnosis →</button>`;
   simWrap.appendChild(card);
   $('simStart').onclick=()=>{ const first=[...curTree.rootCauses].sort((a,b)=>a.sequence-b.sequence)[0]; if(!first){ toast('No root causes'); return; } freezeSim(); enterSimFlow(first.flowId); };
+}
+function updateSimHead(){
+  const st=$('shStatus'), ph=$('shPhase'), stuck=$('shStuck');
+  if(!st) return;
+  const rc=simState.curRc, total=curTree.rootCauses.length;
+  if(rc){ st.textContent=`Testing cause ${rc.sequence} of ${total} · ${trunc(rc.label,34)}`; }
+  if(ph&&simState.phase){ ph.style.display='inline-flex'; ph.className='sh-phase '+simState.phase;
+    ph.textContent=simState.phase==='fix'?'🛠 Fixing':'🔍 Diagnosing'; }
+  if(stuck) stuck.style.display='inline-flex';
 }
 function simRcOf(flow){ return curTree.rootCauses.find(r=>r.flowId===flow.id||r.remedyFlowId===flow.id); }
 function enterSimFlow(flowId){
@@ -1654,6 +1703,9 @@ function enterSimFlow(flowId){
   const rc=simRcOf(flow);
   const isRemedy=flow.kind==='remedy';
   simState.flowId=flowId;
+  simState.curRc=rc||simState.curRc;
+  simState.phase=isRemedy?'fix':'diag';
+  updateSimHead();
   const entry=(()=>{ const t=new Set(); flow.edges.forEach(e=>t.add(e.to)); flow.nodes.forEach(n=>{(n.options||[]).forEach(o=>{if(o.route&&o.route.startsWith('node:'))t.add(o.route.slice(5));});(n.thresholds||[]).forEach(th=>{if(th.route&&th.route.startsWith('node:'))t.add(th.route.slice(5));});}); return flow.nodes.find(n=>!t.has(n.id))||flow.nodes[0]; })();
   const sec=document.createElement('div'); sec.className='sim-step';
   if(isRemedy){ sec.style.background='var(--green-soft)'; sec.style.border='1px solid #a7f3d0';
@@ -1689,16 +1741,53 @@ function simTerminal(flow, note, confirmed){
   scrollSim();
 }
 // Neutral end card — diagnostic stopped without confirming the cause (no fix flow).
+// Offers "Test next cause" so the operator can continue sequential triage.
 function simEnded(rc, note, icon, title){
   const d=document.createElement('div'); d.className='sim-step';
+  const next = rc ? [...curTree.rootCauses].sort((a,b)=>a.sequence-b.sequence).find(x=>x.sequence>rc.sequence) : null;
   d.innerHTML=`<div class="sim-result" style="border-color:#94a3b8;background:linear-gradient(135deg,#f8fafc,#fff)">
     <div class="ico">${icon||'⏹'}</div><div class="t">${title||'Diagnosis ended — cause not confirmed'}</div>
     ${rc?`<div class="rc" style="color:var(--muted)">while testing: ${esc(rc.label)}</div>`:''}
     <div class="sub2" style="margin-top:8px">${esc(note)}</div>
     ${simState.trail.length?`<div class="sim-trail"><b>Path taken:</b>${simState.trail.map(t=>`<div class="tr-step">→ ${esc(t)}</div>`).join('')}</div>`:''}
-    <button class="sim-next sv-restart" style="margin-top:18px">↺ Restart simulation</button></div>`;
-  setTimeout(()=>{ const b=d.querySelector('.sv-restart'); if(b)b.onclick=()=>renderSim(); },0);
+    ${next?`<button class="sim-next sv-next" style="margin-top:18px">▶ Test next cause: ${esc(trunc(next.label,30))}</button>`:''}
+    <button class="sim-next sv-restart" style="margin-top:${next?'8':'18'}px;background:var(--soft);color:var(--text)">↺ Restart simulation</button></div>`;
+  const rb=d.querySelector('.sv-restart'); if(rb)rb.onclick=()=>renderSim();
+  const nb=d.querySelector('.sv-next'); if(nb)nb.onclick=()=>{ freezeSim(); enterSimFlow(next.flowId); };
   return d;
+}
+// Evidence capture UI — photo/video chips + comment box; required items gate the confirm button.
+function captureHTML(n){
+  const m=n.media||{};
+  const kinds=MEDIA_KINDS.filter(k=>m[k.id]&&m[k.id]!=='off');
+  if(!kinds.length) return '';
+  let h=`<div class="cap-box"><div class="cap-t">📋 Capture evidence</div>`;
+  kinds.forEach(k=>{
+    if(k.id==='comment') h+=`<textarea class="cap-comment" data-cap="comment" placeholder="Write a comment${m.comment==='required'?' (required)':' (optional)'}…"></textarea>`;
+    else h+=`<button class="cap-chip" data-cap="${k.id}">${k.icon} Attach ${k.label.toLowerCase()}${m[k.id]==='required'?' *':''}</button>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+function bindCapture(card, n, goLabel, onGo){
+  const m=n.media||{};
+  const go=document.createElement('button');
+  go.className='sim-next cap-go'; go.textContent=goLabel;
+  card.appendChild(go);
+  const validate=()=>{
+    let ok=true;
+    MEDIA_KINDS.forEach(k=>{
+      if(m[k.id]!=='required') return;
+      if(k.id==='comment'){ const t=card.querySelector('[data-cap="comment"]'); if(!t||!t.value.trim()) ok=false; }
+      else { const c=card.querySelector(`[data-cap="${k.id}"]`); if(!c||!c.classList.contains('done')) ok=false; }
+    });
+    go.disabled=!ok;
+    go.title=ok?'':'Capture the required evidence (*) first';
+  };
+  card.querySelectorAll('.cap-chip').forEach(c=>c.onclick=()=>{ c.classList.toggle('done'); c.textContent=c.classList.contains('done')?('✓ '+c.textContent.replace(/^✓ /,'').replace('Attach','Attached')):c.textContent.replace('✓ ','').replace('Attached','Attach'); validate(); });
+  const ta=card.querySelector('[data-cap="comment"]'); if(ta) ta.oninput=validate;
+  go.onclick=()=>{ if(go.disabled) return; onGo(); };
+  validate();
 }
 function simStep(flow, nodeId){
   const n=flow.nodes.find(x=>x.id===nodeId);
@@ -1707,13 +1796,26 @@ function simStep(flow, nodeId){
   const card=document.createElement('div'); card.className='sim-step';
   let h=`<div class="badge b-${n.type}">${m.icon} ${m.label}</div><div class="q">${esc(n.label)}</div>`;
   const sub=nodeSub(n,flow); if(sub) h+=`<div class="sub2">${esc(sub)}</div>`;
-  if(n.type==='done'){ card.innerHTML=h; simWrap.appendChild(card); simTerminal(flow, flow.kind==='remedy'?'Fix applied.':'Diagnosis complete.', true); scrollSim(); return; }
+  if(n.type==='done'){
+    card.innerHTML=h+captureHTML(n);
+    simWrap.appendChild(card);
+    bindCapture(card, n, flow.kind==='remedy'?'✅ Close the issue':'🎯 Confirm root cause', ()=>{
+      simTerminal(flow, flow.kind==='remedy'?'Fix applied.':'Diagnosis complete.', true);
+      scrollSim();
+    });
+    scrollSim(); return;
+  }
   if(n.type==='skip_end'){ h+=`<div class="sub2" style="margin-top:8px">Operator skipped — Photo + RCA captured.</div>`; card.innerHTML=h; simWrap.appendChild(card); simTerminal(flow, 'The operator skipped to the end, so the cause was not confirmed. The fix flow does not run.', false); scrollSim(); return; }
   if(n.type==='reassign'){
-    card.innerHTML=h; simWrap.appendChild(card); freezeSim();
+    card.innerHTML=h+captureHTML(n);
+    simWrap.appendChild(card);
     const rc=simRcOf(flow);
     const who=n.role? n.role+(n.user?' ('+n.user+')':'') : 'another operator';
-    simWrap.appendChild(simEnded(rc, 'Handed off to '+who+'. This diagnostic ends here — the fix flow only runs after the cause is confirmed.', '🤝', 'Reassigned — handed off'));
+    bindCapture(card, n, '🆘 Escalate to '+(n.role||'supervisor'), ()=>{
+      freezeSim();
+      simWrap.appendChild(simEnded(rc, 'Handed off to '+who+' with the captured evidence. This diagnostic ends here — the fix flow only runs after the cause is confirmed.', '🤝', 'Escalated — handed off'));
+      scrollSim();
+    });
     scrollSim(); return;
   }
   if((n.type==='question'||n.type==='action')&&n.options&&n.options.length){
@@ -1750,7 +1852,7 @@ function simResult(rc, note, resolved){
     <div class="sub2" style="margin-top:8px">${esc(note)}</div>
     ${simState.trail.length?`<div class="sim-trail"><b>Path taken:</b>${simState.trail.map(t=>`<div class="tr-step">→ ${esc(t)}</div>`).join('')}</div>`:''}
     <button class="sim-next" id="simRestart" style="margin-top:18px">↺ Restart simulation</button></div>`;
-  setTimeout(()=>{ const b=$('simRestart'); if(b)b.onclick=()=>renderSim(); },0);
+  const rb2=d.querySelector('#simRestart'); if(rb2)rb2.onclick=()=>renderSim();
   return d;
 }
 function scrollSim(){ setTimeout(()=>{ simStage.scrollTop=simStage.scrollHeight; },50); }
@@ -1853,6 +1955,14 @@ function renderPal(){
     c.addEventListener('mouseleave',hideTip);
   });
 }
+flowSurface.addEventListener('dblclick',e=>{
+  if(flowView!=='h') return;
+  if(e.target.closest('.node')||e.target.closest('.zpill')||e.target.closest('.tray-fab')||e.target.closest('#tray')) return;
+  const r=flowSurface.getBoundingClientRect(), z=cam.flow.z;
+  const x=(e.clientX-r.left-cam.flow.x)/z-122, y=(e.clientY-r.top-cam.flow.y)/z-30;
+  const n={id:uid('n_'),type:'question',x,y,label:'New Yes/No step',method:'physical',options:[{id:uid('o_'),text:'Yes',route:''},{id:uid('o_'),text:'No',route:''}]};
+  curFlow.nodes.push(n); sel={kind:'node',id:n.id}; renderFlow(); persist(); openStepModal(n);
+});
 flowSurface.addEventListener('dragover',e=>e.preventDefault());
 flowSurface.addEventListener('drop',e=>{
   e.preventDefault(); const t=e.dataTransfer.getData('text/plain'); if(!t||!NT[t])return;
