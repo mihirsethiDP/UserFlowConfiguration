@@ -393,6 +393,24 @@
   .sv-flow .fl-n { font-size: 12.5px; font-weight: 650; }
   .sv-unrouted { display: inline-flex; font-size: 11.5px; color: #b45309; background: var(--amber-soft); border: 1.5px dashed #fbbf24; padding: 6px 13px; border-radius: 999px; font-weight: 600; }
   .sv-orphans { margin-top: 26px; padding-top: 12px; border-top: 1px dashed var(--border); font-size: 10.5px; font-weight: 800; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
+
+  /* ============ STEP CONFIG MODAL ============ */
+  .sm-l { display: block; font-size: 10px; text-transform: uppercase; color: var(--muted); margin: 15px 0 6px; letter-spacing: .07em; font-weight: 700; }
+  #smBody .sm-l:first-child { margin-top: 8px; }
+  #smBody input, #smBody select { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; background: #fff; }
+  #smBody input:focus, #smBody select:focus { outline: none; border-color: var(--brand2); box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+  .sm-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sm-dest { border: 1.5px solid var(--border); border-radius: 10px; padding: 10px; }
+  .sm-dest.yes { border-color: #a7f3d0; background: #f0fdf4; }
+  .sm-dest.no  { border-color: #fecaca; background: #fef2f2; }
+  .sm-dest .dl { font-size: 11px; font-weight: 800; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+  .sm-dest.yes .dl { color: #047857; } .sm-dest.no .dl { color: #b91c1c; }
+  .sm-media { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center; margin-bottom: 6px; font-size: 12.5px; font-weight: 600; }
+  .sm-note { font-size: 12px; color: var(--muted); background: var(--soft); border-radius: 8px; padding: 9px 12px; margin-top: 12px; line-height: 1.5; }
+  .sm-foot { display: flex; gap: 8px; margin-top: 20px; align-items: center; }
+  .sm-foot .del { border: 1px solid #fecaca; color: var(--red); background: #fff; }
+  .sm-foot .del:hover { background: var(--red); color: #fff; }
+  .sm-foot .spacer { flex: 1; }
 </style>
 </head>
 <body>
@@ -499,21 +517,43 @@
   <div class="actions"><button id="saveCancel">Cancel</button><button class="primary" id="saveConfirm">Save</button></div>
 </div></div>
 
+<!-- Step configuration modal — everything about one step on a single popup -->
+<div class="modal-bg" id="stepModal"><div class="modal" style="width:540px">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+    <div class="badge" id="smBadge">—</div>
+    <h2 id="smTitle" style="margin:0;font-size:16px">Configure step</h2>
+  </div>
+  <div id="smBody"></div>
+  <div class="sm-foot">
+    <button class="del" id="smDelete">🗑 Delete step</button>
+    <span class="spacer"></span>
+    <button id="smCancel">Cancel</button>
+    <button class="primary" id="smSave">Save</button>
+  </div>
+</div></div>
+
 <script>
 // ============================================================
 // NODE TYPES
 // ============================================================
 const NT = {
-  question: { label:'Question', icon:'?', help:'A decision step. Each option becomes its own bottom port and route.' },
-  action:   { label:'Action', icon:'✓', help:'A task the operator performs. Pick an Action type; Message/Call/Escalate add a user selection.' },
-  sensor:   { label:'Sensor', icon:'📡', help:'Read a sensor by tag; route by Safe / Warning / Critical band.' },
-  reassign: { label:'Reassign', icon:'↻', help:'Hands the diagnostic to another role / user and ENDS it here — the cause was not confirmed, so the Fix flow does not run.' },
-  waiting:  { label:'Waiting', icon:'⏱', help:'Pause — by timer or until an event.' },
-  skip_end: { label:'Skip to end', icon:'⏭', help:'Operator bypass: captures Photo + RCA and ENDS the diagnostic without confirming the cause — the Fix flow does not run.' },
-  jump:     { label:'Jump to flow', icon:'↗', help:'Transition to another root-cause flow in this tree.' },
-  done:     { label:'Done', icon:'■', help:'Terminal — confirms this flow\'s root cause and ends.' }
+  question: { label:'Step (Yes/No)', icon:'?', help:'A Yes/No question the operator answers via sensor data, physical inspection or a manual test. Yes and No each route somewhere.' },
+  action:   { label:'Task', icon:'✓', help:'Something the operator does (restart, clean, open a valve…), then continues to the next step.' },
+  done:     { label:'Root cause / Closure', icon:'■', help:'Diagnostic: "Root cause identified" — hands off to the Fix flow. Fix: "Closure — resolved". Can require photo / video / comment evidence.' },
+  reassign: { label:'Escalate (dead end)', icon:'🆘', help:'The operator lacks the skill or authority — the problem is escalated and this diagnostic ENDS. No Fix flow runs. Can require evidence.' },
+  sensor:   { label:'Sensor bands', icon:'📡', help:'Advanced: route by Safe / Warning / Critical threshold band of a sensor tag.' },
+  waiting:  { label:'Waiting', icon:'⏱', help:'Advanced: pause — by timer or until an event.' },
+  skip_end: { label:'Skip to end', icon:'⏭', help:'Advanced: operator bypass — captures Photo + RCA and ends without confirming the cause. No Fix flow.' },
+  jump:     { label:'Jump to flow', icon:'↗', help:'Advanced: transition to another root-cause flow in this tree.' }
 };
-const PAL = { step:['question','action','sensor'], helper:['reassign','waiting','skip_end','jump','done'] };
+const PAL = { step:['question','action','done','reassign'], helper:['sensor','waiting','skip_end','jump'] };
+// How a Yes/No step gets answered
+const METHODS = [
+  {id:'sensor',   label:'Sensor data',        icon:'📡'},
+  {id:'physical', label:'Physical inspection', icon:'👁'},
+  {id:'manual',   label:'Manual testing',      icon:'🔧'}
+];
+const MEDIA_KINDS = [ {id:'photo',label:'Photo',icon:'📷'}, {id:'video',label:'Video',icon:'🎥'}, {id:'comment',label:'Comment',icon:'💬'} ];
 const ACTIONS = [
   {id:'photo',label:'Photo upload',user:false},
   {id:'message',label:'Send message',user:true},
@@ -544,7 +584,7 @@ let view = 'map';            // 'map' | 'flow' | 'sim'
 let flowView = localStorage.getItem('fc-flowview') || 'h';  // 'h' top-down | 'v' stepped
 let sel = null;              // {kind:'node'|'edge'|'rc'|'trigger', id}
 let nextId = 1000; const uid = p => `${p}${++nextId}`;
-const KEY='fc-fable-v1', TKEY='fc-fable-templates';
+const KEY='fc-fable-v2', TKEY='fc-fable-templates';
 // camera per surface
 const cam = { map:{x:60,y:40,z:.8}, flow:{x:60,y:40,z:.85} };
 
@@ -570,86 +610,53 @@ function demoTree(){
   causes.forEach((nm,i)=>{
     const flowId = uid('flow_'), remedyId = uid('flow_'), rcId = uid('rc_');
     tree.rootCauses.push({ id:rcId, label:nm, sequence:i+1, flowId, remedyFlowId:remedyId });
-    // diagnostic flow
     if(i===0) tree.flows.push(buildFlow1(flowId,rcId,nm));
-    else if(i===2) tree.flows.push(buildFlow3(flowId,rcId,nm));
     else tree.flows.push(emptyFlow(flowId,nm,rcId,'diagnostic'));
-    // remedial flow
     if(i===0) tree.flows.push(buildRemedy1(remedyId,rcId,nm));
     else tree.flows.push(emptyFlow(remedyId,'Fix · '+nm,rcId,'remedy'));
   });
   return tree;
 }
-// Demo remedial flow for "Blower is OFF" — ends at a Resolved (done) node
+// Demo DIAGNOSTIC flow — pure boolean steps, each answered by a method (sensor / physical / manual).
+// Yes/No paths lead to: Root cause identified (→ Fix flow) or Escalate (dead end).
+function buildFlow1(flowId,rcId,nm){
+  const id={}; ['q1','q2','q3','esc','done1'].forEach(k=>id[k]=uid('n_'));
+  return { id:flowId, name:nm, rootCauseId:rcId, kind:'diagnostic',
+    nodes:[
+      { id:id.q1, type:'question', x:420, y:60, label:'Is the blower running?', method:'physical', options:[
+        {id:uid('o_'),text:'Yes', route:'node:'+id.q2},
+        {id:uid('o_'),text:'No',  route:'node:'+id.done1} ]},
+      { id:id.q2, type:'question', x:640, y:330, label:'Is DO still below 2 mg/L on the sensor?', method:'sensor', sensorTag:'DO_01', options:[
+        {id:uid('o_'),text:'Yes', route:'node:'+id.q3},
+        {id:uid('o_'),text:'No',  route:'node:'+id.done1} ]},
+      { id:id.q3, type:'question', x:860, y:600, label:'Does the blower trip when restarted?', method:'manual', options:[
+        {id:uid('o_'),text:'Yes', route:'node:'+id.esc},
+        {id:uid('o_'),text:'No',  route:'node:'+id.done1} ]},
+      { id:id.esc, type:'reassign', x:1140, y:870, label:'Electrical fault — beyond operator skill', role:'Maintenance',
+        media:{photo:'required',video:'off',comment:'required'} },
+      { id:id.done1, type:'done', x:420, y:900, label:'Root cause: Blower was OFF',
+        media:{photo:'required',video:'off',comment:'optional'} }
+    ],
+    edges:[]};
+}
+// Demo REMEDIAL flow — tasks + boolean check, ending at Closure (with evidence) or Escalate.
 function buildRemedy1(flowId,rcId,nm){
-  const id={}; ['aPower','aRestart','q1','aCallMaint','done1'].forEach(k=>id[k]=uid('n_'));
+  const id={}; ['t1','t2','q1','esc','done1'].forEach(k=>id[k]=uid('n_'));
   return { id:flowId, name:'Fix · '+nm, rootCauseId:rcId, kind:'remedy',
     nodes:[
-      { id:id.aPower, type:'action', x:420, y:60, label:'Confirm power supply to blower', actionType:'photo' },
-      { id:id.aRestart, type:'action', x:420, y:240, label:'Restart blower from panel', actionType:'custom', customAction:'Restart blower' },
-      { id:id.q1, type:'question', x:420, y:420, label:'Is the blower running steadily?', sequence:1, options:[
-        {id:uid('o_'),text:'Yes — running',      route:'done'},
-        {id:uid('o_'),text:'No — wont start',    route:'node:'+id.aCallMaint} ]},
-      { id:id.aCallMaint, type:'action', x:120, y:640, label:'Escalate to maintenance', actionType:'escalate', role:'Maintenance' },
-      { id:id.done1, type:'done', x:560, y:660, label:'Resolved — blower running' }
+      { id:id.t1, type:'action', x:420, y:60, label:'Confirm power supply to blower', actionType:'photo' },
+      { id:id.t2, type:'action', x:420, y:250, label:'Restart blower from panel', actionType:'custom', customAction:'Restart blower' },
+      { id:id.q1, type:'question', x:420, y:440, label:'Is the blower running steadily?', method:'physical', options:[
+        {id:uid('o_'),text:'Yes', route:'node:'+id.done1},
+        {id:uid('o_'),text:'No',  route:'node:'+id.esc} ]},
+      { id:id.esc, type:'reassign', x:700, y:710, label:'Blower won\'t start — escalate', role:'Maintenance',
+        media:{photo:'off',video:'off',comment:'required'} },
+      { id:id.done1, type:'done', x:280, y:730, label:'Closure — blower running, DO recovering',
+        media:{photo:'required',video:'optional',comment:'required'} }
     ],
     edges:[
-      { id:uid('e_'), from:id.aPower, to:id.aRestart },
-      { id:uid('e_'), from:id.aRestart, to:id.q1 },
-      { id:uid('e_'), from:id.aCallMaint, to:id.done1 }
-    ]};
-}
-// Fully wired, simulation-ready flow — every path reaches Done
-function buildFlow1(flowId,rcId,nm){
-  const id={}; ['aCheck','q1','aStart','aReset','aReasn','done1'].forEach(k=>id[k]=uid('n_'));
-  return { id:flowId, name:nm, rootCauseId:rcId, kind:'diagnostic',
-    nodes:[
-      { id:id.aCheck, type:'action', x:420, y:60, label:'Check blower status on the panel', actionType:'photo', options:[
-        {id:uid('o_'),text:'Blower is ON',      route:'node:'+id.q1},
-        {id:uid('o_'),text:'Blower is OFF',     route:'node:'+id.aStart},
-        {id:uid('o_'),text:'Blower is TRIPPED', route:'node:'+id.aReset} ]},
-      { id:id.q1, type:'question', x:120, y:380, label:'Is DO recovering after restart?', sequence:1, options:[
-        {id:uid('o_'),text:'Yes — DO rising',  route:'done'},
-        {id:uid('o_'),text:'No — still low',   route:'node:'+id.aReasn} ]},
-      { id:id.aStart, type:'action', x:470, y:380, label:'Start the blower', actionType:'custom', customAction:'Start blower' },
-      { id:id.aReset, type:'action', x:800, y:380, label:'Reset trip & notify maintenance', actionType:'escalate', role:'Maintenance' },
-      { id:id.aReasn, type:'reassign', x:120, y:680, label:'Reassign to Process Engineer', role:'Process Engineer' },
-      { id:id.done1, type:'done', x:480, y:720, label:'Confirm root cause: Blower was OFF' }
-    ],
-    edges:[
-      { id:uid('e_'), from:id.aStart,  to:id.done1 },
-      { id:uid('e_'), from:id.aReset,  to:id.done1 }
-    ]};
-}
-function buildFlow3(flowId,rcId,nm){
-  const id={}; ['q1','q2','aCall','aSkip','aDiff','sens','aRca','aReasn','done1'].forEach(k=>id[k]=uid('n_'));
-  return { id:flowId, name:nm, rootCauseId:rcId, kind:'diagnostic',
-    nodes:[
-      { id:id.q1, type:'question', x:120, y:60, label:'Is aeration even across the tank?', sequence:1, options:[
-        {id:uid('o_'),text:'Yes — bubbles normal',route:'node:'+id.q2},
-        {id:uid('o_'),text:'Moderate bubbling',route:'node:'+id.q2},
-        {id:uid('o_'),text:'No bubbles',route:'node:'+id.aCall},
-        {id:uid('o_'),text:'Skip to end',route:'node:'+id.aSkip} ]},
-      { id:id.q2, type:'question', x:480, y:330, label:'Are dead zones created?', sequence:2, options:[
-        {id:uid('o_'),text:'Sludge accumulation',route:'node:'+id.aDiff},
-        {id:uid('o_'),text:'Dark / black water',route:'node:'+id.aDiff},
-        {id:uid('o_'),text:'Uneven DO readings',route:'node:'+id.sens},
-        {id:uid('o_'),text:'Reassign',route:'node:'+id.aReasn} ]},
-      { id:id.aCall, type:'action', x:120, y:360, label:'Call supervisor', actionType:'call', role:'Supervisor' },
-      { id:id.aSkip, type:'skip_end', x:-200, y:360, label:'Skip to end' },
-      { id:id.aDiff, type:'action', x:430, y:640, label:'Diffusers choked — plan cleaning', actionType:'message', role:'Maintenance' },
-      { id:id.sens, type:'sensor', x:720, y:640, label:'Verify DO reading', sensorTag:'DO_01', unit:'mg/L', thresholds:[
-        {id:'safe',label:'Safe',min:2,max:null,route:''},
-        {id:'warn',label:'Warning',min:1,max:2,route:''},
-        {id:'crit',label:'Critical',min:null,max:1,route:'node:'+id.done1} ]},
-      { id:id.aReasn, type:'reassign', x:1000, y:640, label:'Reassign to Supervisor', role:'Supervisor' },
-      { id:id.aRca, type:'action', x:120, y:640, label:'Photo + RCA', actionType:'photo' },
-      { id:id.done1, type:'done', x:560, y:900, label:'Confirm root cause' }
-    ],
-    edges:[
-      { id:uid('e_'), from:id.aCall, to:id.aRca },
-      { id:uid('e_'), from:id.aDiff, to:id.done1 },
-      { id:uid('e_'), from:id.aRca, to:id.done1 }
+      { id:uid('e_'), from:id.t1, to:id.t2 },
+      { id:uid('e_'), from:id.t2, to:id.q1 }
     ]};
 }
 const BUILTINS = [
@@ -668,6 +675,7 @@ function migrate(){
     (t.flows||[]).forEach(f=>{
       if(!f.kind) f.kind='diagnostic';
       // reassign / skip_end are hand-off terminals now — strip any stale outgoing edges
+      (f.nodes||[]).forEach(n=>{ if(n.type==='question'&&!n.method)n.method='physical'; if((n.type==='done'||n.type==='reassign')&&!n.media)n.media={photo:'off',video:'off',comment:'off'}; });
       const term=new Set((f.nodes||[]).filter(n=>n.type==='reassign'||n.type==='skip_end').map(n=>n.id));
       if(term.size) f.edges=(f.edges||[]).filter(e=>!term.has(e.from));
     });
@@ -911,15 +919,18 @@ function renderNode(n){
     body+=`<div class="done-foot" data-open-remedy="1">🛠 Continue to remedial flow →</div>`;
   }
   if(branching){
+    const isBool = n.type==='question';
     const opts=[...n.options].map((o,i)=>({o,i})).sort((a,b)=>a.i-b.i);
-    body+=`<div class="opts">`+opts.map(({o})=>{
+    body+=`<div class="opts">`+opts.map(({o,i})=>{
       const rt=routeLabel(o.route), cls=o.route&&o.route.startsWith('flow:')?'flow':o.route==='done'?'done':'';
+      const yn = isBool ? (i===0?'✓':'✗') : (n.options.indexOf(o)+1);
+      const ynBg = isBool ? (i===0?'var(--green)':'var(--red)') : '';
       return `<div class="opt" data-opt="${o.id}">
-        <div class="on">${n.options.indexOf(o)+1}</div>
-        <div class="ot" contenteditable="true" spellcheck="false" data-edit-opt="${o.id}">${esc(o.text)}</div>
+        <div class="on"${ynBg?` style="background:${ynBg}"`:''}>${yn}</div>
+        <div class="ot"${isBool?' style="cursor:default;font-weight:650"':' contenteditable="true" spellcheck="false"'} data-edit-opt="${o.id}">${esc(o.text)}</div>
         <div class="ort ${cls}" data-pick="${o.id}" ${cls==='flow'?`data-jump="${o.route.slice(5)}"`:''}>${esc(rt)}</div>
       </div>`;
-    }).join('')+`<div class="opt-add" data-add-opt="1">+ Add ${n.type==='action'?'answer':'option'}</div></div>`;
+    }).join('')+(isBool?'':`<div class="opt-add" data-add-opt="1">+ Add answer</div>`)+`</div>`;
   } else if(sensor){
     body+=`<div class="opts">`+n.thresholds.map(t=>{
       const c=t.id, range=t.min!=null&&t.max!=null?`${t.min}–${t.max}`:t.min!=null?`≥${t.min}`:t.max!=null?`<${t.max}`:'any';
@@ -935,10 +946,13 @@ function renderNode(n){
   if(n.type!=='done') {} // all can be targets
   body+=`<div class="port in" data-in="1"></div>`;
   if(branching){
+    const isBool = n.type==='question';
     const opts=[...n.options];
     opts.forEach((o,i)=>{
       const pct=((i+1)/(opts.length+1))*100;
-      body+=`<div class="port out" data-out-opt="${o.id}" style="left:${pct}%"></div><div class="port-num" style="left:${pct}%">${i+1}</div>`;
+      const lbl = isBool ? (i===0?'YES':'NO') : (i+1);
+      const st = isBool ? `;background:${i===0?'var(--green)':'var(--red)'}` : '';
+      body+=`<div class="port out" data-out-opt="${o.id}" style="left:${pct}%"></div><div class="port-num" style="left:${pct}%${st}">${lbl}</div>`;
     });
   } else if(sensor){
     n.thresholds.forEach((t,i)=>{
@@ -955,13 +969,27 @@ function renderNode(n){
   if(rf) rf.onclick=ev=>{ ev.stopPropagation(); const rc=rcOfFlow(curFlow); if(rc&&rc.remedyFlowId){ curFlow=curTree.flows.find(f=>f.id===rc.remedyFlowId); sel=null; closeInsp(); renderFlow(); fitView('flow'); renderCrumb(); } };
   return e;
 }
-function nodeSub(n){
+function mediaChips(n){
+  if(!n.media) return '';
+  const parts=MEDIA_KINDS.filter(k=>n.media[k.id]&&n.media[k.id]!=='off')
+    .map(k=>k.icon+' '+k.label+(n.media[k.id]==='required'?'*':''));
+  return parts.length? ' · Evidence: '+parts.join(' '):'';
+}
+function newLabel(t){ if(t==='question')return 'New Yes/No step'; if(t==='action')return 'New task'; if(t==='done')return curFlow&&curFlow.kind==='remedy'?'Closure — resolved':'Root cause identified'; if(t==='reassign')return 'Escalate — beyond operator skill'; return NT[t].label; }
+function nodeSub(n,f){ const _fl=f||curFlow;
+  if(n.type==='question'){
+    const m=METHODS.find(x=>x.id===(n.method||'physical'));
+    let s=m? m.icon+' Answered by: '+m.label : '';
+    if(n.method==='sensor'){ const t=TAGS.find(x=>x.id===n.sensorTag); s+=t?' · 🏷 '+t.label:' · pick a tag'; }
+    return s;
+  }
   if(n.type==='action'&&n.actionType){ const a=ACTIONS.find(x=>x.id===n.actionType); if(a) return '⚙ '+a.label+(a.user&&n.role?' → '+n.role+(n.user?' ('+n.user+')':''):''); }
   if(n.type==='sensor'){ const t=TAGS.find(x=>x.id===n.sensorTag); return t?'🏷 '+t.label+' · '+t.unit:(n.sensorName?'🏷 '+n.sensorName:'pick a sensor tag'); }
-  if(n.type==='reassign') return (n.role?'👤 '+n.role+(n.user?' · '+n.user:''):'👤 pick a role')+' — ends here, no fix flow';
+  if(n.type==='reassign') return (n.role?'👤 Escalate to '+n.role+(n.user?' · '+n.user:''):'👤 pick who to escalate to')+' — ends here, no fix flow'+mediaChips(n);
   if(n.type==='waiting'){ if((n.waitMode||'time')==='time'&&n.waitVal!=null) return '⏱ '+n.waitVal+' '+(n.waitUnit||'min'); if(n.waitMode==='event'&&n.waitEvent) return '⚡ '+n.waitEvent; }
   if(n.type==='skip_end') return '→ Photo + RCA → ends here, no fix flow';
   if(n.type==='jump'&&n.targetFlow){ const r=curTree.rootCauses.find(x=>x.flowId===n.targetFlow); return '↗ '+(r?r.label:'?'); }
+  if(n.type==='done'){ const base=_fl&&_fl.kind==='remedy'?'Fix complete':'Hands off to the Fix flow'; return base+mediaChips(n); }
   return n.sub||'';
 }
 
@@ -975,7 +1003,7 @@ function bindNode(e,n){
     sel={kind:'node',id:n.id};
     const z=cam.flow.z, sx=ev.clientX, sy=ev.clientY, ox=n.x, oy=n.y; let moved=false;
     const mv=e2=>{ const dx=(e2.clientX-sx)/z, dy=(e2.clientY-sy)/z; if(!moved&&Math.hypot(dx,dy)>3)moved=true; n.x=ox+dx; n.y=oy+dy; e.style.left=n.x+'px'; e.style.top=n.y+'px'; renderFlowWires(); };
-    const up=()=>{ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); if(!moved&&!was) openInsp(); else if(moved) persist(); renderFlow(); };
+    const up=()=>{ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); if(!moved){ (MODAL_TYPES.includes(n.type)? openStepModal(n) : openInsp()); } else persist(); renderFlow(); };
     document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
     if(!was) renderFlow();
   });
@@ -1208,7 +1236,7 @@ function stepTree(node,seen,counter,depth){
 function bindStepped(host){
   host.querySelectorAll('.step-card').forEach(c=>{
     const n=curFlow.nodes.find(x=>x.id===c.dataset.id); if(!n) return;
-    c.addEventListener('click',ev=>{ if(ev.target.closest('[contenteditable]')) return; sel={kind:'node',id:n.id}; openInsp(); });
+    c.addEventListener('click',ev=>{ if(ev.target.closest('[contenteditable]')) return; sel={kind:'node',id:n.id}; (MODAL_TYPES.includes(n.type)? openStepModal(n) : openInsp()); });
     const lbl=c.querySelector('.label');
     lbl.addEventListener('click',ev=>ev.stopPropagation());
     lbl.addEventListener('keydown',ev=>{ if(ev.key==='Enter'){ev.preventDefault();lbl.blur();} });
@@ -1360,6 +1388,167 @@ function delNode(id){
   closeInsp();
 }
 
+// ============================================================
+// STEP CONFIG MODAL — one popup configures the whole step:
+// text, answer method, Yes/No destinations, evidence capture.
+// ============================================================
+const MODAL_TYPES=['question','action','done','reassign'];
+let smNode=null, smTemp=null;
+const stepModal=$('stepModal');
+
+function smDestOptions(excludeId, selected, edgeMode){
+  const isFix=curFlow.kind==='remedy';
+  let h=`<option value="">— choose destination —</option>`;
+  h+=`<option value="done" ${selected==='done'?'selected':''}>${isFix?'✅ Closure — issue resolved':'✅ Root cause identified'}</option>`;
+  h+=`<option value="new:reassign">🆘 Escalate — dead end (new)</option>`;
+  h+=`<option value="new:question">＋ New Yes/No step</option>`;
+  h+=`<option value="new:action">＋ New task</option>`;
+  const others=curFlow.nodes.filter(x=>x.id!==excludeId);
+  if(others.length){
+    h+=`<optgroup label="Existing steps in this flow">`;
+    others.forEach(x=>{ const v='node:'+x.id; h+=`<option value="${v}" ${selected===v?'selected':''}>${NT[x.type].icon} ${esc(trunc(x.label,36))}</option>`; });
+    h+=`</optgroup>`;
+  }
+  h+=`<optgroup label="Other flows in this tree">`;
+  curTree.rootCauses.forEach(r=>{
+    [['flowId','🔍 Diagnose'],['remedyFlowId','🛠 Fix']].forEach(([k,ic])=>{
+      const fid=r[k]; if(fid&&fid!==curFlow.id){ const v='flow:'+fid; h+=`<option value="${v}" ${selected===v?'selected':''}>${ic} · ${esc(trunc(r.label,24))}</option>`; }
+    });
+  });
+  h+=`</optgroup>`;
+  return h;
+}
+// Turn a modal destination value into a concrete route, creating nodes when asked.
+function smResolve(val, src, slot, edgeMode){
+  if(!val) return '';
+  const px = slot==null ? src.x : src.x + (slot===0? -170 : 170);
+  const py = src.y + 300;
+  if(val==='done'){
+    let d=curFlow.nodes.find(x=>x.type==='done');
+    if(!d){ d={id:uid('n_'),type:'done',x:px,y:py,label:curFlow.kind==='remedy'?'Closure — resolved':'Root cause identified',media:{photo:'required',video:'off',comment:'optional'}}; curFlow.nodes.push(d); }
+    return 'node:'+d.id;
+  }
+  if(val.startsWith('new:')){
+    const t=val.slice(4);
+    const nn={ id:uid('n_'), type:t, x:px, y:py, label: t==='question'?'New Yes/No step': t==='action'?'New task':'Escalate — beyond operator skill' };
+    if(t==='question'){ nn.method='physical'; nn.options=[{id:uid('o_'),text:'Yes',route:''},{id:uid('o_'),text:'No',route:''}]; }
+    if(t==='reassign'){ nn.role=''; nn.media={photo:'off',video:'off',comment:'required'}; }
+    curFlow.nodes.push(nn);
+    return 'node:'+nn.id;
+  }
+  if(edgeMode && val.startsWith('flow:')){
+    // plain edges can't point at flows — materialize a Jump node
+    const j={id:uid('n_'),type:'jump',x:px,y:py,label:'Continue in another flow',targetFlow:val.slice(5)};
+    curFlow.nodes.push(j);
+    return 'node:'+j.id;
+  }
+  return val;
+}
+function smMediaSection(){
+  const m=smTemp.media||{};
+  return `<label class="sm-l">Evidence the operator must capture here</label>`+
+    MEDIA_KINDS.map(k=>`<div class="sm-media"><span>${k.icon} ${k.label}</span>
+      <select data-media="${k.id}">${['off','optional','required'].map(v=>`<option value="${v}" ${(m[k.id]||'off')===v?'selected':''}>${v==='off'?'Not asked':v==='optional'?'Optional':'Required'}</option>`).join('')}</select></div>`).join('');
+}
+function openStepModal(n){
+  smNode=n;
+  const isFix=curFlow.kind==='remedy';
+  const outEdge=curFlow.edges.find(e=>e.from===n.id);
+  smTemp={
+    label:n.label||'', method:n.method||'physical', sensorTag:n.sensorTag||'',
+    yes:(n.options&&n.options[0]&&n.options[0].route)||'', no:(n.options&&n.options[1]&&n.options[1].route)||'',
+    actionType:n.actionType||'', role:n.role||'', user:n.user||'',
+    next: outEdge? 'node:'+outEdge.to : '',
+    media: Object.assign({photo:'off',video:'off',comment:'off'}, n.media||{})
+  };
+  const m=NT[n.type];
+  $('smBadge').textContent=m.icon+' '+(n.type==='done'?(isFix?'Closure':'Root cause identified'):n.type==='reassign'?'Escalate (dead end)':m.label);
+  $('smBadge').className='badge b-'+n.type;
+  $('smTitle').textContent= n.type==='question'?'Configure step':'Configure '+(n.type==='action'?'task':n.type==='done'?(isFix?'closure':'root cause'):'escalation');
+  renderSmBody();
+  stepModal.classList.add('open');
+}
+function renderSmBody(){
+  const n=smNode, isFix=curFlow.kind==='remedy';
+  let h='';
+  if(n.type==='question'){
+    h+=`<label class="sm-l">Question the operator answers (Yes / No)</label><input id="sm-label" value="${esc(smTemp.label)}" placeholder="e.g. Is the blower running?">`;
+    h+=`<label class="sm-l">How is it answered?</label><select id="sm-method">${METHODS.map(x=>`<option value="${x.id}" ${smTemp.method===x.id?'selected':''}>${x.icon} ${x.label}</option>`).join('')}</select>`;
+    if(smTemp.method==='sensor'){
+      h+=`<label class="sm-l">Which sensor?</label><select id="sm-tag"><option value="">— pick tag —</option>${TAGS.map(t=>`<option value="${t.id}" ${smTemp.sensorTag===t.id?'selected':''}>${t.label} · ${t.unit}</option>`).join('')}</select>`;
+    }
+    h+=`<label class="sm-l">Where does each answer go?</label>
+      <div class="sm-two">
+        <div class="sm-dest yes"><div class="dl">✓ If YES</div><select id="sm-yes">${smDestOptions(n.id, smTemp.yes)}</select></div>
+        <div class="sm-dest no"><div class="dl">✗ If NO</div><select id="sm-no">${smDestOptions(n.id, smTemp.no)}</select></div>
+      </div>`;
+  }
+  else if(n.type==='action'){
+    h+=`<label class="sm-l">What does the operator do?</label><input id="sm-label" value="${esc(smTemp.label)}" placeholder="e.g. Restart blower from panel">`;
+    h+=`<label class="sm-l">Task type</label><select id="sm-atype"><option value="">— pick —</option>${ACTIONS.map(a=>`<option value="${a.id}" ${smTemp.actionType===a.id?'selected':''}>${a.label}</option>`).join('')}</select>`;
+    const at=ACTIONS.find(a=>a.id===smTemp.actionType);
+    if(at&&at.user){
+      h+=`<div class="sm-two"><div><label class="sm-l">Role</label><select id="sm-role"><option value="">— role —</option>${ROLES.map(r=>`<option value="${r}" ${smTemp.role===r?'selected':''}>${r}</option>`).join('')}</select></div>
+        <div><label class="sm-l">User (optional)</label><input id="sm-user" value="${esc(smTemp.user)}"></div></div>`;
+    }
+    h+=`<label class="sm-l">Then go to</label><select id="sm-next">${smDestOptions(n.id, smTemp.next)}</select>`;
+  }
+  else if(n.type==='done'){
+    h+=`<label class="sm-l">${isFix?'Closure title':'Root cause statement'}</label><input id="sm-label" value="${esc(smTemp.label)}" placeholder="${isFix?'e.g. Resolved — blower running':'e.g. Root cause: Blower was OFF'}">`;
+    h+=smMediaSection();
+    h+=`<div class="sm-note">${isFix?'🏁 This closes the issue. Evidence marked <b>Required</b> must be captured before closure.':'🎯 Reaching this step confirms the root cause and hands the operator to the <b>Fix flow</b> automatically. Evidence is captured at this moment.'}</div>`;
+  }
+  else if(n.type==='reassign'){
+    h+=`<label class="sm-l">Why is this a dead end?</label><input id="sm-label" value="${esc(smTemp.label)}" placeholder="e.g. Electrical fault — beyond operator skill">`;
+    h+=`<div class="sm-two"><div><label class="sm-l">Escalate to (role)</label><select id="sm-role"><option value="">— role —</option>${ROLES.map(r=>`<option value="${r}" ${smTemp.role===r?'selected':''}>${r}</option>`).join('')}</select></div>
+      <div><label class="sm-l">User (optional)</label><input id="sm-user" value="${esc(smTemp.user)}"></div></div>`;
+    h+=smMediaSection();
+    h+=`<div class="sm-note">🆘 The diagnostic <b>ends here</b> and the problem is escalated. The Fix flow does not run — the cause was not confirmed.</div>`;
+  }
+  $('smBody').innerHTML=h;
+  // live bindings into smTemp
+  const g=id=>$(id);
+  if(g('sm-label')) g('sm-label').oninput=e=>smTemp.label=e.target.value;
+  if(g('sm-method')) g('sm-method').onchange=e=>{ smTemp.method=e.target.value; renderSmBody(); };
+  if(g('sm-tag')) g('sm-tag').onchange=e=>smTemp.sensorTag=e.target.value;
+  if(g('sm-yes')) g('sm-yes').onchange=e=>smTemp.yes=e.target.value;
+  if(g('sm-no')) g('sm-no').onchange=e=>smTemp.no=e.target.value;
+  if(g('sm-atype')) g('sm-atype').onchange=e=>{ smTemp.actionType=e.target.value; renderSmBody(); };
+  if(g('sm-role')) g('sm-role').onchange=e=>smTemp.role=e.target.value;
+  if(g('sm-user')) g('sm-user').oninput=e=>smTemp.user=e.target.value;
+  if(g('sm-next')) g('sm-next').onchange=e=>smTemp.next=e.target.value;
+  document.querySelectorAll('#smBody [data-media]').forEach(s=>s.onchange=e=>{ smTemp.media[e.target.dataset.media]=e.target.value; });
+}
+function closeStepModal(){ stepModal.classList.remove('open'); smNode=null; smTemp=null; }
+$('smCancel').onclick=closeStepModal;
+$('smDelete').onclick=()=>{ if(!smNode) return; const id=smNode.id; closeStepModal(); delNode(id); persist(); };
+$('smSave').onclick=()=>{
+  const n=smNode; if(!n){ closeStepModal(); return; }
+  n.label=smTemp.label.trim()||n.label;
+  if(n.type==='question'){
+    n.method=smTemp.method;
+    if(smTemp.method==='sensor') n.sensorTag=smTemp.sensorTag; else delete n.sensorTag;
+    n.options=n.options&&n.options.length>=2? n.options : [{id:uid('o_'),text:'Yes',route:''},{id:uid('o_'),text:'No',route:''}];
+    n.options.length=2;
+    n.options[0].text='Yes'; n.options[1].text='No';
+    n.options[0].route=smResolve(smTemp.yes,n,0);
+    n.options[1].route=smResolve(smTemp.no,n,1);
+  }
+  else if(n.type==='action'){
+    n.actionType=smTemp.actionType; n.role=smTemp.role; n.user=smTemp.user;
+    curFlow.edges=curFlow.edges.filter(e=>e.from!==n.id);
+    const rt=smResolve(smTemp.next,n,null,true);
+    if(rt&&rt.startsWith('node:')) curFlow.edges.push({id:uid('e_'),from:n.id,to:rt.slice(5)});
+  }
+  else if(n.type==='done'){ n.media=Object.assign({},smTemp.media); }
+  else if(n.type==='reassign'){ n.role=smTemp.role; n.user=smTemp.user; n.media=Object.assign({},smTemp.media); }
+  persist();
+  closeStepModal();
+  renderFlow();
+  toast('Step saved');
+};
+stepModal.addEventListener('mousedown',e=>{ if(e.target===stepModal) closeStepModal(); });
+
 // inline route picker (overlay select)
 function inlineRoutePicker(anchor, cb, current){
   const s=document.createElement('select');
@@ -1389,12 +1578,14 @@ function insertNode(type){
   const { sourceNode, sub }=ipopCtx;
   let x=120,y=120;
   if(sourceNode){ const el=flowScene.querySelector(`[data-id="${sourceNode.id}"]`); x=sourceNode.x; y=sourceNode.y+(el?el.offsetHeight:120)+70; }
-  const n={ id:uid('n_'), type, x, y, label:NT[type].label };
-  if(type==='question') n.options=[{id:uid('o_'),text:'Yes',route:''},{id:uid('o_'),text:'No',route:''}];
+  const n={ id:uid('n_'), type, x, y, label:newLabel(type) };
+  if(type==='question'){ n.method='physical'; n.options=[{id:uid('o_'),text:'Yes',route:''},{id:uid('o_'),text:'No',route:''}]; }
+  if(type==='done') n.media={photo:'required',video:'off',comment:'optional'};
+  if(type==='reassign') n.media={photo:'off',video:'off',comment:'required'};
   if(type==='sensor'){ n.sensorTag=''; n.unit=''; n.thresholds=[{id:'safe',label:'Safe',min:null,max:null,route:''},{id:'warn',label:'Warning',min:null,max:null,route:''},{id:'crit',label:'Critical',min:null,max:null,route:''}]; }
   curFlow.nodes.push(n);
   if(sourceNode) setRoute(sourceNode, sub, 'node:'+n.id);
-  sel={kind:'node',id:n.id}; openInsp(); renderFlow(); persist();
+  sel={kind:'node',id:n.id}; renderFlow(); persist(); (MODAL_TYPES.includes(n.type)? openStepModal(n) : openInsp());
 }
 
 // ============================================================
@@ -1429,7 +1620,7 @@ function renderTray(){
 function renderTrayBody(v){
   if(!v.issues.length){ $('trayBody').innerHTML=`<div style="padding:20px;text-align:center;color:var(--green);font-weight:600">✓ No issues</div>`; return; }
   $('trayBody').innerHTML=v.issues.map((is,i)=>`<div class="issue ${is.sev}" data-i="${i}"><div class="dot"></div><div><div class="it">${esc(is.title)}</div><div class="id">${esc(is.desc)}</div></div></div>`).join('');
-  $('trayBody').querySelectorAll('.issue').forEach((el,i)=>el.onclick=()=>{ const is=v.issues[i]; if(is.node){ sel={kind:'node',id:is.node}; if(flowView==='h'){ const n=curFlow.nodes.find(x=>x.id===is.node); if(n){ centerOn(n); } renderFlow(); } openInsp(); } });
+  $('trayBody').querySelectorAll('.issue').forEach((el,i)=>el.onclick=()=>{ const is=v.issues[i]; if(is.node){ sel={kind:'node',id:is.node}; const n=curFlow.nodes.find(x=>x.id===is.node); if(flowView==='h'&&n){ centerOn(n); renderFlow(); } if(n) (MODAL_TYPES.includes(n.type)? openStepModal(n) : openInsp()); else openInsp(); } });
 }
 $('trayClose').onclick=()=>$('tray').classList.remove('open');
 function centerOn(n){ const r=flowSurface.getBoundingClientRect(); cam.flow.x=r.width/2 - (n.x+120)*cam.flow.z; cam.flow.y=r.height/2 - (n.y+60)*cam.flow.z; applyCam('flow'); }
@@ -1515,7 +1706,7 @@ function simStep(flow, nodeId){
   const m=NT[n.type];
   const card=document.createElement('div'); card.className='sim-step';
   let h=`<div class="badge b-${n.type}">${m.icon} ${m.label}</div><div class="q">${esc(n.label)}</div>`;
-  const sub=nodeSub(n); if(sub) h+=`<div class="sub2">${esc(sub)}</div>`;
+  const sub=nodeSub(n,flow); if(sub) h+=`<div class="sub2">${esc(sub)}</div>`;
   if(n.type==='done'){ card.innerHTML=h; simWrap.appendChild(card); simTerminal(flow, flow.kind==='remedy'?'Fix applied.':'Diagnosis complete.', true); scrollSim(); return; }
   if(n.type==='skip_end'){ h+=`<div class="sub2" style="margin-top:8px">Operator skipped — Photo + RCA captured.</div>`; card.innerHTML=h; simWrap.appendChild(card); simTerminal(flow, 'The operator skipped to the end, so the cause was not confirmed. The fix flow does not run.', false); scrollSim(); return; }
   if(n.type==='reassign'){
@@ -1648,7 +1839,7 @@ function sizeWires(svg,scene){ svg.setAttribute('width',3000); svg.setAttribute(
 function renderPal(){
   const s=($('palSearch').value||'').toLowerCase();
   let h='';
-  [['step','Steps'],['helper','Helpers']].forEach(([g,lbl])=>{
+  [['step','Core steps'],['helper','Advanced']].forEach(([g,lbl])=>{
     const items=PAL[g].filter(id=>!s||NT[id].label.toLowerCase().includes(s));
     if(!items.length) return;
     h+=`<div class="pg-head">${lbl}</div><div class="pg-grid">`;
@@ -1667,10 +1858,12 @@ flowSurface.addEventListener('drop',e=>{
   e.preventDefault(); const t=e.dataTransfer.getData('text/plain'); if(!t||!NT[t])return;
   const r=flowSurface.getBoundingClientRect(), z=cam.flow.z;
   const x=(e.clientX-r.left-cam.flow.x)/z-120, y=(e.clientY-r.top-cam.flow.y)/z-40;
-  const n={id:uid('n_'),type:t,x,y,label:NT[t].label};
-  if(t==='question') n.options=[{id:uid('o_'),text:'Yes',route:''},{id:uid('o_'),text:'No',route:''}];
+  const n={id:uid('n_'),type:t,x,y,label:newLabel(t)};
+  if(t==='question'){ n.method='physical'; n.options=[{id:uid('o_'),text:'Yes',route:''},{id:uid('o_'),text:'No',route:''}]; }
+  if(t==='done') n.media={photo:'required',video:'off',comment:'optional'};
+  if(t==='reassign') n.media={photo:'off',video:'off',comment:'required'};
   if(t==='sensor'){ n.sensorTag='';n.unit='';n.thresholds=[{id:'safe',label:'Safe',min:null,max:null,route:''},{id:'warn',label:'Warning',min:null,max:null,route:''},{id:'crit',label:'Critical',min:null,max:null,route:''}]; }
-  curFlow.nodes.push(n); sel={kind:'node',id:n.id}; openInsp(); renderFlow(); persist();
+  curFlow.nodes.push(n); sel={kind:'node',id:n.id}; renderFlow(); persist(); (MODAL_TYPES.includes(n.type)? openStepModal(n) : openInsp());
 });
 
 // ============================================================
@@ -1697,12 +1890,14 @@ $('fz-layout').onclick=()=>{ tidyFlow(); renderFlow(); fitView('flow'); toast('T
 $('palSearch').oninput=renderPal;
 // Quick-start buttons on the empty-flow panel
 function quickAddNode(type){
-  const n={ id:uid('n_'), type, x:180, y:120, label:NT[type].label };
-  if(type==='question') n.options=[{id:uid('o_'),text:'Yes',route:''},{id:uid('o_'),text:'No',route:''}];
+  const n={ id:uid('n_'), type, x:180, y:120, label:newLabel(type) };
+  if(type==='question'){ n.method='physical'; n.options=[{id:uid('o_'),text:'Yes',route:''},{id:uid('o_'),text:'No',route:''}]; }
+  if(type==='done') n.media={photo:'required',video:'off',comment:'optional'};
+  if(type==='reassign') n.media={photo:'off',video:'off',comment:'required'};
   if(type==='sensor'){ n.sensorTag=''; n.unit=''; n.thresholds=[{id:'safe',label:'Safe',min:null,max:null,route:''},{id:'warn',label:'Warning',min:null,max:null,route:''},{id:'crit',label:'Critical',min:null,max:null,route:''}]; }
   curFlow.nodes.push(n);
   sel={kind:'node',id:n.id};
-  renderFlow(); fitView('flow'); openInsp(); persist();
+  renderFlow(); fitView('flow'); persist(); (MODAL_TYPES.includes(n.type)? openStepModal(n) : openInsp());
 }
 $('flowEmpty').querySelectorAll('[data-qs]').forEach(b=>b.onclick=()=>quickAddNode(b.dataset.qs));
 // Dismissible "how it works" hint
@@ -1722,8 +1917,8 @@ function showTemplates(){
   loadTpl().forEach(t=>h+=`<div class="tpl" data-s="${t.id}"><button class="del" data-del="${t.id}">×</button><span class="em">${t.emoji||'⭐'}</span><div class="nm">${esc(t.name)}</div><div class="mt">Saved · ${t.tree.rootCauses.length} causes</div></div>`);
   $('tplGrid').innerHTML=h||'<div style="grid-column:1/-1;text-align:center;color:#64748b;padding:20px">No templates yet</div>';
   $('tplGrid').querySelectorAll('.tpl').forEach(c=>c.onclick=ev=>{ if(ev.target.classList.contains('del'))return;
-    if(c.dataset.b){ const b=BUILTINS.find(x=>x.id===c.dataset.b); const nt=b.build(); data.trees.push(nt); curTree=nt; }
-    else if(c.dataset.s){ const sv=loadTpl().find(x=>x.id===c.dataset.s); if(sv){ const cl=JSON.parse(JSON.stringify(sv.tree)); cl.id=uid('tree_'); data.trees.push(cl); curTree=cl; } }
+    if(c.dataset.b){ const b=BUILTINS.find(x=>x.id===c.dataset.b); const nt=b.build(); data.trees.push(nt); curTree=nt; migrate(); }
+    else if(c.dataset.s){ const sv=loadTpl().find(x=>x.id===c.dataset.s); if(sv){ const cl=JSON.parse(JSON.stringify(sv.tree)); cl.id=uid('tree_'); data.trees.push(cl); curTree=cl; migrate(); } }
     $('tplModal').classList.remove('open'); persist(); go('map'); fitView('map');
   });
   $('tplGrid').querySelectorAll('.del').forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); saveTpl(loadTpl().filter(t=>t.id!==ev.target.dataset.del)); showTemplates(); });
@@ -1739,7 +1934,7 @@ $('welcome').querySelectorAll('.tpl').forEach(c=>c.onclick=()=>{
 // palette collapse via search-area? add a tiny toggle: click logo? Keep simple.
 document.addEventListener('keydown',e=>{
   if(e.target.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
-  if(e.key==='Escape'){ closeInsp(); ipop.classList.remove('open'); }
+  if(e.key==='Escape'){ closeStepModal(); closeInsp(); ipop.classList.remove('open'); }
   if((e.key==='Delete'||e.key==='Backspace')&&sel&&view==='flow'){ if(sel.kind==='node') delNode(sel.id); else if(sel.kind==='edge'){ curFlow.edges=curFlow.edges.filter(x=>x.id!==sel.id); closeInsp(); } }
 });
 document.addEventListener('click',e=>{ if(ipop.classList.contains('open')&&!ipop.contains(e.target)&&!e.target.closest('.padd')&&!e.target.closest('.port')) ipop.classList.remove('open'); });
